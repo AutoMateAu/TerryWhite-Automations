@@ -1,0 +1,182 @@
+"use client"
+
+import type React from "react"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { DialogHeader, DialogTitle, DialogContent, DialogFooter, DialogClose } from "@/components/ui/dialog"
+import { PlusCircle, Trash2 } from "lucide-react"
+import type { PatientProfile } from "@/lib/types"
+import { useToast } from "@/components/ui/use-toast"
+
+interface AddPatientFormProps {
+  onPatientAdd: (newPatient: Omit<PatientProfile, "id">) => void
+}
+
+const initialMedication = { name: "", dosage: "", frequency: "" }
+const initialFormState: Omit<PatientProfile, "id"> = {
+  name: "",
+  dob: "",
+  address: "",
+  medicare: "",
+  allergies: "",
+  mrn: "",
+  currentMedications: [initialMedication],
+}
+
+export function AddPatientForm({ onPatientAdd }: AddPatientFormProps) {
+  const [formData, setFormData] = useState(initialFormState)
+  const { toast } = useToast()
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleMedicationChange = (index: number, field: keyof typeof initialMedication, value: string) => {
+    const newMedications = [...formData.currentMedications]
+    newMedications[index][field] = value
+    setFormData((prev) => ({ ...prev, currentMedications: newMedications }))
+  }
+
+  const addMedicationRow = () => {
+    setFormData((prev) => ({
+      ...prev,
+      currentMedications: [...prev.currentMedications, { ...initialMedication }],
+    }))
+  }
+
+  const removeMedicationRow = (index: number) => {
+    if (formData.currentMedications.length === 1) {
+      toast({ title: "Cannot remove last medication row", variant: "destructive" })
+      return
+    }
+    const newMedications = formData.currentMedications.filter((_, i) => i !== index)
+    setFormData((prev) => ({ ...prev, currentMedications: newMedications }))
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.name || !formData.mrn || !formData.dob) {
+      toast({
+        title: "Missing Required Fields",
+        description: "Please fill in Name, MRN, and DOB.",
+        variant: "destructive",
+      })
+      return
+    }
+    onPatientAdd(formData)
+    setFormData(initialFormState) // Reset form
+    // The dialog will be closed by the DialogClose button
+  }
+
+  return (
+    <DialogContent className="sm:max-w-[800px] max-h-[90vh]">
+      <form onSubmit={handleSubmit}>
+        <DialogHeader>
+          <DialogTitle>Add New Patient</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-6 py-4 max-h-[70vh] overflow-y-auto px-2">
+          {/* Patient Information Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold border-b pb-2">Patient Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name *</Label>
+                <Input id="name" name="name" value={formData.name} onChange={handleInputChange} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="mrn">MRN *</Label>
+                <Input id="mrn" name="mrn" value={formData.mrn} onChange={handleInputChange} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dob">Date of Birth *</Label>
+                <Input id="dob" name="dob" type="date" value={formData.dob} onChange={handleInputChange} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="medicare">Medicare Number</Label>
+                <Input id="medicare" name="medicare" value={formData.medicare} onChange={handleInputChange} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="address">Address</Label>
+                <Input id="address" name="address" value={formData.address} onChange={handleInputChange} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="allergies">Allergies</Label>
+                <Textarea
+                  id="allergies"
+                  name="allergies"
+                  value={formData.allergies}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Penicillin, Peanuts, or 'None known'"
+                  rows={2}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Medications Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold border-b pb-2">Current Medications</h3>
+            <div className="space-y-3">
+              {formData.currentMedications.map((med, index) => (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 p-3 border rounded-md bg-muted/30">
+                  <div className="md:col-span-4 space-y-1">
+                    <Label className="text-xs text-muted-foreground">Medication Name</Label>
+                    <Input
+                      placeholder="e.g., Lisinopril 10mg"
+                      value={med.name}
+                      onChange={(e) => handleMedicationChange(index, "name", e.target.value)}
+                    />
+                  </div>
+                  <div className="md:col-span-3 space-y-1">
+                    <Label className="text-xs text-muted-foreground">Dosage</Label>
+                    <Input
+                      placeholder="e.g., 1 tablet"
+                      value={med.dosage}
+                      onChange={(e) => handleMedicationChange(index, "dosage", e.target.value)}
+                    />
+                  </div>
+                  <div className="md:col-span-4 space-y-1">
+                    <Label className="text-xs text-muted-foreground">Frequency</Label>
+                    <Input
+                      placeholder="e.g., Once daily"
+                      value={med.frequency}
+                      onChange={(e) => handleMedicationChange(index, "frequency", e.target.value)}
+                    />
+                  </div>
+                  <div className="md:col-span-1 flex items-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeMedicationRow(index)}
+                      className="h-9 w-9"
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button type="button" variant="outline" onClick={addMedicationRow} className="w-full">
+              <PlusCircle className="h-4 w-4 mr-2" /> Add Another Medication
+            </Button>
+          </div>
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button type="button" variant="secondary">
+              Cancel
+            </Button>
+          </DialogClose>
+          <DialogClose asChild>
+            <Button type="submit">Save Patient</Button>
+          </DialogClose>
+        </DialogFooter>
+      </form>
+    </DialogContent>
+  )
+}
