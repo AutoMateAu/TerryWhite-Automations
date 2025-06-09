@@ -25,7 +25,10 @@ export default function DashboardPage() {
     setNotifications(
       mockNotifications.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
     )
-    setTasks(mockTasks)
+    const rank = { high: 1, medium: 2, low: 3 }
+    setTasks(
+      mockTasks.sort((a, b) => rank[a.priority] - rank[b.priority]),
+    )
   }, [])
 
   const toggleNotificationCompletion = (id: string) => {
@@ -39,6 +42,12 @@ export default function DashboardPage() {
   const getIcon = (type: "message" | "reminder") => {
     if (type === "message") return <MessageSquare className="h-5 w-5 text-blue-500" />
     return <CalendarCheck className="h-5 w-5 text-green-500" />
+  }
+
+  const getPriorityVariant = (priority: TaskItem["priority"]) => {
+    if (priority === "high") return "destructive"
+    if (priority === "medium") return "secondary"
+    return "outline"
   }
 
   const getRelativeTime = (timestamp: string) => {
@@ -103,18 +112,26 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-2">
             {tasks.map((task) => (
-              <div key={task.id} className="flex items-center space-x-2">
+              <div key={task.id} className="flex items-start space-x-2">
                 <Checkbox
                   id={`task-${task.id}`}
                   checked={task.isCompleted}
                   onCheckedChange={() => toggleTaskCompletion(task.id)}
                 />
-                <label
-                  htmlFor={`task-${task.id}`}
-                  className={`text-sm ${task.isCompleted ? "line-through text-muted-foreground" : ""}`}
-                >
-                  {task.title}
-                </label>
+                <div className="flex flex-col">
+                  <label
+                    htmlFor={`task-${task.id}`}
+                    className={`text-sm ${task.isCompleted ? "line-through text-muted-foreground" : ""}`}
+                  >
+                    {task.title}
+                  </label>
+                  <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                    <Badge variant={getPriorityVariant(task.priority)} className="capitalize">
+                      {task.priority}
+                    </Badge>
+                    <span>Due: {new Date(task.dueDate).toLocaleString()}</span>
+                  </div>
+                </div>
               </div>
             ))}
           </CardContent>

@@ -63,10 +63,34 @@ export const mockNotifications: NotificationItem[] = [
 export const mockDischargedPatients: DischargedPatient[] = []
 
 export const mockTasks: TaskItem[] = [
-  { id: "t1", title: "Verify stock levels", isCompleted: false },
-  { id: "t2", title: "Review new prescriptions", isCompleted: false },
-  { id: "t3", title: "Update billing records", isCompleted: true },
-  { id: "t4", title: "Prepare weekly report", isCompleted: false },
+  {
+    id: "t1",
+    title: "Verify stock levels",
+    isCompleted: false,
+    priority: "high",
+    dueDate: new Date().toISOString(),
+  },
+  {
+    id: "t2",
+    title: "Review new prescriptions",
+    isCompleted: false,
+    priority: "medium",
+    dueDate: new Date(new Date().setHours(17, 0, 0, 0)).toISOString(),
+  },
+  {
+    id: "t3",
+    title: "Update billing records",
+    isCompleted: true,
+    priority: "low",
+    dueDate: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(),
+  },
+  {
+    id: "t4",
+    title: "Prepare weekly report",
+    isCompleted: false,
+    priority: "high",
+    dueDate: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(),
+  },
 ]
 
 export const mockSalesData: SalesRecord[] = [
