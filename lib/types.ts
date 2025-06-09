@@ -54,3 +54,14 @@ export interface DischargedPatient extends PatientFormData {
   id: string
   dischargeTimestamp: string
 }
+
+export interface TaskItem {
+  id: string
+  title: string
+  isCompleted: boolean
+}
+
+export interface SalesRecord {
+  month: string
+  revenue: number
+}
