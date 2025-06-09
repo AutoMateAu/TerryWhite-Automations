@@ -106,7 +106,7 @@ export default function TemplatePage() {
   const timeSlots: (keyof Medication["times"])[] = ["7am", "8am", "Noon", "2pm", "6pm", "8pm", "10pm"]
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 space-y-8 bg-gradient-to-br from-green-50 via-blue-50 to-purple-100 dark:from-slate-800 dark:via-slate-900 dark:to-indigo-900 rounded-xl">
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Medication Management Plan</CardTitle>
