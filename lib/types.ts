@@ -59,6 +59,8 @@ export interface TaskItem {
   id: string
   title: string
   isCompleted: boolean
+  priority: "low" | "medium" | "high"
+  dueDate: string
 }
 
 export interface SalesRecord {
