@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlusCircle, Trash2, Send, Printer } from "lucide-react"
+import { PlusCircle, Trash2, Send, Printer, FileSpreadsheet } from "lucide-react" // Added FileSpreadsheet icon
 import type { PatientFormData, Medication, MedicationWithComment } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
@@ -16,6 +16,7 @@ import { mockDischargedPatients } from "@/lib/data" // For simulating data trans
 import { MedicationSearch } from "@/components/medication-search"
 import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea"
 import { MedicationStatusCombobox } from "@/components/medication-status-combobox"
+import { exportMedicationsToExcel } from "@/lib/export-excel" // Import the new export function
 
 // Replace the initialMedication constant with this function
 const createEmptyMedication = (): Medication => ({
@@ -150,6 +151,23 @@ export default function TemplatePage() {
         description: "The medication plan is ready to be printed.",
       })
     }, 1000)
+  }
+
+  const handleDownloadExcel = () => {
+    const medicationsToExport = formData.medications.filter((med) => !isMedicationRowEmpty(med))
+    if (medicationsToExport.length === 0) {
+      toast({
+        title: "No Medications to Export",
+        description: "Please add at least one medication to export to Excel.",
+        variant: "destructive",
+      })
+      return
+    }
+    exportMedicationsToExcel(medicationsToExport, formData.name || "Patient")
+    toast({
+      title: "Medications Exported",
+      description: "The medication list has been downloaded as an Excel file.",
+    })
   }
 
   const handleSubmitToDischarge = () => {
@@ -391,6 +409,9 @@ export default function TemplatePage() {
           </div>
         </CardContent>
         <CardFooter className="flex gap-2 justify-end pt-4">
+          <Button onClick={handleDownloadExcel} variant="outline" size="sm">
+            <FileSpreadsheet className="h-4 w-4 mr-2" /> Download Excel
+          </Button>
           <Button onClick={handleSaveAndPrint} variant="outline" size="sm">
             <Printer className="h-4 w-4 mr-2" /> Save & Print
           </Button>
