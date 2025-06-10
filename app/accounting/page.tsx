@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-import { Database, AlertTriangle, PhoneCall } from "lucide-react"
+import { Database, AlertTriangle, PhoneCall, Users, Download } from "lucide-react"
 import type { CustomerAccount, DischargedPatient } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
 import { RecordPaymentForm } from "@/components/record-payment-form"
@@ -21,16 +21,15 @@ import {
 } from "@/services/accounting-service"
 import { createClient } from "@/utils/supabase/client"
 import { SetupGuide } from "@/components/setup-guide"
-import { Download, Phone, Users } from "lucide-react"
 import { PDFExportDialog } from "@/components/pdf-export-dialog"
 import { BulkPDFExportDialog } from "@/components/bulk-pdf-export-dialog"
 import { EnhancedExportDialog } from "@/components/enhanced-export-dialog"
-import { EditDueDateDialog } from "@/components/edit-due-date-dialog" // Import the new dialog
+import { EditDueDateDialog } from "@/components/edit-due-date-dialog"
 import { format } from "date-fns"
-import AccountingOverview from "@/components/accounting-overview" // Import the new overview component
+import AccountingOverview from "@/components/accounting-overview"
+import CustomerAccountTable from "@/components/customer-account-table" // Import the new table component
 
 export default function AccountingPage() {
-  // Keep states for dialogs and their related data
   const [selectedAccount, setSelectedAccount] = useState<CustomerAccount | null>(null)
   const [dischargeForm, setDischargeForm] = useState<DischargedPatient | null>(null)
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
@@ -44,11 +43,9 @@ export default function AccountingPage() {
   const [isEditDueDateDialogOpen, setIsEditDueDateDialogOpen] = useState(false)
   const [selectedAccountForDueDate, setSelectedAccountForDueDate] = useState<CustomerAccount | null>(null)
 
-  // Keep states for setup guide and mock data warning
   const [isUsingMockData, setIsUsingMockData] = useState(false)
   const [showSetupGuide, setShowSetupGuide] = useState(false)
 
-  // Keep states for inline due date editing (if still desired for table rows)
   const [editingDueDateId, setEditingDueDateId] = useState<string | null>(null)
   const [tempDueDate, setTempDueDate] = useState<Date | undefined>(undefined)
   const [isUpdatingDueDate, setIsUpdatingDueDate] = useState(false)
@@ -57,11 +54,8 @@ export default function AccountingPage() {
   const { toast } = useToast()
   const supabase = createClient()
 
-  // --- Data fetching and filtering logic (simplified for dialogs) ---
-  // We still need a way to get accounts for dialogs, but the main display is static.
-  // For a full integration, you'd connect AccountingOverview to real data.
-  const [accounts, setAccounts] = useState<CustomerAccount[]>([]) // Keep for dialogs
-  const [isLoading, setIsLoading] = useState(true) // Keep for initial load check
+  const [accounts, setAccounts] = useState<CustomerAccount[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     async function loadAccountsForDialogs() {
@@ -92,8 +86,7 @@ export default function AccountingPage() {
     loadAccountsForDialogs()
   }, [toast])
 
-  // Filtered accounts for dialogs (e.g., bulk export)
-  const filteredAccounts = accounts // For now, use all fetched accounts for dialogs
+  const filteredAccounts = accounts
 
   const handleViewDischarge = async (account: CustomerAccount) => {
     try {
@@ -194,7 +187,7 @@ export default function AccountingPage() {
 
   const handlePaymentSuccess = () => {
     setIsPaymentDialogOpen(false)
-    getCustomerAccounts().then((data) => setAccounts(data)) // Refresh accounts for dialogs
+    getCustomerAccounts().then((data) => setAccounts(data))
   }
 
   const handleCallSuccess = () => {
@@ -203,7 +196,7 @@ export default function AccountingPage() {
 
   const handleDueDateSuccess = () => {
     setIsEditDueDateDialogOpen(false)
-    getCustomerAccounts().then((data) => setAccounts(data)) // Refresh accounts for dialogs
+    getCustomerAccounts().then((data) => setAccounts(data))
   }
 
   const handleInlineDueDateEdit = (account: CustomerAccount) => {
@@ -280,8 +273,8 @@ export default function AccountingPage() {
 
   return (
     <>
-      <AccountingOverview /> {/* Render the new overview component */}
-      {/* Mock Data Warning (kept as it's relevant to database setup) */}
+      <AccountingOverview />
+      <CustomerAccountTable /> {/* Render the new customer account table here */}
       {isUsingMockData && (
         <div className="container mx-auto px-6 mt-6">
           <Alert variant="warning" className="mb-6">
@@ -301,7 +294,6 @@ export default function AccountingPage() {
         </div>
       )}
       {/* All existing dialogs remain the same... */}
-      {/* Discharge Form Dialog */}
       <Dialog open={!!dischargeForm} onOpenChange={() => setDischargeForm(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {dischargeForm && (
@@ -367,7 +359,6 @@ export default function AccountingPage() {
           )}
         </DialogContent>
       </Dialog>
-      {/* Record Payment Dialog */}
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
         <DialogContent>
           {selectedAccount && (
@@ -379,17 +370,14 @@ export default function AccountingPage() {
           )}
         </DialogContent>
       </Dialog>
-      {/* Payment History Dialog */}
       <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
         <DialogContent>{selectedAccount && <PaymentHistory account={selectedAccount} />}</DialogContent>
       </Dialog>
-      {/* Call History Dialog */}
       <Dialog open={isCallHistoryDialogOpen} onOpenChange={setIsCallHistoryDialogOpen}>
         <DialogContent className="max-w-3xl">
           {selectedAccount && <CallHistory account={selectedAccount} />}
         </DialogContent>
       </Dialog>
-      {/* Add Call Dialog */}
       <Dialog open={isAddCallDialogOpen} onOpenChange={setIsAddCallDialogOpen}>
         <DialogContent>
           {selectedAccount && (
@@ -401,10 +389,7 @@ export default function AccountingPage() {
           )}
         </DialogContent>
       </Dialog>
-      {/* Overdue Report Dialog (kept, but its data will come from `accounts` state) */}
       <Dialog open={false} onOpenChange={() => {}}>
-        {" "}
-        {/* This dialog was previously `showOverdueReport` */}
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -448,7 +433,7 @@ export default function AccountingPage() {
                             <h4 className="font-semibold text-red-800">{account.patientName}</h4>
                             <p className="text-sm text-muted-foreground">MRN: {account.mrn}</p>
                             <div className="flex items-center gap-1 mt-1">
-                              <Phone className="h-3 w-3 text-muted-foreground" />
+                              <PhoneCall className="h-3 w-3 text-muted-foreground" />
                               <span className="text-xs text-muted-foreground">
                                 {account.phone || "No phone available"}
                               </span>
@@ -467,7 +452,6 @@ export default function AccountingPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => {
-                                  // setShowOverdueReport(false) // Removed as this dialog is now controlled differently
                                   handleRecordPayment(account)
                                 }}
                               >
@@ -477,7 +461,6 @@ export default function AccountingPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => {
-                                  // setShowOverdueReport(false) // Removed as this dialog is now controlled differently
                                   handleAddCall(account)
                                 }}
                               >
@@ -502,7 +485,6 @@ export default function AccountingPage() {
           </div>
         </DialogContent>
       </Dialog>
-      {/* Setup Guide Dialog */}
       <Dialog open={showSetupGuide} onOpenChange={setShowSetupGuide}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -511,7 +493,6 @@ export default function AccountingPage() {
           <SetupGuide onClose={() => setShowSetupGuide(false)} />
         </DialogContent>
       </Dialog>
-      {/* Single Account PDF Export Dialog */}
       <Dialog open={isPDFExportDialogOpen} onOpenChange={setIsPDFExportDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <PDFExportDialog
@@ -521,27 +502,24 @@ export default function AccountingPage() {
           />
         </DialogContent>
       </Dialog>
-      {/* Bulk PDF Export Dialog */}
       <Dialog open={isBulkPDFDialogOpen} onOpenChange={setIsBulkPDFDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <BulkPDFExportDialog
             accounts={filteredAccounts.filter((account) => {
               if (bulkReportType === "overdue") return account.status === "overdue"
               if (bulkReportType === "current") return account.status === "current"
-              return true // all accounts
+              return true
             })}
             reportType={bulkReportType}
             onClose={() => setIsBulkPDFDialogOpen(false)}
           />
         </DialogContent>
       </Dialog>
-      {/* Enhanced Export Dialog */}
       <Dialog open={isEnhancedExportDialogOpen} onOpenChange={setIsEnhancedExportDialogOpen}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <EnhancedExportDialog accounts={filteredAccounts} onClose={() => setIsEnhancedExportDialogOpen(false)} />
         </DialogContent>
       </Dialog>
-      {/* Edit Due Date Dialog */}
       <Dialog open={isEditDueDateDialogOpen} onOpenChange={setIsEditDueDateDialogOpen}>
         <DialogContent>
           {selectedAccountForDueDate && (
