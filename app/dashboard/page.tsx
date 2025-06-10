@@ -16,19 +16,40 @@ import {
   AlertTriangle,
   BarChart2,
   TrendingUp,
+  Activity,
+  Building2,
 } from "lucide-react"
 import { mockNotifications } from "@/lib/data"
 import type { NotificationItem } from "@/lib/types"
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts"
 
-const sampleChartData = [
-  { name: "Jan", value: 30 },
-  { name: "Feb", value: 45 },
-  { name: "Mar", value: 35 },
-  { name: "Apr", value: 60 },
-  { name: "May", value: 75 },
-  { name: "Jun", value: 90 },
+const sampleSalesData = [
+  { name: "Mon", value: 400 },
+  { name: "Tue", value: 520 },
+  { name: "Wed", value: 150 },
+  { name: "Thu", value: 430 },
+  { name: "Fri", value: 540 },
+  { name: "Sat", value: 350 },
+  { name: "Sun", value: 290 },
 ]
+
+const salesByHospital = [
+  { name: "Hospital A", value: 30 },
+  { name: "Hospital B", value: 40 },
+  { name: "Hospital C", value: 30 },
+]
+
+const COLORS = ["#4F46E5", "#3B82F6", "#06B6D4"]
 
 export default function DashboardPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
@@ -48,19 +69,24 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10 px-6">
-      <h1 className="text-4xl font-bold mb-10 text-indigo-800">Dashboard</h1>
+    <div className="min-h-screen bg-gray-50 px-6 py-10">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-4xl font-bold text-gray-800">Good Morning, John Doe</h1>
+          <p className="text-gray-500">Your performance summary this week</p>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
-        <Card className="shadow-xl rounded-2xl bg-white">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+        <Card className="shadow-xl rounded-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl text-blue-700">
-              <BarChart2 className="h-5 w-5" /> Monthly Revenue
+              <BarChart2 className="h-5 w-5" /> Revenue Analytics
             </CardTitle>
           </CardHeader>
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={sampleChartData}>
+              <LineChart data={sampleSalesData}>
                 <XAxis dataKey="name" stroke="#4F46E5" />
                 <YAxis stroke="#4F46E5" />
                 <Tooltip />
@@ -70,53 +96,88 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-xl rounded-2xl bg-white col-span-1 xl:col-span-2">
+        <Card className="shadow-xl rounded-2xl">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl text-green-700">
-              <TrendingUp className="h-5 w-5" /> Tasks & Reminders
+            <CardTitle className="flex items-center gap-2 text-xl text-blue-700">
+              <Building2 className="h-5 w-5" /> Sales Analytics by Hospital
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4">
-            {notifications.map((item) => (
-              <div
-                key={item.id}
-                className={`flex items-start justify-between rounded-lg p-4 border ${
-                  item.isCompleted ? "bg-gray-100 opacity-70" : "bg-green-50"
-                }`}
-              >
-                <div className="flex gap-3 items-start">
-                  {item.type === "message" ? (
-                    <MessageSquare className="text-blue-500 h-5 w-5 mt-1" />
-                  ) : (
-                    <CalendarCheck className="text-green-500 h-5 w-5 mt-1" />
-                  )}
-                  <div>
-                    <p className="text-base font-semibold text-gray-800">{item.title}</p>
-                    <p className="text-sm text-gray-600 mt-1">{item.content}</p>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  {item.type === "reminder" && item.dueDate && !item.isCompleted && new Date(item.dueDate) < new Date() && (
-                    <Badge variant="destructive" className="flex items-center gap-1">
-                      <AlertTriangle className="h-3 w-3" /> Overdue
-                    </Badge>
-                  )}
-                  <div className="flex items-center gap-2">
+          <CardContent className="flex justify-center items-center h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={salesByHospital}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label
+                >
+                  {salesByHospital.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-xl rounded-2xl col-span-1 lg:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl text-green-700">
+              <TrendingUp className="h-5 w-5" /> Tasks
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {notifications.map(
+              (item) =>
+                !item.isCompleted && (
+                  <div
+                    key={item.id}
+                    className="p-3 rounded-md border bg-white shadow-sm flex justify-between items-start"
+                  >
+                    <div>
+                      <p className="font-semibold text-gray-800">{item.title}</p>
+                      <p className="text-sm text-gray-600 mt-1">{item.content}</p>
+                    </div>
                     <Checkbox
-                      id={`complete-${item.id}`}
                       checked={item.isCompleted}
                       onCheckedChange={() => toggleCompletion(item.id)}
+                      className="mt-1"
                     />
-                    <label htmlFor={`complete-${item.id}`} className="text-sm text-gray-700">
-                      Done
-                    </label>
                   </div>
-                </div>
-              </div>
-            ))}
+                ),
+            )}
           </CardContent>
         </Card>
       </div>
+
+      <Card className="shadow-xl rounded-2xl">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-xl text-indigo-700">
+            <Activity className="h-5 w-5" /> Activity (Completed)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {notifications.map(
+            (item) =>
+              item.isCompleted && (
+                <div
+                  key={item.id}
+                  className="p-3 rounded-md border bg-gray-100 flex justify-between items-start"
+                >
+                  <div>
+                    <p className="font-semibold text-gray-700 line-through">{item.title}</p>
+                    <p className="text-sm text-gray-500 mt-1">{item.content}</p>
+                  </div>
+                  <Badge variant="secondary">Done</Badge>
+                </div>
+              ),
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
