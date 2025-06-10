@@ -22,16 +22,26 @@ export function exportMedicationsToExcel(medications: Medication[], patientName:
     return row
   })
 
-  // Create a worksheet
+  // Create worksheet and workbook
   const ws = XLSX.utils.json_to_sheet(data)
-
-  // Create a workbook
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, "Medications List")
 
-  // Generate file name
-  const fileName = `${patientName.replace(/\s+/g, "_")}_Medications_List.xlsx`
+  // Generate workbook as ArrayBuffer (browser-safe)
+  const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" })
 
-  // Write and download the file
-  XLSX.writeFile(wb, fileName)
+  // Create a Blob and download link
+  const blob = new Blob([wbout], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  })
+
+  const fileName = `${patientName.replace(/\s+/g, "_") || "Patient"}_Medications_List.xlsx`
+
+  const link = document.createElement("a")
+  link.href = URL.createObjectURL(blob)
+  link.download = fileName
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(link.href)
 }
