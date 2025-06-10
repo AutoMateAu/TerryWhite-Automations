@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { User, CalendarDays, MapPin, FileIcon as FileMedical, Pill } from "lucide-react"
+import { User, CalendarDays, MapPin, FileIcon as FileMedical, Pill, Phone } from "lucide-react"
 import type { PatientProfile } from "@/lib/types"
 import { mockPatients } from "@/lib/data"
 import { Button } from "@/components/ui/button" // Added import
@@ -43,7 +43,8 @@ export default function PatientsPage() {
     .filter(
       (patient) =>
         patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        patient.mrn.toLowerCase().includes(searchTerm.toLowerCase()),
+        patient.mrn.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.phone.toLowerCase().includes(searchTerm.toLowerCase()),
     )
     .sort((a, b) => a.name.localeCompare(b.name))
 
@@ -61,7 +62,7 @@ export default function PatientsPage() {
 
       <Input
         type="search"
-        placeholder="Search patients by name or MRN..."
+        placeholder="Search patients by name, MRN, or phone number..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         className="mb-6"
@@ -77,6 +78,12 @@ export default function PatientsPage() {
                 <User className="h-5 w-5 text-primary" />
                 <span className="font-medium">{patient.name}</span>
                 <span className="text-sm text-muted-foreground">(MRN: {patient.mrn})</span>
+                {patient.phone && (
+                  <span className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Phone className="h-3 w-3" />
+                    {patient.phone}
+                  </span>
+                )}
               </div>
             </AccordionTrigger>
             <AccordionContent className="p-4 border-t">
@@ -89,6 +96,12 @@ export default function PatientsPage() {
                     <CalendarDays className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
                       <strong>DOB:</strong> {new Date(patient.dob).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">
+                      <strong>Phone:</strong> {patient.phone || "Not provided"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">

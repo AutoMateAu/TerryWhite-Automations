@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Users, FileText, Send, Pill } from "lucide-react"
+import { Home, Users, FileText, Send, Pill, DollarSign } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +20,7 @@ const navItems = [
   { href: "/patients", label: "Patients", icon: Users },
   { href: "/template", label: "Template", icon: FileText },
   { href: "/discharge", label: "Discharge", icon: Send },
+  { href: "/accounting", label: "Accounting", icon: DollarSign },
 ]
 
 export function AppSidebar() {

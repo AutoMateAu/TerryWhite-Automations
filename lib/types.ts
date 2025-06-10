@@ -1,67 +1,69 @@
-export interface Medication {
+export interface CustomerAccount {
   id: string
-  name: string
-  times: {
-    "7am": string
-    "8am": string
-    Noon: string
-    "2pm": string
-    "6pm": string
-    "8pm": string
-    "10pm": string
-  }
-  status: string
+  patientName: string
+  mrn: string
+  totalOwed: number
+  status: "current" | "overdue" | "paid"
+  createdAt: string
+  lastPaymentDate?: string
+  lastPaymentAmount?: number
+  phone?: string
+  email?: string
+  address?: string
+  notes?: string
+  dueDate?: string // Added new field for editable due date
+}
+
+export interface Payment {
+  id: string
+  accountId: string
+  amount: number
+  paymentDate: string
+  method: string
+  notes?: string
+}
+
+export interface CallLog {
+  id: string
+  accountId: string
+  callDate: string
   comments: string
 }
 
-export interface PatientFormData {
-  name: string
-  address: string
-  medicare: string
-  allergies: string
-  dob: string
-  mrn: string
-  admissionDate: string
-  dischargeDate: string
-  pharmacist: string
-  dateListPrepared: string
-  pageInfo: string
-  medications: Medication[]
+export interface PDFExportOptions {
+  includeContactInfo: boolean
+  includePaymentHistory: boolean
+  includeCallHistory: boolean
+  includeOutstandingBalance: boolean
+  includeAccountSummary: boolean
+  includeNotes: boolean
+  customTitle?: string
+  paymentDateRange?: {
+    startDate: string
+    endDate: string
+  }
+  callDateRange?: {
+    startDate: string
+    endDate: string
+  }
 }
 
-export interface PatientProfile {
-  id: string
-  name: string
-  dob: string
-  address: string
-  medicare: string
-  allergies: string
-  mrn: string
-  currentMedications: Array<{ name: string; dosage: string; frequency: string }>
+export interface BulkReportOptions {
+  includeDetailedBreakdown: boolean
+  includeSummaryStatistics: boolean
+  includeContactList: boolean
+  includeAgingAnalysis: boolean
+  groupByStatus: boolean
+  sortBy: "amount" | "name" | "dueDate" | "status"
+  sortDirection: "asc" | "desc"
 }
 
-export interface NotificationItem {
-  id: string
-  type: "message" | "reminder"
-  title: string
-  content: string
-  dueDate?: string
-  isCompleted?: boolean
-  timestamp: string
-}
-
-export interface DischargedPatient extends PatientFormData {
-  id: string
-  dischargeTimestamp: string
-}
-
-export interface TaskItem {
-  id: string
-  title: string
-  isCompleted: boolean
-}
-
-export interface SalesRecord {
-  month: string
-  revenue: number
+export interface ExportSelection {
+  mode: "single" | "multiple" | "all"
+  accountIds: string[]
+  filters: {
+    search: string
+    status: "all" | "current" | "overdue" | "paid"
+    balanceRange: { min?: number; max?: number }
+  }
 }

@@ -15,6 +15,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
 import { mockDischargedPatients } from "@/lib/data" // For simulating data transfer
 import { MedicationSearch } from "@/components/medication-search"
+import { formatAustralianPhoneNumber, getPhoneNumberMaxLength } from "@/utils/phone-formatter"
 
 const initialMedication: Medication = {
   id: Date.now().toString(),
@@ -31,6 +32,7 @@ const initialFormData: PatientFormData = {
   allergies: "",
   dob: "",
   mrn: "",
+  phone: "",
   admissionDate: "",
   dischargeDate: "",
   pharmacist: "",
@@ -46,6 +48,11 @@ export default function TemplatePage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatAustralianPhoneNumber(e.target.value)
+    setFormData((prev) => ({ ...prev, phone: formatted }))
   }
 
   const handleMedicationChange = (
@@ -129,6 +136,18 @@ export default function TemplatePage() {
             <div>
               <Label htmlFor="mrn">MRN</Label>
               <Input id="mrn" name="mrn" value={formData.mrn} onChange={handleInputChange} />
+            </div>
+            <div>
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                name="phone"
+                value={formData.phone || ""}
+                onChange={handlePhoneChange}
+                placeholder="0412 345 678 or (02) 9876 5432"
+                maxLength={getPhoneNumberMaxLength(formData.phone || "")}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Mobile: 04XX XXX XXX • Landline: (0X) XXXX XXXX</p>
             </div>
             <div>
               <Label htmlFor="medicare">Medicare</Label>
