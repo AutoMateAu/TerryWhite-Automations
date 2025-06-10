@@ -25,7 +25,7 @@ export interface PatientFormData {
   dischargeDate: string
   pharmacist: string
   dateListPrepared: string
-  pageInfo: string
+  phoneNumber?: string // Add phone number as optional field
   medications: Medication[]
 }
 
@@ -37,6 +37,7 @@ export interface PatientProfile {
   medicare: string
   allergies: string
   mrn: string
+  phoneNumber?: string // Add phone number here too
   currentMedications: Array<{ name: string; dosage: string; frequency: string }>
 }
 
@@ -55,13 +56,8 @@ export interface DischargedPatient extends PatientFormData {
   dischargeTimestamp: string
 }
 
-export interface TaskItem {
+export interface MedicationWithComment {
   id: string
-  title: string
-  isCompleted: boolean
-}
-
-export interface SalesRecord {
-  month: string
-  revenue: number
+  name: string
+  comment: string | null
 }

@@ -1,10 +1,4 @@
-import type {
-  PatientProfile,
-  NotificationItem,
-  DischargedPatient,
-  TaskItem,
-  SalesRecord,
-} from "./types"
+import type { PatientProfile, NotificationItem, DischargedPatient } from "./types"
 
 export const mockPatients: PatientProfile[] = [
   {
@@ -61,19 +55,3 @@ export const mockNotifications: NotificationItem[] = [
 ]
 
 export const mockDischargedPatients: DischargedPatient[] = []
-
-export const mockTasks: TaskItem[] = [
-  { id: "t1", title: "Verify stock levels", isCompleted: false },
-  { id: "t2", title: "Review new prescriptions", isCompleted: false },
-  { id: "t3", title: "Update billing records", isCompleted: true },
-  { id: "t4", title: "Prepare weekly report", isCompleted: false },
-]
-
-export const mockSalesData: SalesRecord[] = [
-  { month: "Jan", revenue: 12000 },
-  { month: "Feb", revenue: 15000 },
-  { month: "Mar", revenue: 18000 },
-  { month: "Apr", revenue: 16000 },
-  { month: "May", revenue: 19000 },
-  { month: "Jun", revenue: 22000 },
-]
