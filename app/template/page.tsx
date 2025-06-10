@@ -189,9 +189,9 @@ export default function TemplatePage() {
   const timeSlots: (keyof Medication["times"])[] = ["7am", "8am", "Noon", "2pm", "6pm", "8pm", "10pm"]
 
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-futuristic-blue to-futuristic-purple animate-gradient-shift bg-[length:200%_200%]">
+    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-purple-50 animate-gradient-shift bg-[length:200%_200%]">
       <Card className="max-w-6xl mx-auto rounded-3xl shadow-2xl backdrop-blur-lg bg-white/80 border border-white/30 animate-fade-in-up">
-        <CardHeader className="pb-4 border-b border-white/20 bg-gradient-to-r from-futuristic-blue/20 to-futuristic-purple/20 rounded-t-3xl">
+        <CardHeader className="pb-4 border-b border-white/20 bg-gradient-to-r from-blue-50/50 to-purple-50/50 rounded-t-3xl">
           <CardTitle className="text-3xl font-extrabold text-gray-900 drop-shadow-sm">
             Medication Management Plan
           </CardTitle>
@@ -208,7 +208,7 @@ export default function TemplatePage() {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-futuristic-blue focus:ring-1 focus:ring-futuristic-blue transition-all duration-200"
+                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
               />
             </div>
             <div className="space-y-1">
@@ -221,7 +221,7 @@ export default function TemplatePage() {
                 type="date"
                 value={formData.dob}
                 onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-futuristic-blue focus:ring-1 focus:ring-futuristic-blue transition-all duration-200"
+                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
               />
             </div>
             <div className="space-y-1">
@@ -233,7 +233,7 @@ export default function TemplatePage() {
                 name="mrn"
                 value={formData.mrn}
                 onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-futuristic-blue focus:ring-1 focus:ring-futuristic-blue transition-all duration-200"
+                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
               />
             </div>
             <div className="space-y-1">
@@ -245,7 +245,7 @@ export default function TemplatePage() {
                 name="phoneNumber"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-futuristic-blue focus:ring-1 focus:ring-futuristic-blue transition-all duration-200"
+                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
                 placeholder="Phone number"
               />
             </div>
@@ -258,7 +258,7 @@ export default function TemplatePage() {
                 name="address"
                 value={formData.address}
                 onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-futuristic-blue focus:ring-1 focus:ring-futuristic-blue transition-all duration-200"
+                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
               />
             </div>
             <div className="space-y-1">
@@ -270,7 +270,7 @@ export default function TemplatePage() {
                 name="medicare"
                 value={formData.medicare}
                 onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-futuristic-blue focus:ring-1 focus:ring-futuristic-blue transition-all duration-200"
+                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
               />
             </div>
             <div className="space-y-1">
@@ -282,7 +282,7 @@ export default function TemplatePage() {
                 name="allergies"
                 value={formData.allergies}
                 onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-futuristic-blue focus:ring-1 focus:ring-futuristic-blue transition-all duration-200"
+                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
               />
             </div>
             <div className="space-y-1">
@@ -295,7 +295,7 @@ export default function TemplatePage() {
                 type="date"
                 value={formData.admissionDate}
                 onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-futuristic-blue focus:ring-1 focus:ring-futuristic-blue transition-all duration-200"
+                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
               />
             </div>
             <div className="space-y-1">
@@ -308,7 +308,7 @@ export default function TemplatePage() {
                 type="date"
                 value={formData.dischargeDate}
                 onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-futuristic-blue focus:ring-1 focus:ring-futuristic-blue transition-all duration-200"
+                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
               />
             </div>
             <div className="space-y-1">
@@ -320,7 +320,7 @@ export default function TemplatePage() {
                 name="pharmacist"
                 value={formData.pharmacist}
                 onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-futuristic-blue focus:ring-1 focus:ring-futuristic-blue transition-all duration-200"
+                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
               />
             </div>
             <div className="space-y-1">
@@ -334,7 +334,7 @@ export default function TemplatePage() {
           {/* Medication Table Section */}
           <div className="overflow-x-auto rounded-xl shadow-lg border border-white/40 bg-white/70">
             <Table>
-              <TableHeader className="bg-gradient-to-r from-futuristic-green/20 to-futuristic-blue/20">
+              <TableHeader className="bg-gradient-to-r from-blue-50/50 to-purple-50/50">
                 <TableRow className="border-b border-white/30">
                   <TableHead className="w-[200px] text-xs text-gray-800 font-semibold">Medication</TableHead>
                   {timeSlots.map((slot) => (
@@ -365,7 +365,7 @@ export default function TemplatePage() {
                         <Input
                           value={med.times[slot]}
                           onChange={(e) => handleMedicationChange(index, `times.${slot}`, e.target.value)}
-                          className="text-center text-xs p-1 h-8 bg-white/90 border-white/50 focus:border-futuristic-green focus:ring-1 focus:ring-futuristic-green transition-all duration-200"
+                          className="text-center text-xs p-1 h-8 bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
                         />
                       </TableCell>
                     ))}
@@ -380,7 +380,7 @@ export default function TemplatePage() {
                         value={med.comments}
                         onChange={(e) => handleMedicationChange(index, "comments", e.target.value)}
                         placeholder="Enter comments..."
-                        className="text-xs bg-white/90 border-white/50 focus:border-futuristic-green focus:ring-1 focus:ring-futuristic-green transition-all duration-200"
+                        className="text-xs bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
                       />
                     </TableCell>
                     <TableCell className="py-1">
@@ -403,8 +403,8 @@ export default function TemplatePage() {
             variant="outline"
             onClick={addMedicationRow}
             className="mt-4 h-9 text-sm font-semibold rounded-lg px-4 py-2
-                       bg-gradient-to-r from-futuristic-green to-futuristic-blue text-white
-                       hover:from-futuristic-blue hover:to-futuristic-green
+                       bg-gradient-to-r from-emerald-50 to-emerald-100 text-gray-800
+                       hover:from-emerald-100 hover:to-emerald-200
                        shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]"
           >
             <PlusCircle className="h-4 w-4 mr-2" /> Add Medication
@@ -425,14 +425,14 @@ export default function TemplatePage() {
             </p>
           </div>
         </CardContent>
-        <CardFooter className="flex flex-wrap gap-3 justify-end pt-4 border-t border-white/20 bg-gradient-to-l from-futuristic-purple/20 to-futuristic-pink/20 rounded-b-3xl p-6">
+        <CardFooter className="flex flex-wrap gap-3 justify-end pt-4 border-t border-white/20 bg-gradient-to-l from-blue-50/50 to-purple-50/50 rounded-b-3xl p-6">
           <Button
             onClick={handleDownloadExcel}
             variant="outline"
             size="sm"
             className="h-10 text-sm font-semibold rounded-lg px-5 py-2
-                       bg-gradient-to-r from-futuristic-yellow to-futuristic-green text-gray-900
-                       hover:from-futuristic-green hover:to-futuristic-yellow
+                       bg-gradient-to-r from-cyan-50 to-cyan-100 text-gray-800
+                       hover:from-cyan-100 hover:to-cyan-200
                        shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]"
           >
             <FileSpreadsheet className="h-4 w-4 mr-2" /> Download Excel
@@ -442,8 +442,8 @@ export default function TemplatePage() {
             variant="outline"
             size="sm"
             className="h-10 text-sm font-semibold rounded-lg px-5 py-2
-                       bg-gradient-to-r from-futuristic-blue to-futuristic-green text-white
-                       hover:from-futuristic-green hover:to-futuristic-blue
+                       bg-gradient-to-r from-blue-50 to-blue-100 text-gray-800
+                       hover:from-blue-100 hover:to-blue-200
                        shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]"
           >
             <Printer className="h-4 w-4 mr-2" /> Save & Print
@@ -452,8 +452,8 @@ export default function TemplatePage() {
             onClick={handleSubmitToDischarge}
             size="sm"
             className="h-10 text-sm font-semibold rounded-lg px-5 py-2
-                       bg-gradient-to-r from-futuristic-purple to-futuristic-pink text-white
-                       hover:from-futuristic-pink hover:to-futuristic-purple
+                       bg-gradient-to-r from-purple-50 to-purple-100 text-gray-800
+                       hover:from-purple-100 hover:to-purple-200
                        shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]"
           >
             <Send className="h-4 w-4 mr-2" /> Send to Discharge

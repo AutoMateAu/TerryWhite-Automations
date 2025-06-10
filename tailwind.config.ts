@@ -53,12 +53,6 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Custom futuristic colors
-        "futuristic-blue": "#00C6FF",
-        "futuristic-purple": "#0072FF",
-        "futuristic-pink": "#FC00FF",
-        "futuristic-green": "#00FF87",
-        "futuristic-yellow": "#FFFF00",
       },
       borderRadius: {
         lg: "var(--radius)",
