@@ -843,19 +843,19 @@ export async function submitMedicationPlanToDB(
 
     if (existingAccount) {
       customerAccountId = existingAccount.id
-      // Update existing account (e.g., link new discharge form)
-      // For simplicity, we're not updating total_owed here, assuming it's handled by payments
-      // If you need to link discharge forms to accounts, you'd need a join table or array column
-      // For now, we'll just ensure the account exists.
+      // If account exists, you might want to update its total_owed if new medications are added
+      // For now, we'll assume total_owed is managed by payments, but if you want to add to it
+      // based on new forms, you'd fetch the current total_owed and add to it here.
     } else {
       // Create new account
+      const totalOwed = formData.medications.length * 100 // Each medication costs $100
       const { data: newAccount, error: insertAccountError } = await supabase
         .from("customer_accounts")
         .insert({
           patient_id: patientId,
           patient_name: formData.name,
           mrn: formData.mrn,
-          total_owed: 0, // New accounts start with 0 owed
+          total_owed: totalOwed, // New accounts start with 0 owed
           status: "current",
           phone: formData.phone || null,
           // last_payment_date, last_payment_amount, due_date will be null initially
