@@ -12,8 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/components/ui/use-toast"
 import { Download, FileText, Calendar, Users, Clock } from "lucide-react"
-import type { CustomerAccount, PDFExportOptions } from "@/lib/types"
+import type { CustomerAccount, PDFExportOptions, BulkReportOptions } from "@/lib/types" // Import BulkReportOptions
 import { generateBulkAccountsPDF } from "@/utils/pdf-client"
+import { generateBulkPDFFilename } from "@/lib/bulk-pdf-generator" // Import filename generator
 
 interface BulkPDFExportDialogProps {
   accounts: CustomerAccount[]
@@ -27,10 +28,10 @@ export function BulkPDFExportDialog({ accounts, reportType, onClose }: BulkPDFEx
 
   // Export options state (minimal for bulk reports)
   const [options, setOptions] = useState<PDFExportOptions>({
-    includeContactInfo: false,
+    includeContactInfo: true, // Default to true for overdue report
     includePaymentHistory: false,
     includeCallHistory: false,
-    includeOutstandingBalance: false,
+    includeOutstandingBalance: true, // Default to true for overdue report
     includeAccountSummary: false,
     includeNotes: false,
     customTitle: "",
@@ -50,14 +51,15 @@ export function BulkPDFExportDialog({ accounts, reportType, onClose }: BulkPDFEx
   })
 
   // Advanced options
-  const [advancedOptions, setAdvancedOptions] = useState({
+  const [advancedOptions, setAdvancedOptions] = useState<BulkReportOptions>({
+    // Use BulkReportOptions type
     includeDetailedBreakdown: true,
     includeSummaryStatistics: true,
     includeContactList: true,
-    includeAgingAnalysis: true,
+    includeAgingAnalysis: reportType === "overdue", // Default to true for overdue
     groupByStatus: false,
-    sortBy: "amount" as "amount" | "name" | "dueDate" | "status",
-    sortDirection: "desc" as "asc" | "desc",
+    sortBy: "amount",
+    sortDirection: "desc",
   })
 
   // Additional filters for all accounts
@@ -89,19 +91,21 @@ export function BulkPDFExportDialog({ accounts, reportType, onClose }: BulkPDFEx
 
   const getReportDescription = () => {
     const filteredAccounts = getFilteredAccounts()
+    const totalOutstandingFiltered = filteredAccounts.reduce((sum, acc) => acc.totalOwed, 0)
+
     switch (reportType) {
       case "overdue":
-        return `Export ${filteredAccounts.length} overdue accounts with total outstanding of $${filteredAccounts
-          .reduce((sum, acc) => sum + acc.totalOwed, 0)
-          .toFixed(2)}`
+        return `Export ${filteredAccounts.length} overdue accounts with total outstanding of $${totalOutstandingFiltered.toFixed(
+          2,
+        )}`
       case "current":
-        return `Export ${filteredAccounts.length} current accounts with total outstanding of $${filteredAccounts
-          .reduce((sum, acc) => sum + acc.totalOwed, 0)
-          .toFixed(2)}`
+        return `Export ${filteredAccounts.length} current accounts with total outstanding of $${totalOutstandingFiltered.toFixed(
+          2,
+        )}`
       case "all":
-        return `Export ${filteredAccounts.length} accounts with total outstanding of $${filteredAccounts
-          .reduce((sum, acc) => sum + acc.totalOwed, 0)
-          .toFixed(2)}`
+        return `Export ${filteredAccounts.length} accounts with total outstanding of $${totalOutstandingFiltered.toFixed(
+          2,
+        )}`
       default:
         return `Export ${filteredAccounts.length} accounts`
     }
@@ -180,6 +184,7 @@ export function BulkPDFExportDialog({ accounts, reportType, onClose }: BulkPDFEx
           description: "Please provide both start and end dates for payment history filter.",
           variant: "destructive",
         })
+        setIsGenerating(false)
         return
       }
 
@@ -189,6 +194,7 @@ export function BulkPDFExportDialog({ accounts, reportType, onClose }: BulkPDFEx
           description: "Please provide both start and end dates for call history filter.",
           variant: "destructive",
         })
+        setIsGenerating(false)
         return
       }
 
@@ -201,6 +207,7 @@ export function BulkPDFExportDialog({ accounts, reportType, onClose }: BulkPDFEx
           description: "No accounts match the selected filters.",
           variant: "destructive",
         })
+        setIsGenerating(false)
         return
       }
 
@@ -211,8 +218,19 @@ export function BulkPDFExportDialog({ accounts, reportType, onClose }: BulkPDFEx
         })
       }
 
-      // Generate PDF
-      await generateBulkAccountsPDF(accountsToExport, exportOptions, reportType, advancedOptions)
+      // Generate PDF and get the Blob
+      const pdfBlob = await generateBulkAccountsPDF(accountsToExport, exportOptions, reportType, advancedOptions)
+
+      // Create a URL for the Blob and trigger download
+      const url = URL.createObjectURL(pdfBlob)
+      const filename = generateBulkPDFFilename(reportType, accountsToExport.length)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url) // Clean up the object URL
 
       toast({
         title: "PDF Generated Successfully",
