@@ -6,21 +6,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Database, AlertTriangle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { checkTablesExist } from "@/services/accounting-service"
+import { checkTablesExist, getCustomerAccounts } from "@/services/accounting-service" // Import getCustomerAccounts
 import { SetupGuide } from "@/components/setup-guide"
 import AccountingOverview from "@/components/accounting-overview"
 import CustomerAccountTable from "@/components/customer-account-table"
+import type { CustomerAccount } from "@/lib/types" // Import CustomerAccount type
 
 export default function AccountingPage() {
-  // Removed all dialog-related states and handlers, as they are now in app/accounts/[id]/page.tsx
   const [isUsingMockData, setIsUsingMockData] = useState(false)
   const [showSetupGuide, setShowSetupGuide] = useState(false)
-  const [isLoading, setIsLoading] = useState(true) // Keep for initial load check of mock data status
+  const [isLoading, setIsLoading] = useState(true)
+  const [customerAccounts, setCustomerAccounts] = useState<CustomerAccount[]>([]) // State to hold accounts
 
   const { toast } = useToast()
 
   useEffect(() => {
-    async function checkMockDataStatus() {
+    async function fetchData() {
       try {
         const tablesExist = await checkTablesExist()
         setIsUsingMockData(!tablesExist)
@@ -31,19 +32,22 @@ export default function AccountingPage() {
             variant: "warning",
           })
         }
+
+        const accounts = await getCustomerAccounts()
+        setCustomerAccounts(accounts)
       } catch (error) {
-        console.error("Error checking tables:", error)
+        console.error("Error fetching accounting data:", error)
         toast({
           title: "Error",
-          description: "Failed to check database status.",
+          description: "Failed to load accounting data.",
           variant: "destructive",
         })
-        setIsUsingMockData(true) // Assume mock data if check fails
+        setIsUsingMockData(true) // Assume mock data if fetch fails
       } finally {
         setIsLoading(false)
       }
     }
-    checkMockDataStatus()
+    fetchData()
   }, [toast])
 
   if (isLoading) {
@@ -59,8 +63,8 @@ export default function AccountingPage() {
 
   return (
     <>
-      <AccountingOverview />
-      <CustomerAccountTable />
+      <AccountingOverview accounts={customerAccounts} /> {/* Pass accounts to AccountingOverview */}
+      <CustomerAccountTable accounts={customerAccounts} /> {/* Pass accounts to CustomerAccountTable */}
       {isUsingMockData && (
         <div className="container mx-auto px-6 mt-6">
           <Alert variant="warning" className="mb-6">
@@ -72,8 +76,6 @@ export default function AccountingPage() {
             </AlertDescription>
           </Alert>
           <div className="flex flex-col items-end mb-4">
-            {" "}
-            {/* Adjusted for better alignment */}
             <Button onClick={() => setShowSetupGuide(true)} variant="outline">
               <Database className="mr-2 h-4 w-4" />
               Setup Database
@@ -81,7 +83,6 @@ export default function AccountingPage() {
           </div>
         </div>
       )}
-      {/* Setup Guide Dialog (only dialog remaining in this page) */}
       <Dialog open={showSetupGuide} onOpenChange={setShowSetupGuide}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>

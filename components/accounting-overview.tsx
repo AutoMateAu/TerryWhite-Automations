@@ -1,7 +1,12 @@
 "use client"
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DollarSign, Calendar } from "lucide-react"
+import { DollarSign, Calendar, FileText } from "lucide-react"
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from "recharts"
+import { Button } from "@/components/ui/button" // Import Button
+import { Dialog, DialogContent } from "@/components/ui/dialog" // Import Dialog components
+import { BulkPDFExportDialog } from "@/components/bulk-pdf-export-dialog" // Import BulkPDFExportDialog
+import type { CustomerAccount } from "@/lib/types" // Import CustomerAccount type
 
 const sampleRevenueData = [
   { name: "Mon", value: 250 },
@@ -21,7 +26,21 @@ const overduePieData = [
 
 const COLORS = ["#6366F1", "#3B82F6", "#06B6D4"]
 
-export default function AccountingOverview() {
+interface AccountingOverviewProps {
+  accounts: CustomerAccount[]
+}
+
+export default function AccountingOverview({ accounts }: AccountingOverviewProps) {
+  const [showBulkExportDialog, setShowBulkExportDialog] = useState(false)
+
+  const overdueAccounts = accounts.filter((account) => account.status === "overdue")
+  const totalOverdueAmount = overdueAccounts.reduce((sum, acc) => sum + acc.totalOwed, 0)
+
+  const currentAccounts = accounts.filter((account) => account.status === "current")
+  const totalCurrentAmount = currentAccounts.reduce((sum, acc) => sum + acc.totalOwed, 0)
+
+  const totalOutstanding = accounts.reduce((sum, acc) => (acc.status !== "paid" ? sum + acc.totalOwed : sum), 0)
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-indigo-50 py-10 px-6">
       <div className="mb-10">
@@ -35,8 +54,10 @@ export default function AccountingOverview() {
             <CardTitle className="text-sm font-medium">Total Outstanding</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">$1,450.70</div>
-            <p className="text-sm">Across 5 accounts</p>
+            <div className="text-3xl font-bold">
+              ${totalOutstanding.toLocaleString("en-AU", { minimumFractionDigits: 2 })}
+            </div>
+            <p className="text-sm">Across {accounts.filter((acc) => acc.status !== "paid").length} accounts</p>
           </CardContent>
         </Card>
 
@@ -45,8 +66,18 @@ export default function AccountingOverview() {
             <CardTitle className="text-sm font-medium">Overdue Accounts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">5</div>
-            <p className="text-sm">$1,450.70 total</p>
+            <div className="text-3xl font-bold">{overdueAccounts.length}</div>
+            <p className="text-sm">${totalOverdueAmount.toLocaleString("en-AU", { minimumFractionDigits: 2 })} total</p>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="mt-4 w-full bg-white text-red-600 hover:bg-red-50"
+              onClick={() => setShowBulkExportDialog(true)}
+              disabled={overdueAccounts.length === 0}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Generate Overdue Report
+            </Button>
           </CardContent>
         </Card>
 
@@ -55,8 +86,8 @@ export default function AccountingOverview() {
             <CardTitle className="text-sm font-medium">Current Accounts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">0</div>
-            <p className="text-sm">$0.00 total</p>
+            <div className="text-3xl font-bold">{currentAccounts.length}</div>
+            <p className="text-sm">${totalCurrentAmount.toLocaleString("en-AU", { minimumFractionDigits: 2 })} total</p>
           </CardContent>
         </Card>
       </div>
@@ -100,6 +131,17 @@ export default function AccountingOverview() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Bulk PDF Export Dialog for Overdue Accounts */}
+      <Dialog open={showBulkExportDialog} onOpenChange={setShowBulkExportDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <BulkPDFExportDialog
+            accounts={accounts} // Pass all accounts, dialog will filter by reportType
+            reportType="overdue"
+            onClose={() => setShowBulkExportDialog(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
