@@ -1,47 +1,52 @@
 import * as XLSX from "xlsx"
 import type { Medication } from "./types"
 
-export function exportMedicationsToExcel(medications: Medication[], patientName: string) {
-  if (!medications || medications.length === 0) {
-    console.warn("No medications to export.")
-    return
+export function exportMedicationsToExcel(
+  medications: Medication[],
+  patientName: string,
+  templateType: "before-admission" | "after-admission" | "new" | "hospital-specific",
+) {
+  let data: any[] = []
+  let headers: string[] = []
+
+  if (templateType === "before-admission") {
+    headers = [
+      "Medication",
+      "Dosage and Frequency",
+      "Home med or New",
+      "Currently Charted?",
+      "Comments/Actions",
+      "Dr to sign when action completed",
+    ]
+    data = medications.map((med) => ({
+      Medication: med.name,
+      "Dosage and Frequency": med.dosageFrequency,
+      "Home med or New": med.homeNewStatus,
+      "Currently Charted?": med.chartedStatus,
+      "Comments/Actions": med.commentsActions,
+      "Dr to sign when action completed": med.drSignActionCompleted,
+    }))
+  } else {
+    // Default headers for other templates
+    headers = ["Medication", "7AM", "8AM", "Noon", "2PM", "6PM", "8PM", "10PM", "Status", "Comments"]
+    data = medications.map((med) => ({
+      Medication: med.name,
+      "7AM": med.times?.["7am"],
+      "8AM": med.times?.["8am"],
+      Noon: med.times?.Noon,
+      "2PM": med.times?.["2pm"],
+      "6PM": med.times?.["6pm"],
+      "8PM": med.times?.["8pm"],
+      "10PM": med.times?.["10pm"],
+      Status: med.status,
+      Comments: med.comments,
+    }))
   }
 
-  const timeSlots = ["7am", "8am", "Noon", "2pm", "6pm", "8pm", "10pm"]
+  const worksheet = XLSX.utils.json_to_sheet(data, { header: headers })
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Medications")
 
-  // Prepare data for the worksheet
-  const data = medications.map((med) => {
-    const row: { [key: string]: string } = {
-      Medication: med.name,
-    }
-    timeSlots.forEach((slot) => {
-      row[slot.toUpperCase()] = med.times[slot as keyof Medication["times"]] || ""
-    })
-    row["Status"] = med.status
-    row["Comments"] = med.comments
-    return row
-  })
-
-  // Create worksheet and workbook
-  const ws = XLSX.utils.json_to_sheet(data)
-  const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws, "Medications List")
-
-  // Generate workbook as ArrayBuffer (browser-safe)
-  const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" })
-
-  // Create a Blob and download link
-  const blob = new Blob([wbout], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  })
-
-  const fileName = `${patientName.replace(/\s+/g, "_") || "Patient"}_Medications_List.xlsx`
-
-  const link = document.createElement("a")
-  link.href = URL.createObjectURL(blob)
-  link.download = fileName
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(link.href)
+  const fileName = `${patientName.replace(/\s/g, "_")}_Medications_${templateType}.xlsx`
+  XLSX.writeFile(workbook, fileName)
 }

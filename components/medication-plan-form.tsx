@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlusCircle, Trash2, Send, Printer, FileSpreadsheet, ArrowLeft } from "lucide-react" // Added ArrowLeft icon
+import { PlusCircle, Trash2, Send, Printer, FileSpreadsheet, ArrowLeft } from "lucide-react"
 import type { PatientFormData, Medication, MedicationWithComment } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
@@ -16,6 +16,8 @@ import { mockDischargedPatients } from "@/lib/data"
 import { MedicationSearch } from "@/components/medication-search"
 import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea"
 import { MedicationStatusCombobox } from "@/components/medication-status-combobox"
+import { HomeNewStatusCombobox } from "@/components/home-new-status-combobox" // New import
+import { ChartedStatusCombobox } from "@/components/charted-status-combobox" // New import
 import { exportMedicationsToExcel } from "@/lib/export-excel"
 
 // Define props for the MedicationPlanForm
@@ -25,13 +27,28 @@ interface MedicationPlanFormProps {
   onBack: () => void // Callback to go back to template selection
 }
 
-const createEmptyMedication = (): Medication => ({
-  id: Date.now().toString() + Math.random(),
-  name: "",
-  times: { "7am": "", "8am": "", Noon: "", "2pm": "", "6pm": "", "8pm": "", "10pm": "" },
-  status: "",
-  comments: "",
-})
+// Helper function to create an empty medication row based on template type
+const createEmptyMedication = (templateType: MedicationPlanFormProps["templateType"]): Medication => {
+  if (templateType === "before-admission") {
+    return {
+      id: Date.now().toString() + Math.random(),
+      name: "",
+      dosageFrequency: "", // New field
+      homeNewStatus: "", // New field
+      chartedStatus: "", // New field
+      commentsActions: "", // Renamed field
+      drSignActionCompleted: "", // New field
+    }
+  } else {
+    return {
+      id: Date.now().toString() + Math.random(),
+      name: "",
+      times: { "7am": "", "8am": "", Noon: "", "2pm": "", "6pm": "", "8pm": "", "10pm": "" },
+      status: "",
+      comments: "",
+    }
+  }
+}
 
 const initialFormData: PatientFormData = {
   name: "",
@@ -40,11 +57,24 @@ const initialFormData: PatientFormData = {
   allergies: "",
   dob: "",
   mrn: "",
+  // Fields specific to 'after-admission' or default
+  phone: "",
   admissionDate: "",
   dischargeDate: "",
   pharmacist: "",
   dateListPrepared: new Date().toISOString().split("T")[0],
-  medications: [createEmptyMedication()],
+  // Fields specific to 'before-admission'
+  concession: "",
+  healthFund: "",
+  reasonForAdmission: "",
+  relevantPastMedicalHistory: "",
+  communityPharmacist: "",
+  generalPractitioner: "",
+  medicationRisksComments: "",
+  sourcesOfHistory: "",
+  pharmacistSignature: "",
+  dateTimeSigned: "",
+  medications: [], // Will be initialized based on templateType in useState
 }
 
 export default function MedicationPlanForm({ templateType, hospitalName, onBack }: MedicationPlanFormProps) {
@@ -54,15 +84,17 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
       dateListPrepared: new Date().toISOString().split("T")[0],
     }
 
+    // Initialize medications based on template type
+    baseData.medications = [createEmptyMedication(templateType)]
+
     // Pre-fill logic based on templateType
     if (templateType === "after-admission") {
-      // Example: pre-fill dischargeDate for after-admission template
       return { ...baseData, dischargeDate: new Date().toISOString().split("T")[0] }
     }
     // For "before-admission", "new", or "hospital-specific" (if no specific pre-fill)
     return baseData
   })
-  const [phoneNumber, setPhoneNumber] = useState("")
+
   const { toast } = useToast()
   const router = useRouter()
 
@@ -95,7 +127,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
     const newMedications = [...formData.medications]
     if (field.startsWith("times.")) {
       const timeKey = field.split(".")[1] as keyof Medication["times"]
-      newMedications[index].times[timeKey] = value
+      ;(newMedications[index] as any).times[timeKey] = value
     } else {
       ;(newMedications[index] as any)[field] = value
     }
@@ -106,14 +138,23 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
     const newMedications = [...formData.medications]
     if (medicationWithComment) {
       newMedications[index].name = medicationWithComment.name
-      newMedications[index].comments = medicationWithComment.comment || ""
+      // For before-admission, comments go to commentsActions
+      if (templateType === "before-admission") {
+        ;(newMedications[index] as any).commentsActions = medicationWithComment.comment || ""
+      } else {
+        ;(newMedications[index] as any).comments = medicationWithComment.comment || ""
+      }
 
       if (index === formData.medications.length - 1) {
-        newMedications.push(createEmptyMedication())
+        newMedications.push(createEmptyMedication(templateType))
       }
     } else {
       newMedications[index].name = ""
-      newMedications[index].comments = ""
+      if (templateType === "before-admission") {
+        ;(newMedications[index] as any).commentsActions = ""
+      } else {
+        ;(newMedications[index] as any).comments = ""
+      }
     }
     setFormData((prev) => ({ ...prev, medications: newMedications }))
   }
@@ -121,7 +162,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
   const addMedicationRow = () => {
     setFormData((prev) => ({
       ...prev,
-      medications: [...prev.medications, createEmptyMedication()],
+      medications: [...prev.medications, createEmptyMedication(templateType)],
     }))
   }
 
@@ -135,12 +176,25 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
   }
 
   const isMedicationRowEmpty = (medication: Medication) => {
-    return (
-      !medication.name.trim() &&
-      !medication.status.trim() &&
-      !medication.comments.trim() &&
-      Object.values(medication.times).every((time) => !time.trim())
-    )
+    if (templateType === "before-admission") {
+      const med = medication as Medication // Cast for type safety
+      return (
+        !med.name?.trim() &&
+        !med.dosageFrequency?.trim() &&
+        !med.homeNewStatus?.trim() &&
+        !med.chartedStatus?.trim() &&
+        !med.commentsActions?.trim() &&
+        !med.drSignActionCompleted?.trim()
+      )
+    } else {
+      const med = medication as Medication // Cast for type safety
+      return (
+        !med.name?.trim() &&
+        !med.status?.trim() &&
+        !med.comments?.trim() &&
+        Object.values(med.times || {}).every((time) => !time?.trim())
+      )
+    }
   }
 
   const handleSaveAndPrint = () => {
@@ -191,7 +245,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
       })
       return
     }
-    exportMedicationsToExcel(medicationsToExport, formData.name || "Patient")
+    exportMedicationsToExcel(medicationsToExport, formData.name || "Patient", templateType) // Pass templateType
     toast({
       title: "Medications Exported",
       description: "The medication list has been downloaded as an Excel file.",
@@ -212,10 +266,9 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
     })
     setFormData({
       ...initialFormData,
-      medications: [createEmptyMedication()],
+      medications: [createEmptyMedication(templateType)],
       dateListPrepared: new Date().toISOString().split("T")[0],
     })
-    setPhoneNumber("")
     router.push("/discharge")
   }
 
@@ -237,154 +290,277 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
         </CardHeader>
         <CardContent className="space-y-6 p-6">
           {/* Patient Information Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 rounded-xl bg-white/70 shadow-inner border border-white/40">
-            <div className="space-y-1">
-              <Label htmlFor="name" className="text-xs font-medium text-gray-700">
-                Name
-              </Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="dob" className="text-xs font-medium text-gray-700">
-                DOB
-              </Label>
-              <Input
-                id="dob"
-                name="dob"
-                type="date"
-                value={formData.dob}
-                onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="mrn" className="text-xs font-medium text-gray-700">
-                MRN
-              </Label>
-              <Input
-                id="mrn"
-                name="mrn"
-                value={formData.mrn}
-                onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="phoneNumber" className="text-xs font-medium text-gray-700">
-                Phone
-              </Label>
-              <Input
-                id="phoneNumber"
-                name="phoneNumber"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
-                placeholder="Phone number"
-              />
-            </div>
-            <div className="space-y-1 col-span-full md:col-span-2">
-              <Label htmlFor="address" className="text-xs font-medium text-gray-700">
-                Address
-              </Label>
-              <Input
-                id="address"
-                name="address"
-                value={formData.address}
-                onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="medicare" className="text-xs font-medium text-gray-700">
-                Medicare
-              </Label>
-              <Input
-                id="medicare"
-                name="medicare"
-                value={formData.medicare}
-                onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="allergies" className="text-xs font-medium text-gray-700">
-                Allergies
-              </Label>
-              <Input
-                id="allergies"
-                name="allergies"
-                value={formData.allergies}
-                onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="admissionDate" className="text-xs font-medium text-gray-700">
-                Admission Date
-              </Label>
-              <Input
-                id="admissionDate"
-                name="admissionDate"
-                type="date"
-                value={formData.admissionDate}
-                onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="dischargeDate" className="text-xs font-medium text-gray-700">
-                Discharge Date
-              </Label>
-              <Input
-                id="dischargeDate"
-                name="dischargeDate"
-                type="date"
-                value={formData.dischargeDate}
-                onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="pharmacist" className="text-xs font-medium text-gray-700">
-                Pharmacist
-              </Label>
-              <Input
-                id="pharmacist"
-                name="pharmacist"
-                value={formData.pharmacist}
-                onChange={handleInputChange}
-                className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs font-medium text-gray-700">List Prepared</Label>
-              <div className="h-9 px-3 py-2 bg-white/90 rounded-md flex items-center text-sm text-gray-600 border border-white/50">
-                {new Date().toLocaleDateString()}
+          {templateType === "before-admission" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 rounded-xl bg-white/70 shadow-inner border border-white/40">
+              <div className="space-y-1">
+                <Label htmlFor="name" className="text-xs font-medium text-gray-700">
+                  Patient Name
+                </Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="dob" className="text-xs font-medium text-gray-700">
+                  D.O.B.
+                </Label>
+                <Input
+                  id="dob"
+                  name="dob"
+                  type="date"
+                  value={formData.dob}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="mrn" className="text-xs font-medium text-gray-700">
+                  MRN
+                </Label>
+                <Input
+                  id="mrn"
+                  name="mrn"
+                  value={formData.mrn}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="medicare" className="text-xs font-medium text-gray-700">
+                  Medicare
+                </Label>
+                <Input
+                  id="medicare"
+                  name="medicare"
+                  value={formData.medicare}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1 col-span-full md:col-span-2">
+                <Label htmlFor="address" className="text-xs font-medium text-gray-700">
+                  Address
+                </Label>
+                <Input
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="concession" className="text-xs font-medium text-gray-700">
+                  Concession
+                </Label>
+                <Input
+                  id="concession"
+                  name="concession"
+                  value={formData.concession}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="healthFund" className="text-xs font-medium text-gray-700">
+                  Health Fund
+                </Label>
+                <Input
+                  id="healthFund"
+                  name="healthFund"
+                  value={formData.healthFund}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="allergies" className="text-xs font-medium text-gray-700">
+                  Allergies
+                </Label>
+                <Input
+                  id="allergies"
+                  name="allergies"
+                  value={formData.allergies}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
               </div>
             </div>
-          </div>
+          ) : (
+            // Default Patient Information Section (for after-admission, new, hospital-specific)
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 rounded-xl bg-white/70 shadow-inner border border-white/40">
+              <div className="space-y-1">
+                <Label htmlFor="name" className="text-xs font-medium text-gray-700">
+                  Name
+                </Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="dob" className="text-xs font-medium text-gray-700">
+                  DOB
+                </Label>
+                <Input
+                  id="dob"
+                  name="dob"
+                  type="date"
+                  value={formData.dob}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="mrn" className="text-xs font-medium text-gray-700">
+                  MRN
+                </Label>
+                <Input
+                  id="mrn"
+                  name="mrn"
+                  value={formData.mrn}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="phoneNumber" className="text-xs font-medium text-gray-700">
+                  Phone
+                </Label>
+                <Input
+                  id="phoneNumber"
+                  name="phone" // Use 'phone' for the actual formData field
+                  value={formData.phone || ""}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  placeholder="Phone number"
+                />
+              </div>
+              <div className="space-y-1 col-span-full md:col-span-2">
+                <Label htmlFor="address" className="text-xs font-medium text-gray-700">
+                  Address
+                </Label>
+                <Input
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="medicare" className="text-xs font-medium text-gray-700">
+                  Medicare
+                </Label>
+                <Input
+                  id="medicare"
+                  name="medicare"
+                  value={formData.medicare}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="allergies" className="text-xs font-medium text-gray-700">
+                  Allergies
+                </Label>
+                <Input
+                  id="allergies"
+                  name="allergies"
+                  value={formData.allergies}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="admissionDate" className="text-xs font-medium text-gray-700">
+                  Admission Date
+                </Label>
+                <Input
+                  id="admissionDate"
+                  name="admissionDate"
+                  type="date"
+                  value={formData.admissionDate}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="dischargeDate" className="text-xs font-medium text-gray-700">
+                  Discharge Date
+                </Label>
+                <Input
+                  id="dischargeDate"
+                  name="dischargeDate"
+                  type="date"
+                  value={formData.dischargeDate}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="pharmacist" className="text-xs font-medium text-gray-700">
+                  Pharmacist
+                </Label>
+                <Input
+                  id="pharmacist"
+                  name="pharmacist"
+                  value={formData.pharmacist}
+                  onChange={handleInputChange}
+                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-gray-700">List Prepared</Label>
+                <div className="h-9 px-3 py-2 bg-white/90 rounded-md flex items-center text-sm text-gray-600 border border-white/50">
+                  {new Date().toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Medication Table Section */}
           <div className="overflow-x-auto rounded-xl shadow-lg border border-white/40 bg-white/70">
             <Table>
               <TableHeader className="bg-gradient-to-r from-blue-50/50 to-purple-50/50">
-                <TableRow className="border-b border-white/30">
-                  <TableHead className="w-[200px] text-xs text-gray-800 font-semibold">Medication</TableHead>
-                  {timeSlots.map((slot) => (
-                    <TableHead key={slot} className="min-w-[60px] text-center text-xs text-gray-800 font-semibold">
-                      {slot.toUpperCase()}
+                {templateType === "before-admission" ? (
+                  <TableRow className="border-b border-white/30">
+                    <TableHead className="w-[200px] text-xs text-gray-800 font-semibold">Medication</TableHead>
+                    <TableHead className="min-w-[150px] text-xs text-gray-800 font-semibold">
+                      Dosage and Frequency
                     </TableHead>
-                  ))}
-                  <TableHead className="min-w-[120px] text-xs text-gray-800 font-semibold">Status</TableHead>
-                  <TableHead className="min-w-[150px] text-xs text-gray-800 font-semibold">Comments</TableHead>
-                  <TableHead className="w-[40px]"></TableHead>
-                </TableRow>
+                    <TableHead className="min-w-[120px] text-xs text-gray-800 font-semibold">Home med or New</TableHead>
+                    <TableHead className="min-w-[120px] text-xs text-gray-800 font-semibold">
+                      Currently Charted?
+                    </TableHead>
+                    <TableHead className="min-w-[200px] text-xs text-gray-800 font-semibold">
+                      Comments/Actions
+                    </TableHead>
+                    <TableHead className="min-w-[150px] text-xs text-gray-800 font-semibold">
+                      Dr to sign when action completed
+                    </TableHead>
+                    <TableHead className="w-[40px]"></TableHead>
+                  </TableRow>
+                ) : (
+                  <TableRow className="border-b border-white/30">
+                    <TableHead className="w-[200px] text-xs text-gray-800 font-semibold">Medication</TableHead>
+                    {timeSlots.map((slot) => (
+                      <TableHead key={slot} className="min-w-[60px] text-center text-xs text-gray-800 font-semibold">
+                        {slot.toUpperCase()}
+                      </TableHead>
+                    ))}
+                    <TableHead className="min-w-[120px] text-xs text-gray-800 font-semibold">Status</TableHead>
+                    <TableHead className="min-w-[150px] text-xs text-gray-800 font-semibold">Comments</TableHead>
+                    <TableHead className="w-[40px]"></TableHead>
+                  </TableRow>
+                )}
               </TableHeader>
               <TableBody>
                 {formData.medications.map((med, index) => (
@@ -399,29 +575,70 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                         placeholder="Search medication..."
                       />
                     </TableCell>
-                    {timeSlots.map((slot) => (
-                      <TableCell key={slot} className="py-1">
-                        <Input
-                          value={med.times[slot]}
-                          onChange={(e) => handleMedicationChange(index, `times.${slot}`, e.target.value)}
-                          className="text-center text-xs p-1 h-8 bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
-                        />
-                      </TableCell>
-                    ))}
-                    <TableCell className="py-1">
-                      <MedicationStatusCombobox
-                        value={med.status}
-                        onChange={(value) => handleMedicationChange(index, "status", value)}
-                      />
-                    </TableCell>
-                    <TableCell className="py-1">
-                      <AutoResizeTextarea
-                        value={med.comments}
-                        onChange={(e) => handleMedicationChange(index, "comments", e.target.value)}
-                        placeholder="Enter comments..."
-                        className="text-xs bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
-                      />
-                    </TableCell>
+                    {templateType === "before-admission" ? (
+                      <>
+                        <TableCell className="py-1">
+                          <Input
+                            value={(med as Medication).dosageFrequency || ""}
+                            onChange={(e) => handleMedicationChange(index, "dosageFrequency", e.target.value)}
+                            className="text-xs p-1 h-8 bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                          />
+                        </TableCell>
+                        <TableCell className="py-1">
+                          <HomeNewStatusCombobox
+                            value={(med as Medication).homeNewStatus || ""}
+                            onChange={(value) => handleMedicationChange(index, "homeNewStatus", value)}
+                          />
+                        </TableCell>
+                        <TableCell className="py-1">
+                          <ChartedStatusCombobox
+                            value={(med as Medication).chartedStatus || ""}
+                            onChange={(value) => handleMedicationChange(index, "chartedStatus", value)}
+                          />
+                        </TableCell>
+                        <TableCell className="py-1">
+                          <AutoResizeTextarea
+                            value={(med as Medication).commentsActions || ""}
+                            onChange={(e) => handleMedicationChange(index, "commentsActions", e.target.value)}
+                            placeholder="Enter comments/actions..."
+                            className="text-xs bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                          />
+                        </TableCell>
+                        <TableCell className="py-1">
+                          <Input
+                            value={(med as Medication).drSignActionCompleted || ""}
+                            onChange={(e) => handleMedicationChange(index, "drSignActionCompleted", e.target.value)}
+                            className="text-xs p-1 h-8 bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                          />
+                        </TableCell>
+                      </>
+                    ) : (
+                      <>
+                        {timeSlots.map((slot) => (
+                          <TableCell key={slot} className="py-1">
+                            <Input
+                              value={(med as Medication).times?.[slot] || ""}
+                              onChange={(e) => handleMedicationChange(index, `times.${slot}`, e.target.value)}
+                              className="text-center text-xs p-1 h-8 bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                            />
+                          </TableCell>
+                        ))}
+                        <TableCell className="py-1">
+                          <MedicationStatusCombobox
+                            value={(med as Medication).status || ""}
+                            onChange={(value) => handleMedicationChange(index, "status", value)}
+                          />
+                        </TableCell>
+                        <TableCell className="py-1">
+                          <AutoResizeTextarea
+                            value={(med as Medication).comments || ""}
+                            onChange={(e) => handleMedicationChange(index, "comments", e.target.value)}
+                            placeholder="Enter comments..."
+                            className="text-xs bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                          />
+                        </TableCell>
+                      </>
+                    )}
                     <TableCell className="py-1">
                       <Button
                         variant="ghost"
@@ -449,7 +666,118 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
             <PlusCircle className="h-4 w-4 mr-2" /> Add Medication
           </Button>
 
-          {/* Footer Text Section */}
+          {/* Additional Sections for Before Admission Template */}
+          {templateType === "before-admission" && (
+            <div className="space-y-4 mt-6 p-4 rounded-xl bg-white/70 shadow-inner border border-white/40">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="reasonForAdmission" className="text-xs font-medium text-gray-700">
+                    Reason for Admission
+                  </Label>
+                  <AutoResizeTextarea
+                    id="reasonForAdmission"
+                    name="reasonForAdmission"
+                    value={formData.reasonForAdmission || ""}
+                    onChange={handleInputChange}
+                    placeholder="Enter reason for admission..."
+                    className="text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="relevantPastMedicalHistory" className="text-xs font-medium text-gray-700">
+                    Relevant Past Medical History
+                  </Label>
+                  <AutoResizeTextarea
+                    id="relevantPastMedicalHistory"
+                    name="relevantPastMedicalHistory"
+                    value={formData.relevantPastMedicalHistory || ""}
+                    onChange={handleInputChange}
+                    placeholder="Enter relevant past medical history..."
+                    className="text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="communityPharmacist" className="text-xs font-medium text-gray-700">
+                    Community Pharmacist
+                  </Label>
+                  <Input
+                    id="communityPharmacist"
+                    name="communityPharmacist"
+                    value={formData.communityPharmacist || ""}
+                    onChange={handleInputChange}
+                    className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="generalPractitioner" className="text-xs font-medium text-gray-700">
+                    General Practitioner
+                  </Label>
+                  <Input
+                    id="generalPractitioner"
+                    name="generalPractitioner"
+                    value={formData.generalPractitioner || ""}
+                    onChange={handleInputChange}
+                    className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="medicationRisksComments" className="text-xs font-medium text-gray-700">
+                  Medication Risks Identified and Pharmacist's Comments:
+                </Label>
+                <AutoResizeTextarea
+                  id="medicationRisksComments"
+                  name="medicationRisksComments"
+                  value={formData.medicationRisksComments || ""}
+                  onChange={handleInputChange}
+                  placeholder="Enter medication risks and pharmacist's comments..."
+                  className="text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="sourcesOfHistory" className="text-xs font-medium text-gray-700">
+                  Sources of History (at least two sources)
+                </Label>
+                <AutoResizeTextarea
+                  id="sourcesOfHistory"
+                  name="sourcesOfHistory"
+                  value={formData.sourcesOfHistory || ""}
+                  onChange={handleInputChange}
+                  placeholder="Enter sources of history..."
+                  className="text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/40">
+                <div className="space-y-1">
+                  <Label htmlFor="pharmacistSignature" className="text-xs font-medium text-gray-700">
+                    Pharmacist:
+                  </Label>
+                  <Input
+                    id="pharmacistSignature"
+                    name="pharmacistSignature"
+                    value={formData.pharmacistSignature || ""}
+                    onChange={handleInputChange}
+                    className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="dateTimeSigned" className="text-xs font-medium text-gray-700">
+                    Date/Time:
+                  </Label>
+                  <Input
+                    id="dateTimeSigned"
+                    name="dateTimeSigned"
+                    type="datetime-local"
+                    value={formData.dateTimeSigned || ""}
+                    onChange={handleInputChange}
+                    className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Footer Text Section (always present) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-xs text-gray-700 bg-white/70 p-4 rounded-xl shadow-inner border border-white/40">
             <p className="text-xs leading-relaxed">
               This list is your medication management plan as determined by your doctor at iMH Hirondelle Private
