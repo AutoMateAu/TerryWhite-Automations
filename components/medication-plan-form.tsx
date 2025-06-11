@@ -12,13 +12,13 @@ import { PlusCircle, Trash2, Send, Printer, FileSpreadsheet, ArrowLeft } from "l
 import type { PatientFormData, Medication, MedicationWithComment } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
-import { mockDischargedPatients } from "@/lib/data"
 import { MedicationSearch } from "@/components/medication-search"
 import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea"
 import { MedicationStatusCombobox } from "@/components/medication-status-combobox"
-import { HomeNewStatusCombobox } from "@/components/home-new-status-combobox" // New import
-import { ChartedStatusCombobox } from "@/components/charted-status-combobox" // New import
+import { HomeNewStatusCombobox } from "@/components/home-new-status-combobox"
+import { ChartedStatusCombobox } from "@/components/charted-status-combobox"
 import { exportMedicationsToExcel } from "@/lib/export-excel"
+import { submitMedicationPlanToDB } from "@/services/accounting-service" // Import the new server action
 
 // Define props for the MedicationPlanForm
 interface MedicationPlanFormProps {
@@ -33,11 +33,11 @@ const createEmptyMedication = (templateType: MedicationPlanFormProps["templateTy
     return {
       id: Date.now().toString() + Math.random(),
       name: "",
-      dosageFrequency: "", // New field
-      homeNewStatus: "", // New field
-      chartedStatus: "", // New field
-      commentsActions: "", // Renamed field
-      drSignActionCompleted: "", // New field
+      dosageFrequency: "",
+      homeNewStatus: "",
+      chartedStatus: "",
+      commentsActions: "",
+      drSignActionCompleted: "",
     }
   } else {
     return {
@@ -57,13 +57,11 @@ const initialFormData: PatientFormData = {
   allergies: "",
   dob: "",
   mrn: "",
-  // Fields specific to 'after-admission' or default
-  phone: "",
+  phone: "", // Default for general template
   admissionDate: "",
   dischargeDate: "",
   pharmacist: "",
   dateListPrepared: new Date().toISOString().split("T")[0],
-  // Fields specific to 'before-admission'
   concession: "",
   healthFund: "",
   reasonForAdmission: "",
@@ -91,14 +89,12 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
     if (templateType === "after-admission") {
       return { ...baseData, dischargeDate: new Date().toISOString().split("T")[0] }
     }
-    // For "before-admission", "new", or "hospital-specific" (if no specific pre-fill)
     return baseData
   })
 
   const { toast } = useToast()
   const router = useRouter()
 
-  // Determine the title based on templateType and hospitalName
   const getTitle = () => {
     switch (templateType) {
       case "before-admission":
@@ -138,7 +134,6 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
     const newMedications = [...formData.medications]
     if (medicationWithComment) {
       newMedications[index].name = medicationWithComment.name
-      // For before-admission, comments go to commentsActions
       if (templateType === "before-admission") {
         ;(newMedications[index] as any).commentsActions = medicationWithComment.comment || ""
       } else {
@@ -177,7 +172,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
 
   const isMedicationRowEmpty = (medication: Medication) => {
     if (templateType === "before-admission") {
-      const med = medication as Medication // Cast for type safety
+      const med = medication as Medication
       return (
         !med.name?.trim() &&
         !med.dosageFrequency?.trim() &&
@@ -187,7 +182,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
         !med.drSignActionCompleted?.trim()
       )
     } else {
-      const med = medication as Medication // Cast for type safety
+      const med = medication as Medication
       return (
         !med.name?.trim() &&
         !med.status?.trim() &&
@@ -198,41 +193,12 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
   }
 
   const handleSaveAndPrint = () => {
-    const medicationsWithData = formData.medications.filter((med) => !isMedicationRowEmpty(med))
-
-    if (medicationsWithData.length === 0) {
-      toast({
-        title: "No Medications to Save",
-        description: "Please add at least one medication before saving.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    const formDataForSaving = {
-      ...formData,
-      medications: medicationsWithData,
-    }
-
-    const newDischargedPatient: PatientFormData & { id: string; dischargeTimestamp: string } = {
-      ...formDataForSaving,
-      id: `discharge-${Date.now()}`,
-      dischargeTimestamp: new Date().toISOString(),
-    }
-
-    mockDischargedPatients.push(newDischargedPatient)
-
     toast({
-      title: "Medication Plan Saved",
-      description: `Medication plan for ${formData.name} has been saved and is ready for printing.`,
+      title: "Save & Print",
+      description:
+        "This feature is not yet implemented for direct printing. Please use 'Send to Discharge' and print from there.",
+      variant: "default",
     })
-
-    setTimeout(() => {
-      toast({
-        title: "Print Ready",
-        description: "The medication plan is ready to be printed.",
-      })
-    }, 1000)
   }
 
   const handleDownloadExcel = () => {
@@ -245,31 +211,51 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
       })
       return
     }
-    exportMedicationsToExcel(medicationsToExport, formData.name || "Patient", templateType) // Pass templateType
+    exportMedicationsToExcel(medicationsToExport, formData.name || "Patient", templateType)
     toast({
       title: "Medications Exported",
       description: "The medication list has been downloaded as an Excel file.",
     })
   }
 
-  const handleSubmitToDischarge = () => {
-    const newDischargedPatient: PatientFormData & { id: string; dischargeTimestamp: string } = {
-      ...formData,
-      id: `discharge-${Date.now()}`,
-      dischargeTimestamp: new Date().toISOString(),
-    }
-    mockDischargedPatients.push(newDischargedPatient)
+  const handleSubmitToDischarge = async () => {
+    const medicationsWithData = formData.medications.filter((med) => !isMedicationRowEmpty(med))
 
-    toast({
-      title: "Template Sent to Discharge",
-      description: `Medication plan for ${formData.name} has been prepared.`,
-    })
-    setFormData({
-      ...initialFormData,
-      medications: [createEmptyMedication(templateType)],
-      dateListPrepared: new Date().toISOString().split("T")[0],
-    })
-    router.push("/discharge")
+    if (!formData.name || !formData.mrn || !formData.dob || medicationsWithData.length === 0) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in patient name, MRN, DOB, and add at least one medication.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const dataToSubmit = {
+      ...formData,
+      medications: medicationsWithData,
+    }
+
+    const result = await submitMedicationPlanToDB(dataToSubmit, templateType, hospitalName)
+
+    if (result.success) {
+      toast({
+        title: "Template Sent to Discharge",
+        description: `Medication plan for ${formData.name} has been prepared and saved.`,
+      })
+      // Reset form after successful submission
+      setFormData({
+        ...initialFormData,
+        medications: [createEmptyMedication(templateType)],
+        dateListPrepared: new Date().toISOString().split("T")[0],
+      })
+      router.push("/discharge") // Redirect to discharge page
+    } else {
+      toast({
+        title: "Submission Failed",
+        description: result.error || "An error occurred while saving the medication plan.",
+        variant: "destructive",
+      })
+    }
   }
 
   const timeSlots: (keyof Medication["times"])[] = ["7am", "8am", "Noon", "2pm", "6pm", "8pm", "10pm"]
@@ -336,7 +322,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                 <Input
                   id="medicare"
                   name="medicare"
-                  value={formData.medicare}
+                  value={formData.medicare || ""}
                   onChange={handleInputChange}
                   className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
                 />
@@ -360,7 +346,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                 <Input
                   id="concession"
                   name="concession"
-                  value={formData.concession}
+                  value={formData.concession || ""}
                   onChange={handleInputChange}
                   className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
                 />
@@ -372,7 +358,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                 <Input
                   id="healthFund"
                   name="healthFund"
-                  value={formData.healthFund}
+                  value={formData.healthFund || ""}
                   onChange={handleInputChange}
                   className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
                 />
@@ -391,7 +377,6 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
               </div>
             </div>
           ) : (
-            // Default Patient Information Section (for after-admission, new, hospital-specific)
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 rounded-xl bg-white/70 shadow-inner border border-white/40">
               <div className="space-y-1">
                 <Label htmlFor="name" className="text-xs font-medium text-gray-700">
@@ -431,12 +416,12 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="phoneNumber" className="text-xs font-medium text-gray-700">
+                <Label htmlFor="phone" className="text-xs font-medium text-gray-700">
                   Phone
                 </Label>
                 <Input
-                  id="phoneNumber"
-                  name="phone" // Use 'phone' for the actual formData field
+                  id="phone"
+                  name="phone"
                   value={formData.phone || ""}
                   onChange={handleInputChange}
                   className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
@@ -487,7 +472,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   id="admissionDate"
                   name="admissionDate"
                   type="date"
-                  value={formData.admissionDate}
+                  value={formData.admissionDate || ""}
                   onChange={handleInputChange}
                   className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
                 />
@@ -500,7 +485,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   id="dischargeDate"
                   name="dischargeDate"
                   type="date"
-                  value={formData.dischargeDate}
+                  value={formData.dischargeDate || ""}
                   onChange={handleInputChange}
                   className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
                 />
@@ -512,7 +497,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                 <Input
                   id="pharmacist"
                   name="pharmacist"
-                  value={formData.pharmacist}
+                  value={formData.pharmacist || ""}
                   onChange={handleInputChange}
                   className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
                 />

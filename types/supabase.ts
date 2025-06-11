@@ -15,6 +15,8 @@ export interface Database {
           status: "current" | "overdue" | "paid"
           created_at: string
           updated_at: string
+          phone: string | null // Added phone
+          due_date: string | null // Added due_date
         }
         Insert: {
           id?: string
@@ -27,6 +29,8 @@ export interface Database {
           status?: "current" | "overdue" | "paid"
           created_at?: string
           updated_at?: string
+          phone?: string | null
+          due_date?: string | null
         }
         Update: {
           id?: string
@@ -39,12 +43,14 @@ export interface Database {
           status?: "current" | "overdue" | "paid"
           created_at?: string
           updated_at?: string
+          phone?: string | null
+          due_date?: string | null
         }
       }
       payment_records: {
         Row: {
           id: string
-          customer_id: string
+          customer_id: string // Renamed from account_id to customer_id for consistency
           amount: number
           payment_date: string
           payment_method: "cash" | "card" | "insurance" | "other"
@@ -93,6 +99,7 @@ export interface Database {
       discharged_patient_forms: {
         Row: {
           id: string
+          patient_id: string | null // Added foreign key to patients table
           name: string
           address: string | null
           medicare: string | null
@@ -106,9 +113,24 @@ export interface Database {
           discharge_timestamp: string
           created_at: string
           updated_at: string
+          template_type: string | null // Added template_type
+          hospital_name: string | null // Added hospital_name
+          medications: Json | null // Added medications as JSONB
+          phone: string | null // Added phone
+          concession: string | null // Added before-admission fields
+          health_fund: string | null
+          reason_for_admission: string | null
+          relevant_past_medical_history: string | null
+          community_pharmacist: string | null
+          general_practitioner: string | null
+          medication_risks_comments: string | null
+          sources_of_history: string | null
+          pharmacist_signature: string | null
+          date_time_signed: string | null
         }
         Insert: {
           id?: string
+          patient_id?: string | null
           name: string
           address?: string | null
           medicare?: string | null
@@ -122,9 +144,24 @@ export interface Database {
           discharge_timestamp: string
           created_at?: string
           updated_at?: string
+          template_type?: string | null
+          hospital_name?: string | null
+          medications?: Json | null
+          phone?: string | null
+          concession?: string | null
+          health_fund?: string | null
+          reason_for_admission?: string | null
+          relevant_past_medical_history?: string | null
+          community_pharmacist?: string | null
+          general_practitioner?: string | null
+          medication_risks_comments?: string | null
+          sources_of_history?: string | null
+          pharmacist_signature?: string | null
+          date_time_signed?: string | null
         }
         Update: {
           id?: string
+          patient_id?: string | null
           name?: string
           address?: string | null
           medicare?: string | null
@@ -138,8 +175,72 @@ export interface Database {
           discharge_timestamp?: string
           created_at?: string
           updated_at?: string
+          template_type?: string | null
+          hospital_name?: string | null
+          medications?: Json | null
+          phone?: string | null
+          concession?: string | null
+          health_fund?: string | null
+          reason_for_admission?: string | null
+          relevant_past_medical_history?: string | null
+          community_pharmacist?: string | null
+          general_practitioner?: string | null
+          medication_risks_comments?: string | null
+          sources_of_history?: string | null
+          pharmacist_signature?: string | null
+          date_time_signed?: string | null
         }
       }
+      patients: {
+        Row: {
+          id: string
+          name: string
+          dob: string
+          address: string | null
+          medicare: string | null
+          allergies: string | null
+          mrn: string
+          phone: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          dob: string
+          address?: string | null
+          medicare?: string | null
+          allergies?: string | null
+          mrn: string
+          phone?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          dob?: string
+          address?: string | null
+          medicare?: string | null
+          allergies?: string | null
+          mrn?: string
+          phone?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }

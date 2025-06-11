@@ -2,7 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server"
 import { revalidatePath } from "next/cache"
-import type { CustomerAccount, CallLog, Payment } from "@/lib/types"
+import type { CustomerAccount, CallLog, Payment, PatientFormData, DischargedPatient, PatientProfile } from "@/lib/types"
 import { mockCustomerAccounts, mockPatients } from "@/lib/data" // Import mock data as fallback
 
 // Function to check if required tables exist
@@ -18,9 +18,23 @@ export async function checkTablesExist() {
     }
 
     // Check if payments table exists
-    const { error: paymentsError } = await supabase.from("payments").select("id").limit(1)
+    const { error: paymentsError } = await supabase.from("payment_records").select("id").limit(1) // Corrected table name
 
     if (paymentsError && paymentsError.message.includes("does not exist")) {
+      return false
+    }
+
+    // Check if patients table exists
+    const { error: patientsError } = await supabase.from("patients").select("id").limit(1)
+
+    if (patientsError && patientsError.message.includes("does not exist")) {
+      return false
+    }
+
+    // Check if discharged_patient_forms table exists
+    const { error: dischargedFormsError } = await supabase.from("discharged_patient_forms").select("id").limit(1)
+
+    if (dischargedFormsError && dischargedFormsError.message.includes("does not exist")) {
       return false
     }
 
@@ -78,32 +92,34 @@ function calculateAccountStatus(account: any): "current" | "overdue" | "paid" {
   return "current"
 }
 
-// Helper function to get phone number from patient data
-function getPatientPhone(patientId: string, mrn: string): string {
-  // First try to find by patient ID
-  const patientById = mockPatients.find((p) => p.id === patientId)
-  if (patientById?.phone) {
-    return patientById.phone
-  }
+// Helper function to get phone number from patient data (now from DB or mock)
+async function getPatientPhoneFromDB(patientId: string, mrn: string): Promise<string | null> {
+  const supabase = createClient()
+  try {
+    const { data, error } = await supabase
+      .from("patients")
+      .select("phone")
+      .or(`id.eq.${patientId},mrn.eq.${mrn}`)
+      .single()
 
-  // Then try to find by MRN
-  const patientByMrn = mockPatients.find((p) => p.mrn === mrn)
-  if (patientByMrn?.phone) {
-    return patientByMrn.phone
+    if (error && error.code !== "PGRST116") {
+      // PGRST116 means no rows found
+      console.error("Error fetching patient phone:", error)
+      return null
+    }
+    return data?.phone || null
+  } catch (error) {
+    console.error("Error in getPatientPhoneFromDB:", error)
+    return null
   }
-
-  // Return placeholder if not found
-  return "Contact pharmacy for phone number"
 }
 
 // Get all customer accounts
 export async function getCustomerAccounts() {
-  // First check if tables exist
   const tablesExist = await checkTablesExist()
 
-  // If tables don't exist, return mock data with calculated status and phone numbers
   if (!tablesExist) {
-    console.log("Tables don't exist, returning mock data")
+    console.log("Tables don't exist, returning mock data for customer accounts")
     return mockCustomerAccounts.map((account) => {
       const baseDate = account.lastPaymentDate ? new Date(account.lastPaymentDate) : new Date(account.createdAt)
       const calculatedDueDate = new Date(baseDate)
@@ -111,7 +127,7 @@ export async function getCustomerAccounts() {
 
       return {
         ...account,
-        phone: account.phone || getPatientPhone(account.patientId, account.mrn),
+        phone: account.phone || "Contact pharmacy for phone number", // Mock phone
         status:
           account.totalOwed === 0
             ? ("paid" as const)
@@ -133,42 +149,43 @@ export async function getCustomerAccounts() {
 
     if (error) {
       console.error("Error fetching customer accounts:", error)
-      // Fall back to mock data if there's an error
-      return mockCustomerAccounts
+      return [] // Return empty array on DB error
     }
 
-    return data.map((account) => {
-      const calculatedStatus = calculateAccountStatus(account)
+    const accountsWithPhone = await Promise.all(
+      data.map(async (account) => {
+        const calculatedStatus = calculateAccountStatus(account)
+        const phone = account.phone || (await getPatientPhoneFromDB(account.patient_id, account.mrn))
 
-      return {
-        id: account.id,
-        patientId: account.patient_id,
-        patientName: account.patient_name,
-        mrn: account.mrn,
-        phone: account.phone || getPatientPhone(account.patient_id, account.mrn),
-        totalOwed: account.total_owed,
-        lastPaymentDate: account.last_payment_date,
-        lastPaymentAmount: account.last_payment_amount,
-        status: calculatedStatus, // Use calculated status instead of stored status
-        dischargeFormIds: [], // We'll fetch these separately if needed
-        createdAt: account.created_at,
-        dueDate: account.due_date, // Include the actual due_date from DB
-      }
-    }) as CustomerAccount[]
+        return {
+          id: account.id,
+          patientId: account.patient_id,
+          patientName: account.patient_name,
+          mrn: account.mrn,
+          phone: phone,
+          totalOwed: account.total_owed,
+          lastPaymentDate: account.last_payment_date,
+          lastPaymentAmount: account.last_payment_amount,
+          status: calculatedStatus,
+          dischargeFormIds: [], // Will fetch separately if needed
+          createdAt: account.created_at,
+          dueDate: account.due_date,
+        }
+      }),
+    )
+    return accountsWithPhone as CustomerAccount[]
   } catch (error) {
     console.error("Error in getCustomerAccounts:", error)
-    // Fall back to mock data
-    return mockCustomerAccounts
+    return []
   }
 }
 
 // Get a single customer account by ID
 export async function getCustomerAccountById(id: string) {
-  // Check if tables exist
   const tablesExist = await checkTablesExist()
 
-  // If tables don't exist, return mock data
   if (!tablesExist) {
+    console.log("Tables don't exist, returning mock data for single customer account")
     const account = mockCustomerAccounts.find((acc) => acc.id === id)
     if (account) {
       const baseDate = account.lastPaymentDate ? new Date(account.lastPaymentDate) : new Date(account.createdAt)
@@ -176,7 +193,7 @@ export async function getCustomerAccountById(id: string) {
       calculatedDueDate.setDate(calculatedDueDate.getDate() + 30)
       return {
         ...account,
-        phone: account.phone || getPatientPhone(account.patientId, account.mrn),
+        phone: account.phone || "Contact pharmacy for phone number",
         dueDate: calculatedDueDate.toISOString().split("T")[0],
       }
     }
@@ -190,39 +207,234 @@ export async function getCustomerAccountById(id: string) {
 
     if (error) {
       console.error("Error fetching customer account:", error)
-      // Try to find in mock data
-      const account = mockCustomerAccounts.find((acc) => acc.id === id)
-      return account || null
+      return null
     }
+
+    const phone = data.phone || (await getPatientPhoneFromDB(data.patient_id, data.mrn))
 
     return {
       id: data.id,
       patientId: data.patient_id,
       patientName: data.patient_name,
       mrn: data.mrn,
-      phone: data.phone || getPatientPhone(data.patient_id, data.mrn),
+      phone: phone,
       totalOwed: data.total_owed,
       lastPaymentDate: data.last_payment_date,
       lastPaymentAmount: data.last_payment_amount,
       status: data.status,
-      dischargeFormIds: [], // We'll fetch these separately if needed
+      dischargeFormIds: [], // Will fetch separately if needed
       createdAt: data.created_at,
-      dueDate: data.due_date, // Include the actual due_date from DB
+      dueDate: data.due_date,
     } as CustomerAccount
   } catch (error) {
     console.error("Error in getCustomerAccountById:", error)
-    // Try to find in mock data
-    const account = mockCustomerAccounts.find((acc) => acc.id === id)
-    return account || null
+    return null
   }
 }
 
-// Get discharge forms for a customer
+// Get all patients
+export async function getPatients(): Promise<PatientProfile[]> {
+  const tablesExist = await checkTablesExist()
+  if (!tablesExist) {
+    console.warn("Required tables do not exist. Returning mock patient data.")
+    return mockPatients
+  }
+
+  const supabase = createClient()
+  try {
+    const { data, error } = await supabase.from("patients").select("*").order("name", { ascending: true })
+    if (error) {
+      console.error("Error fetching patients:", error)
+      return []
+    }
+    return data.map((p) => ({
+      id: p.id,
+      name: p.name,
+      dob: p.dob,
+      address: p.address || "",
+      medicare: p.medicare || "",
+      allergies: p.allergies || "",
+      mrn: p.mrn,
+      phone: p.phone || null,
+    })) as PatientProfile[]
+  } catch (error) {
+    console.error("Error in getPatients:", error)
+    return []
+  }
+}
+
+// Add or update a patient
+export async function upsertPatient(
+  patientData: Omit<PatientProfile, "id" | "createdAt" | "updatedAt"> & { id?: string },
+): Promise<{ success: boolean; patient?: PatientProfile; error?: string }> {
+  const tablesExist = await checkTablesExist()
+  if (!tablesExist) {
+    return { success: false, error: "Database tables not set up yet." }
+  }
+
+  const supabase = createClient()
+
+  try {
+    let data
+    let error
+
+    if (patientData.id) {
+      // Attempt to update existing patient
+      const { data: updateData, error: updateError } = await supabase
+        .from("patients")
+        .update({
+          name: patientData.name,
+          dob: patientData.dob,
+          address: patientData.address,
+          medicare: patientData.medicare,
+          allergies: patientData.allergies,
+          mrn: patientData.mrn,
+          phone: patientData.phone,
+        })
+        .eq("id", patientData.id)
+        .select()
+        .single()
+      data = updateData
+      error = updateError
+    } else {
+      // Check if patient with MRN already exists
+      const { data: existingPatient, error: existingError } = await supabase
+        .from("patients")
+        .select("id")
+        .eq("mrn", patientData.mrn)
+        .single()
+
+      if (existingError && existingError.code !== "PGRST116") {
+        // PGRST116 means no rows found
+        console.error("Error checking for existing patient:", existingError)
+        return { success: false, error: existingError.message }
+      }
+
+      if (existingPatient) {
+        // Patient with this MRN already exists, update it
+        const { data: updateData, error: updateError } = await supabase
+          .from("patients")
+          .update({
+            name: patientData.name,
+            dob: patientData.dob,
+            address: patientData.address,
+            medicare: patientData.medicare,
+            allergies: patientData.allergies,
+            phone: patientData.phone,
+          })
+          .eq("id", existingPatient.id)
+          .select()
+          .single()
+        data = updateData
+        error = updateError
+      } else {
+        // Insert new patient
+        const { data: insertData, error: insertError } = await supabase
+          .from("patients")
+          .insert({
+            name: patientData.name,
+            dob: patientData.dob,
+            address: patientData.address,
+            medicare: patientData.medicare,
+            allergies: patientData.allergies,
+            mrn: patientData.mrn,
+            phone: patientData.phone,
+          })
+          .select()
+          .single()
+        data = insertData
+        error = insertError
+      }
+    }
+
+    if (error) {
+      console.error("Error upserting patient:", error)
+      return { success: false, error: error.message }
+    }
+
+    revalidatePath("/patients")
+    revalidatePath("/accounting") // Patient info might affect accounting view
+
+    return {
+      success: true,
+      patient: {
+        id: data.id,
+        name: data.name,
+        dob: data.dob,
+        address: data.address || "",
+        medicare: data.medicare || "",
+        allergies: data.allergies || "",
+        mrn: data.mrn,
+        phone: data.phone || null,
+      },
+    }
+  } catch (e: any) {
+    console.error("Unexpected error in upsertPatient:", e)
+    return { success: false, error: e.message || "An unexpected error occurred." }
+  }
+}
+
+// Get all discharged forms
+export async function getDischargedForms(): Promise<DischargedPatient[]> {
+  const tablesExist = await checkTablesExist()
+  if (!tablesExist) {
+    console.warn("Required tables do not exist. Returning mock discharged patient data.")
+    return [] // Return empty array as mockDischargedPatients is now empty
+  }
+
+  const supabase = createClient()
+  try {
+    const { data, error } = await supabase
+      .from("discharged_patient_forms")
+      .select("*")
+      .order("discharge_timestamp", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching discharged forms:", error)
+      return []
+    }
+
+    return data.map((form) => ({
+      id: form.id,
+      patientId: form.patient_id || "", // Ensure patientId is not null
+      name: form.name,
+      address: form.address,
+      medicare: form.medicare,
+      allergies: form.allergies,
+      dob: form.dob,
+      mrn: form.mrn,
+      phone: form.phone,
+      admissionDate: form.admission_date,
+      dischargeDate: form.discharge_date,
+      pharmacist: form.pharmacist,
+      dateListPrepared: form.date_list_prepared,
+      concession: form.concession,
+      healthFund: form.health_fund,
+      reasonForAdmission: form.reason_for_admission,
+      relevantPastMedicalHistory: form.relevant_past_medical_history,
+      communityPharmacist: form.community_pharmacist,
+      generalPractitioner: form.general_practitioner,
+      medicationRisksComments: form.medication_risks_comments,
+      sourcesOfHistory: form.sources_of_history,
+      pharmacistSignature: form.pharmacist_signature,
+      dateTimeSigned: form.date_time_signed,
+      dischargeTimestamp: form.discharge_timestamp,
+      templateType: form.template_type || "new", // Default to 'new' if not set
+      hospitalName: form.hospital_name,
+      medications: form.medications, // JSONB column
+      createdAt: form.created_at,
+      updatedAt: form.updated_at,
+    })) as DischargedPatient[]
+  } catch (error) {
+    console.error("Error in getDischargedForms:", error)
+    return []
+  }
+}
+
+// Get discharge forms for a customer (already exists, but ensure it uses DB)
 export async function getDischargeFormsForCustomer(customerId: string) {
-  // Check if tables exist
   const tablesExist = await checkTablesExist()
 
-  // If tables don't exist, return empty array
   if (!tablesExist) {
     return []
   }
@@ -258,9 +470,9 @@ export async function getPaymentHistory(accountId: string): Promise<Payment[]> {
 
   try {
     const { data, error } = await supabase
-      .from("payments")
+      .from("payment_records") // Corrected table name
       .select("*")
-      .eq("account_id", accountId)
+      .eq("customer_id", accountId) // Use customer_id as per schema
       .order("payment_date", { ascending: false })
 
     if (error) {
@@ -270,10 +482,10 @@ export async function getPaymentHistory(accountId: string): Promise<Payment[]> {
 
     return (data || []).map((payment) => ({
       id: payment.id,
-      accountId: payment.account_id,
+      accountId: payment.customer_id, // Map to accountId
       amount: payment.amount,
       paymentDate: payment.payment_date,
-      method: payment.method || "Unknown",
+      method: payment.payment_method || "Unknown",
       notes: payment.notes || "",
     }))
   } catch (error) {
@@ -317,10 +529,8 @@ export async function getCallHistory(accountId: string): Promise<CallLog[]> {
 
 // Add a new call log
 export async function addCallLog(customerId: string, comments: string, createdBy = "Pharmacy Staff") {
-  // Check if tables exist
   const tablesExist = await checkTablesExist()
 
-  // If tables don't exist, simulate success but show a warning
   if (!tablesExist) {
     console.log("Tables don't exist, simulating call log creation")
     return {
@@ -343,7 +553,7 @@ export async function addCallLog(customerId: string, comments: string, createdBy
     const { data: callLogData, error: callLogError } = await supabase
       .from("call_logs")
       .insert({
-        customer_id: customerId,
+        account_id: customerId, // Use account_id as per schema
         call_date: new Date().toISOString(),
         comments: comments,
         created_by: createdBy,
@@ -355,7 +565,6 @@ export async function addCallLog(customerId: string, comments: string, createdBy
       return { success: false, error: callLogError.message }
     }
 
-    // Revalidate the accounting page to show updated data
     revalidatePath("/accounting")
 
     return { success: true, callLog: callLogData[0] }
@@ -372,10 +581,8 @@ export async function recordPayment(
   paymentMethod: "cash" | "card" | "insurance" | "other",
   notes?: string,
 ) {
-  // Check if tables exist
   const tablesExist = await checkTablesExist()
 
-  // If tables don't exist, simulate success but show a warning
   if (!tablesExist) {
     console.log("Tables don't exist, simulating payment recording")
     return {
@@ -432,10 +639,9 @@ export async function recordPayment(
     if (newBalance === 0) {
       newStatus = "paid"
     } else {
-      // If a payment is made, the account becomes current, and the due date is reset to 30 days from now
       const newDueDate = new Date()
       newDueDate.setDate(newDueDate.getDate() + 30)
-      accountData.due_date = newDueDate.toISOString().split("T")[0] // Update due_date for status calculation
+      accountData.due_date = newDueDate.toISOString().split("T")[0]
       newStatus = calculateAccountStatus(accountData)
     }
 
@@ -447,7 +653,7 @@ export async function recordPayment(
         last_payment_date: new Date().toISOString().split("T")[0],
         last_payment_amount: amount,
         status: newStatus,
-        due_date: accountData.due_date, // Update the due_date in DB
+        due_date: accountData.due_date,
       })
       .eq("id", customerId)
 
@@ -456,7 +662,6 @@ export async function recordPayment(
       return { success: false, error: updateError.message }
     }
 
-    // 6. Revalidate the accounting page to show updated data
     revalidatePath("/accounting")
 
     return { success: true, payment: paymentData[0] }
@@ -476,7 +681,6 @@ export async function updateAccountDueDate(accountId: string, newDueDate: string
   const supabase = createClient()
 
   try {
-    // First, get the current account details to calculate the new status
     const { data: accountData, error: fetchError } = await supabase
       .from("customer_accounts")
       .select("total_owed, created_at, last_payment_date")
@@ -488,10 +692,9 @@ export async function updateAccountDueDate(accountId: string, newDueDate: string
       return { success: false, error: fetchError.message }
     }
 
-    // Temporarily create an object to pass to calculateAccountStatus
     const tempAccount = {
       ...accountData,
-      due_date: newDueDate, // Use the new due date for status calculation
+      due_date: newDueDate,
     }
     const newStatus = calculateAccountStatus(tempAccount)
 
@@ -499,7 +702,7 @@ export async function updateAccountDueDate(accountId: string, newDueDate: string
       .from("customer_accounts")
       .update({
         due_date: newDueDate,
-        status: newStatus, // Update status based on new due date
+        status: newStatus,
       })
       .eq("id", accountId)
 
@@ -513,5 +716,167 @@ export async function updateAccountDueDate(accountId: string, newDueDate: string
   } catch (error) {
     console.error("Error in updateAccountDueDate:", error)
     return { success: false, error: "An unexpected error occurred." }
+  }
+}
+
+// NEW SERVER ACTION: Submit Medication Plan to DB (Patient, Discharge Form, Account)
+export async function submitMedicationPlanToDB(
+  formData: PatientFormData,
+  templateType: "before-admission" | "after-admission" | "new" | "hospital-specific",
+  hospitalName?: string,
+) {
+  const tablesExist = await checkTablesExist()
+  if (!tablesExist) {
+    return { success: false, error: "Database tables not set up yet. Please run the setup scripts." }
+  }
+
+  const supabase = createClient()
+
+  try {
+    // 1. Upsert Patient
+    let patientId: string
+    const { data: existingPatient, error: existingPatientError } = await supabase
+      .from("patients")
+      .select("id")
+      .eq("mrn", formData.mrn)
+      .single()
+
+    if (existingPatientError && existingPatientError.code !== "PGRST116") {
+      // PGRST116 means no rows found
+      console.error("Error checking for existing patient:", existingPatientError)
+      return { success: false, error: existingPatientError.message }
+    }
+
+    if (existingPatient) {
+      patientId = existingPatient.id
+      // Update existing patient details
+      const { error: updatePatientError } = await supabase
+        .from("patients")
+        .update({
+          name: formData.name,
+          dob: formData.dob,
+          address: formData.address,
+          medicare: formData.medicare,
+          allergies: formData.allergies,
+          phone: formData.phone || null,
+        })
+        .eq("id", patientId)
+      if (updatePatientError) {
+        console.error("Error updating patient:", updatePatientError)
+        return { success: false, error: updatePatientError.message }
+      }
+    } else {
+      // Insert new patient
+      const { data: newPatient, error: insertPatientError } = await supabase
+        .from("patients")
+        .insert({
+          name: formData.name,
+          dob: formData.dob,
+          address: formData.address,
+          medicare: formData.medicare,
+          allergies: formData.allergies,
+          mrn: formData.mrn,
+          phone: formData.phone || null,
+        })
+        .select("id")
+        .single()
+      if (insertPatientError) {
+        console.error("Error inserting new patient:", insertPatientError)
+        return { success: false, error: insertPatientError.message }
+      }
+      patientId = newPatient.id
+    }
+
+    // 2. Insert Discharged Form
+    const { data: dischargedFormData, error: dischargedFormError } = await supabase
+      .from("discharged_patient_forms")
+      .insert({
+        patient_id: patientId,
+        name: formData.name,
+        address: formData.address,
+        medicare: formData.medicare,
+        allergies: formData.allergies,
+        dob: formData.dob,
+        mrn: formData.mrn,
+        phone: formData.phone || null,
+        admission_date: formData.admissionDate || null,
+        discharge_date: formData.dischargeDate || null,
+        pharmacist: formData.pharmacist || null,
+        date_list_prepared: formData.dateListPrepared,
+        discharge_timestamp: new Date().toISOString(), // Current timestamp
+        template_type: templateType,
+        hospital_name: hospitalName || null,
+        medications: formData.medications as any, // Cast to any for JSONB
+        concession: formData.concession || null,
+        health_fund: formData.healthFund || null,
+        reason_for_admission: formData.reasonForAdmission || null,
+        relevant_past_medical_history: formData.relevantPastMedicalHistory || null,
+        community_pharmacist: formData.communityPharmacist || null,
+        general_practitioner: formData.generalPractitioner || null,
+        medication_risks_comments: formData.medicationRisksComments || null,
+        sources_of_history: formData.sourcesOfHistory || null,
+        pharmacist_signature: formData.pharmacistSignature || null,
+        date_time_signed: formData.dateTimeSigned || null,
+      })
+      .select("id")
+      .single()
+
+    if (dischargedFormError) {
+      console.error("Error inserting discharged form:", dischargedFormError)
+      return { success: false, error: dischargedFormError.message }
+    }
+    const dischargeFormId = dischargedFormData.id
+
+    // 3. Upsert Customer Account
+    let customerAccountId: string
+    const { data: existingAccount, error: existingAccountError } = await supabase
+      .from("customer_accounts")
+      .select("id")
+      .eq("patient_id", patientId)
+      .single()
+
+    if (existingAccountError && existingAccountError.code !== "PGRST116") {
+      // PGRST116 means no rows found
+      console.error("Error checking for existing account:", existingAccountError)
+      return { success: false, error: existingAccountError.message }
+    }
+
+    if (existingAccount) {
+      customerAccountId = existingAccount.id
+      // Update existing account (e.g., link new discharge form)
+      // For simplicity, we're not updating total_owed here, assuming it's handled by payments
+      // If you need to link discharge forms to accounts, you'd need a join table or array column
+      // For now, we'll just ensure the account exists.
+    } else {
+      // Create new account
+      const { data: newAccount, error: insertAccountError } = await supabase
+        .from("customer_accounts")
+        .insert({
+          patient_id: patientId,
+          patient_name: formData.name,
+          mrn: formData.mrn,
+          total_owed: 0, // New accounts start with 0 owed
+          status: "current",
+          phone: formData.phone || null,
+          // last_payment_date, last_payment_amount, due_date will be null initially
+        })
+        .select("id")
+        .single()
+      if (insertAccountError) {
+        console.error("Error inserting new customer account:", insertAccountError)
+        return { success: false, error: insertAccountError.message }
+      }
+      customerAccountId = newAccount.id
+    }
+
+    // Revalidate paths to show updated data
+    revalidatePath("/discharge")
+    revalidatePath("/accounting")
+    revalidatePath("/patients")
+
+    return { success: true, dischargeFormId, customerAccountId, patientId }
+  } catch (e: any) {
+    console.error("Unexpected error in submitMedicationPlanToDB:", e)
+    return { success: false, error: e.message || "An unexpected error occurred." }
   }
 }

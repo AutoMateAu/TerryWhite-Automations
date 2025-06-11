@@ -6,8 +6,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { User, CalendarDays, MapPin, FileIcon as FileMedical, Pill, Phone } from "lucide-react"
 import type { PatientProfile } from "@/lib/types"
-import { mockPatients } from "@/lib/data"
-import { Button } from "@/components/ui/button" // Added import
+import { getPatients, upsertPatient } from "@/services/accounting-service" // Import server actions
+import { Button } from "@/components/ui/button"
 import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 import { AddPatientForm } from "@/components/add-patient-form"
 import { useToast } from "@/components/ui/use-toast"
@@ -16,27 +16,35 @@ export default function PatientsPage() {
   const [patients, setPatients] = useState<PatientProfile[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
   useEffect(() => {
-    // In a real app, fetch this data
-    setPatients(mockPatients.sort((a, b) => a.name.localeCompare(b.name)))
+    const fetchPatientsData = async () => {
+      setLoading(true)
+      const fetchedPatients = await getPatients()
+      setPatients(fetchedPatients)
+      setLoading(false)
+    }
+    fetchPatientsData()
   }, [])
 
-  const handleAddNewPatient = (newPatientData: Omit<PatientProfile, "id">) => {
-    const newPatient: PatientProfile = {
-      ...newPatientData,
-      id: `patient-${Date.now()}`,
+  const handleAddNewPatient = async (newPatientData: Omit<PatientProfile, "id">) => {
+    const result = await upsertPatient(newPatientData)
+    if (result.success && result.patient) {
+      setPatients((prev) => [...prev, result.patient!].sort((a, b) => a.name.localeCompare(b.name)))
+      toast({
+        title: "Patient Added",
+        description: `${result.patient.name} has been successfully added to the system.`,
+      })
+      setIsDialogOpen(false)
+    } else {
+      toast({
+        title: "Failed to Add Patient",
+        description: result.error || "An unknown error occurred.",
+        variant: "destructive",
+      })
     }
-    // Simulate adding to the backend
-    mockPatients.push(newPatient)
-    // Update UI state
-    setPatients((prev) => [...prev, newPatient].sort((a, b) => a.name.localeCompare(b.name)))
-    toast({
-      title: "Patient Added",
-      description: `${newPatient.name} has been successfully added to the system.`,
-    })
-    setIsDialogOpen(false) // Close the dialog
   }
 
   const filteredPatients = patients
@@ -44,9 +52,17 @@ export default function PatientsPage() {
       (patient) =>
         patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.mrn.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        patient.phone.toLowerCase().includes(searchTerm.toLowerCase()),
+        (patient.phone && patient.phone.toLowerCase().includes(searchTerm.toLowerCase())),
     )
     .sort((a, b) => a.name.localeCompare(b.name))
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8 text-center">
+        <p>Loading patients...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto py-8">
@@ -123,18 +139,11 @@ export default function PatientsPage() {
                     </span>
                   </div>
 
-                  <h4 className="font-semibold mt-4 pt-3 border-t">Current Medications:</h4>
-                  {patient.currentMedications.length > 0 ? (
-                    <ul className="list-disc list-inside space-y-1 text-sm">
-                      {patient.currentMedications.map((med, index) => (
-                        <li key={index}>
-                          {med.name} - {med.dosage} ({med.frequency})
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No current medications listed.</p>
-                  )}
+                  {/* Current Medications are now part of discharge forms, not patient profile directly */}
+                  <h4 className="font-semibold mt-4 pt-3 border-t">Associated Medication Plans:</h4>
+                  <p className="text-sm text-muted-foreground">
+                    View full medication plans in the Discharge Summaries section.
+                  </p>
                 </CardContent>
               </Card>
             </AccordionContent>
