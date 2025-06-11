@@ -24,7 +24,7 @@ export function SendPaymentLinkDialog({ isOpen, onClose, account }: SendPaymentL
   const [phoneNumber, setPhoneNumber] = useState(account.phone || "")
   const [message, setMessage] = useState(
     `Hi ${account.patientName},\n\nYour outstanding balance is $${account.totalOwed.toFixed(2)}. ` +
-      `Please use this secure link to make a payment: https://demo.paybyweb.nab.com.au/SecureBillPayment/securebill/nab/payTemplate.vm?&bill_name=\n\n` +
+      `Please use this secure link to make a payment: https://demo.paybyweb.nab.com.au/SecureBillPayment/securebill/nab/payTemplate.vm?&bill_name=${encodeURIComponent(account.patientName)}\n\n` +
       `Your discharge summary is attached here: [PDF_LINK_PLACEHOLDER]\n\n` +
       `Thank you,\nYour Pharmacy`,
   )
