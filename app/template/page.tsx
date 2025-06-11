@@ -41,9 +41,9 @@ export default function TemplateSelectionPage() {
   }
 
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-purple-50 animate-gradient-shift bg-[length:200%_200%]">
+    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-blue-50 animate-gradient-shift bg-[length:200%_200%]">
       <Card className="max-w-6xl mx-auto rounded-3xl shadow-2xl backdrop-blur-lg bg-white/80 border border-white/30 animate-fade-in-up">
-        <CardHeader className="pb-4 border-b border-white/20 bg-gradient-to-r from-blue-50/50 to-purple-50/50 rounded-t-3xl">
+        <CardHeader className="pb-4 border-b border-white/20 bg-gradient-to-r from-gray-100/50 to-blue-100/50 rounded-t-3xl">
           <CardTitle className="text-3xl font-extrabold text-gray-900 drop-shadow-sm">
             Select a Medication Plan Template
           </CardTitle>
@@ -54,8 +54,8 @@ export default function TemplateSelectionPage() {
             <Button
               onClick={() => handleSelectTemplate("before-admission")}
               className="h-auto py-6 text-lg font-semibold rounded-xl
-                         bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800
-                         hover:from-blue-200 hover:to-blue-300
+                         bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700
+                         hover:from-blue-100 hover:to-blue-200
                          shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]
                          flex flex-col items-center justify-center space-y-2"
             >
@@ -65,8 +65,8 @@ export default function TemplateSelectionPage() {
             <Button
               onClick={() => handleSelectTemplate("after-admission")}
               className="h-auto py-6 text-lg font-semibold rounded-xl
-                         bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800
-                         hover:from-purple-200 hover:to-purple-300
+                         bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700
+                         hover:from-indigo-100 hover:to-indigo-200
                          shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]
                          flex flex-col items-center justify-center space-y-2"
             >
@@ -84,8 +84,8 @@ export default function TemplateSelectionPage() {
                   key={hospital.id}
                   onClick={() => handleSelectTemplate("hospital-specific", hospital.name)}
                   className="h-auto py-4 text-base font-medium rounded-lg
-                             bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-800
-                             hover:from-emerald-100 hover:to-emerald-200
+                             bg-gradient-to-r from-green-50 to-green-100 text-green-700
+                             hover:from-green-100 hover:to-green-200
                              shadow-sm hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-[1.01]
                              flex items-center justify-center space-x-2"
                 >
@@ -102,8 +102,8 @@ export default function TemplateSelectionPage() {
             <Button
               onClick={() => handleSelectTemplate("new")}
               className="w-full h-auto py-6 text-lg font-semibold rounded-xl
-                         bg-gradient-to-r from-cyan-50 to-cyan-100 text-cyan-800
-                         hover:from-cyan-100 hover:to-cyan-200
+                         bg-gradient-to-r from-slate-50 to-slate-100 text-slate-700
+                         hover:from-slate-100 hover:to-slate-200
                          shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]
                          flex flex-col items-center justify-center space-y-2"
             >
