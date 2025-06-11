@@ -541,15 +541,10 @@ export class BulkPDFGenerator {
   }
 }
 
-export function generatePDFFilename(type: "single" | "multiple", patientName?: string, suffix = "multiple"): string {
+export function generateBulkPDFFilename(reportType: "overdue" | "all" | "current", accountCount: number): string {
   const date = new Date().toISOString().split("T")[0]
-
-  if (type === "single" && patientName) {
-    const sanitizedName = patientName.replace(/[^a-z0-9]/gi, "-").toLowerCase()
-    return `account-report-${sanitizedName}-${date}.pdf`
-  } else {
-    return `accounts-report-${suffix || "multiple"}-${date}.pdf`
-  }
+  const typeSuffix = reportType.charAt(0).toUpperCase() + reportType.slice(1)
+  return `${typeSuffix}-Accounts-Report-${accountCount}-accounts-${date}.pdf`
 }
 
 export function processAccountsInBatches<T>(accounts: T[], batchSize = 50, processor: (batch: T[]) => void): void {
