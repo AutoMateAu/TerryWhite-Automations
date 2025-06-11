@@ -13,6 +13,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { Download, FileText, Settings, Calendar, Users, AlertTriangle } from "lucide-react"
 import type { CustomerAccount, PDFExportOptions } from "@/lib/types"
 import { generateAccountPDF } from "@/utils/pdf-client"
+import { generatePDFFilename } from "@/lib/pdf-generator" // Import the filename generator
 
 interface PDFExportDialogProps {
   accounts: CustomerAccount[]
@@ -90,6 +91,7 @@ export function PDFExportDialog({ accounts, selectedAccount, onClose }: PDFExpor
           description: "Please provide both start and end dates for payment history filter.",
           variant: "destructive",
         })
+        setIsGenerating(false) // Ensure loading state is reset
         return
       }
 
@@ -99,11 +101,15 @@ export function PDFExportDialog({ accounts, selectedAccount, onClose }: PDFExpor
           description: "Please provide both start and end dates for call history filter.",
           variant: "destructive",
         })
+        setIsGenerating(false) // Ensure loading state is reset
         return
       }
 
       // Filter accounts for multiple export
       let accountsToExport = accounts
+      let filenamePatientName: string | undefined
+      let filenameSuffix: string | undefined
+
       if (exportType === "multiple") {
         accountsToExport = accounts.filter((account) => {
           // Status filter
@@ -134,6 +140,7 @@ export function PDFExportDialog({ accounts, selectedAccount, onClose }: PDFExpor
             description: "No accounts match the selected filters.",
             variant: "destructive",
           })
+          setIsGenerating(false) // Ensure loading state is reset
           return
         }
 
@@ -143,6 +150,7 @@ export function PDFExportDialog({ accounts, selectedAccount, onClose }: PDFExpor
             description: `You're about to export ${accountsToExport.length} accounts. This may take a while.`,
           })
         }
+        filenameSuffix = accountFilters.statusFilter === "all" ? "multiple" : accountFilters.statusFilter
       } else {
         // Single account export
         const account = accounts.find((acc) => acc.id === selectedAccountId)
@@ -152,13 +160,26 @@ export function PDFExportDialog({ accounts, selectedAccount, onClose }: PDFExpor
             description: "Please select a valid account to export.",
             variant: "destructive",
           })
+          setIsGenerating(false) // Ensure loading state is reset
           return
         }
         accountsToExport = [account]
+        filenamePatientName = account.patientName
       }
 
       // Generate PDF
-      await generateAccountPDF(accountsToExport, exportOptions, exportType)
+      const pdfBlob = await generateAccountPDF(accountsToExport, exportOptions, exportType)
+
+      // Initiate download
+      const filename = generatePDFFilename(exportType, filenamePatientName, filenameSuffix)
+      const url = URL.createObjectURL(pdfBlob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
 
       toast({
         title: "PDF Generated Successfully",

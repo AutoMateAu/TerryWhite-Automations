@@ -507,7 +507,7 @@ export async function getCallHistory(accountId: string): Promise<CallLog[]> {
     const { data, error } = await supabase
       .from("call_logs")
       .select("*")
-      .eq("account_id", accountId)
+      .eq("customer_id", accountId)
       .order("call_date", { ascending: false })
 
     if (error) {
