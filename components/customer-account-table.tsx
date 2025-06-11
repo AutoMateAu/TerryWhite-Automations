@@ -21,7 +21,7 @@ import {
   CalendarDays,
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { formatAustralianPhoneNumber } from "@/utils/phone-formatter" // Corrected import
+import { formatAustralianPhoneNumber } from "@/utils/phone-formatter"
 import { RecordPaymentForm } from "@/components/record-payment-form"
 import { PaymentHistory } from "@/components/payment-history"
 import { AddCallLogForm } from "@/components/add-call-log-form"
@@ -35,7 +35,7 @@ import { SendPaymentLinkDialog } from "@/components/send-payment-link-dialog"
 import type { CustomerAccount, PDFExportOptions } from "@/lib/types"
 
 interface CustomerAccountTableProps {
-  accounts: CustomerAccount[] // Now correctly receives accounts as a prop
+  accounts: CustomerAccount[]
 }
 
 export default function CustomerAccountTable({ accounts }: CustomerAccountTableProps) {
@@ -63,7 +63,7 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
       const matchesSearch =
         account.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         account.mrn.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (account.phone && formatAustralianPhoneNumber(account.phone).includes(searchTerm)) // Corrected function call
+        (account.phone && formatAustralianPhoneNumber(account.phone).includes(searchTerm))
 
       const matchesStatus = filterStatus === "all" || account.status === filterStatus
 
@@ -260,8 +260,7 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
                 <TableRow key={account.id}>
                   <TableCell className="font-medium">{account.patientName}</TableCell>
                   <TableCell>{account.mrn}</TableCell>
-                  <TableCell>{account.phone ? formatAustralianPhoneNumber(account.phone) : "N/A"}</TableCell>{" "}
-                  {/* Corrected function call */}
+                  <TableCell>{account.phone ? formatAustralianPhoneNumber(account.phone) : "N/A"}</TableCell>
                   <TableCell className="text-right">
                     ${account.totalOwed.toLocaleString("en-AU", { minimumFractionDigits: 2 })}
                   </TableCell>
