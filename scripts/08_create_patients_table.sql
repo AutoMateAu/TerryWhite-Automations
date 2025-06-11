@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS patients (
     medicare VARCHAR(255),
     allergies TEXT,
     mrn VARCHAR(255) UNIQUE NOT NULL,
-    phone VARCHAR(20),
+    phone VARCHAR(20) NULL, -- Explicitly set to NULL
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -21,6 +21,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop existing trigger if it exists to avoid errors on re-creation
 DROP TRIGGER IF EXISTS set_patients_updated_at ON patients;
 CREATE TRIGGER set_patients_updated_at
 BEFORE UPDATE ON patients
