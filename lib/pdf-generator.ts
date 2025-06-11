@@ -621,6 +621,11 @@ export class PDFGenerator {
   save(filename: string): void {
     this.doc.save(filename)
   }
+
+  // NEW: Expose the jspdf output method
+  output(type: "blob"): Blob {
+    return this.doc.output(type)
+  }
 }
 
 export function generatePDFFilename(type: "single" | "multiple", patientName?: string, suffix = "multiple"): string {
