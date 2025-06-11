@@ -347,7 +347,13 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
             <DialogDescription>Record details of your conversation.</DialogDescription>
           </DialogHeader>
           {selectedAccount && (
-            <AddCallLogForm accountId={selectedAccount.id} onClose={() => setIsAddCallLogDialogOpen(false)} />
+            <AddCallLogForm
+              account={selectedAccount}
+              onCancel={() => setIsAddCallLogDialogOpen(false)}
+              onSuccess={() => {
+                /* handle success if needed, e.g., re-fetch accounts */
+              }}
+            />
           )}
         </DialogContent>
       </Dialog>
