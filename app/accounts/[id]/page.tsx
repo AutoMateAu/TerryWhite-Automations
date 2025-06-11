@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-import { FileText, DollarSign, History, PhoneCall, Edit, Download, Check, X, CalendarIcon } from "lucide-react"
+import { FileText, DollarSign, History, PhoneCall, Edit, Download, Share2, Check, X, CalendarIcon } from "lucide-react" // Added Share2 icon
 import type { CustomerAccount, DischargedPatient } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
 import { RecordPaymentForm } from "@/components/record-payment-form"
@@ -21,6 +21,7 @@ import {
 import { createClient } from "@/utils/supabase/client"
 import { PDFExportDialog } from "@/components/pdf-export-dialog"
 import { EditDueDateDialog } from "@/components/edit-due-date-dialog"
+import { SendPaymentLinkDialog } from "@/components/send-payment-link-dialog" // Import the new dialog
 import { format } from "date-fns"
 import { Calendar as CalendarUI } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -44,6 +45,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
   const [isAddCallDialogOpen, setIsAddCallDialogOpen] = useState(false)
   const [isPDFExportDialogOpen, setIsPDFExportDialogOpen] = useState(false)
   const [isEditDueDateDialogOpen, setIsEditDueDateDialogOpen] = useState(false)
+  const [isSendPaymentLinkDialogOpen, setIsSendPaymentLinkDialogOpen] = useState(false) // New state for payment link dialog
 
   const [editingDueDateId, setEditingDueDateId] = useState<string | null>(null)
   const [tempDueDate, setTempDueDate] = useState<Date | undefined>(undefined)
@@ -111,6 +113,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
         if (formData) {
           const form: DischargedPatient = {
             id: formData.id,
+            patientId: formData.patient_id || "",
             name: formData.name,
             address: formData.address || "",
             medicare: formData.medicare || "",
@@ -122,32 +125,23 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
             dischargeDate: formData.discharge_date || "",
             pharmacist: formData.pharmacist || "",
             dateListPrepared: formData.date_list_prepared || "",
-            pageInfo: "",
-            medications: [],
+            pageInfo: "", // This field is not in DB, keep for compatibility if needed elsewhere
+            medications: formData.medications || [], // Use JSONB data
             dischargeTimestamp: formData.discharge_timestamp,
-          }
-
-          const { data: medicationsData, error: medsError } = await supabase
-            .from("discharged_form_medications")
-            .select("*")
-            .eq("form_id", formData.id)
-
-          if (medicationsData) {
-            form.medications = medicationsData.map((med) => ({
-              id: med.id,
-              name: med.medication_name,
-              times: {
-                "7am": med.time_7am || "",
-                "8am": med.time_8am || "",
-                Noon: med.time_noon || "",
-                "2pm": med.time_2pm || "",
-                "6pm": med.time_6pm || "",
-                "8pm": med.time_8pm || "",
-                "10pm": med.time_10pm || "",
-              },
-              status: med.status || "",
-              comments: med.comments || "",
-            }))
+            templateType: formData.template_type || "new",
+            hospitalName: formData.hospital_name || null,
+            createdAt: formData.created_at,
+            updatedAt: formData.updated_at,
+            concession: formData.concession || null,
+            healthFund: formData.health_fund || null,
+            reasonForAdmission: formData.reason_for_admission || null,
+            relevantPastMedicalHistory: formData.relevant_past_medical_history || null,
+            communityPharmacist: formData.community_pharmacist || null,
+            generalPractitioner: formData.general_practitioner || null,
+            medicationRisksComments: formData.medication_risks_comments || null,
+            sourcesOfHistory: formData.sources_of_history || null,
+            pharmacistSignature: formData.pharmacist_signature || null,
+            dateTimeSigned: formData.date_time_signed || null,
           }
           setDischargeForm(form)
         } else {
@@ -455,6 +449,12 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
             <Download className="h-4 w-4 mr-2" />
             Export PDF
           </Button>
+          <Button onClick={() => setIsSendPaymentLinkDialogOpen(true)} disabled={!account.phone}>
+            {" "}
+            {/* New button */}
+            <Share2 className="h-4 w-4 mr-2" />
+            Send Payment Link
+          </Button>
         </CardContent>
       </Card>
 
@@ -491,29 +491,89 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                   {dischargeForm.medications.length === 0 ? (
                     <p className="text-muted-foreground">No medications listed.</p>
                   ) : (
-                    dischargeForm.medications.map((med, index) => (
-                      <div key={med.id || index} className="mb-3 p-3 border rounded-md text-sm">
-                        <p>
-                          <strong>{med.name || "Unnamed Medication"}</strong>
-                        </p>
-                        <p>
-                          Status: <Badge variant="outline">{med.status || "N/A"}</Badge>
-                        </p>
-                        <p>Comments: {med.comments || "None"}</p>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-1 mt-2">
-                          {Object.entries(med.times).map(
-                            ([time, dose]) =>
-                              dose && (
-                                <p key={time} className="text-xs">
-                                  <strong>{time.toUpperCase()}:</strong> {dose}
-                                </p>
-                              ),
+                    dischargeForm.medications.map(
+                      (
+                        med: any,
+                        index: number, // Cast med to any for flexible access
+                      ) => (
+                        <div key={med.id || index} className="mb-3 p-3 border rounded-md text-sm">
+                          <p>
+                            <strong>{med.name || "Unnamed Medication"}</strong>
+                          </p>
+                          {/* Conditional rendering based on template type */}
+                          {dischargeForm.templateType === "before-admission" ? (
+                            <>
+                              <p>Dosage & Frequency: {med.dosageFrequency || "N/A"}</p>
+                              <p>
+                                Home med or New: <Badge variant="outline">{med.homeNewStatus || "N/A"}</Badge>
+                              </p>
+                              <p>
+                                Currently Charted?: <Badge variant="outline">{med.chartedStatus || "N/A"}</Badge>
+                              </p>
+                              <p>Comments/Actions: {med.commentsActions || "None"}</p>
+                              <p>Dr to sign when action completed: {med.drSignActionCompleted || "N/A"}</p>
+                            </>
+                          ) : (
+                            <>
+                              <p>
+                                Status: <Badge variant="outline">{med.status || "N/A"}</Badge>
+                              </p>
+                              <p>Comments: {med.comments || "None"}</p>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-1 mt-2">
+                                {Object.entries(med.times || {}).map(
+                                  ([time, dose]) =>
+                                    dose && (
+                                      <p key={time} className="text-xs">
+                                        <strong>{time.toUpperCase()}:</strong> {dose}
+                                      </p>
+                                    ),
+                                )}
+                              </div>
+                            </>
                           )}
                         </div>
-                      </div>
-                    ))
+                      ),
+                    )
                   )}
                 </div>
+
+                {dischargeForm.templateType === "before-admission" && (
+                  <div className="space-y-2 text-sm">
+                    <p>
+                      <strong>Concession:</strong> {dischargeForm.concession || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Health Fund:</strong> {dischargeForm.healthFund || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Reason for Admission:</strong> {dischargeForm.reasonForAdmission || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Relevant Past Medical History:</strong>{" "}
+                      {dischargeForm.relevantPastMedicalHistory || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Community Pharmacist:</strong> {dischargeForm.communityPharmacist || "N/A"}
+                    </p>
+                    <p>
+                      <strong>General Practitioner:</strong> {dischargeForm.generalPractitioner || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Medication Risks Identified & Pharmacist's Comments:</strong>{" "}
+                      {dischargeForm.medicationRisksComments || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Sources of History:</strong> {dischargeForm.sourcesOfHistory || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Pharmacist Signature:</strong> {dischargeForm.pharmacistSignature || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Date/Time Signed:</strong>{" "}
+                      {dischargeForm.dateTimeSigned ? new Date(dischargeForm.dateTimeSigned).toLocaleString() : "N/A"}
+                    </p>
+                  </div>
+                )}
 
                 <div className="pt-3 border-t text-xs text-muted-foreground">
                   <p>Pharmacist: {dischargeForm.pharmacist || "N/A"}</p>
@@ -580,6 +640,14 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
           )}
         </DialogContent>
       </Dialog>
+
+      {account && (
+        <SendPaymentLinkDialog
+          isOpen={isSendPaymentLinkDialogOpen}
+          onClose={() => setIsSendPaymentLinkDialogOpen(false)}
+          account={account}
+        />
+      )}
     </div>
   )
 }

@@ -1,18 +1,26 @@
 "use client"
 
 import type { CustomerAccount, PDFExportOptions, BulkReportOptions } from "@/lib/types"
-import { PDFGenerator, generatePDFFilename, type PatientAccountData } from "@/lib/pdf-generator"
-import { BulkPDFGenerator, generateBulkPDFFilename } from "@/lib/bulk-pdf-generator"
+import { PDFGenerator, type PatientAccountData } from "@/lib/pdf-generator"
+import { BulkPDFGenerator } from "@/lib/bulk-pdf-generator"
 import { getPaymentHistory, getCallHistory } from "@/services/accounting-service"
 
+/**
+ * Generates a PDF report for customer accounts and returns it as a Blob.
+ * This function is designed to be called from the client side.
+ * @param accounts The customer accounts to include in the PDF.
+ * @param options PDF export options.
+ * @param type The type of export ("single" or "multiple").
+ * @param bulkOptions Optional bulk report options.
+ * @returns A Promise that resolves to a Blob containing the generated PDF.
+ */
 export async function generateAccountPDF(
   accounts: CustomerAccount[],
   options: PDFExportOptions,
   type: "single" | "multiple",
   bulkOptions?: any,
-): Promise<void> {
+): Promise<Blob> {
   try {
-    // Prepare account data
     const accountsData: PatientAccountData[] = []
 
     for (const account of accounts) {
@@ -49,49 +57,44 @@ export async function generateAccountPDF(
       })
     }
 
-    // Generate PDF
+    let pdfBlob: Blob
+
     if (bulkOptions) {
-      // Use bulk generator for "all" mode
       const bulkGenerator = new BulkPDFGenerator()
       bulkGenerator.generateBulkReport(accountsData, options, bulkOptions, "all")
-      const filename = generateBulkPDFFilename("all", accountsData.length)
-      bulkGenerator.save(filename)
+      pdfBlob = bulkGenerator.output("blob")
     } else {
-      // Use regular generator for single/multiple
       const pdfGenerator = new PDFGenerator()
 
       if (type === "single" && accountsData.length === 1) {
         pdfGenerator.generateSingleAccountPDF(accountsData[0], options)
-        const filename = generatePDFFilename("single", accountsData[0].account.patientName)
-        pdfGenerator.save(filename)
       } else {
         pdfGenerator.generateMultipleAccountsPDF(accountsData, options)
-        const filename = generatePDFFilename("multiple", undefined, `${accountsData.length}-accounts`)
-        pdfGenerator.save(filename)
       }
+      pdfBlob = pdfGenerator.output("blob")
     }
+
+    return pdfBlob
   } catch (error) {
     console.error("Error generating PDF:", error)
     throw new Error("Failed to generate PDF. Please try again.")
   }
 }
 
-// New function for bulk reports (overdue, all, current)
+// New function for bulk reports (overdue, all, current) - this will also return a Blob
 export async function generateBulkAccountsPDF(
   accounts: CustomerAccount[],
   options: PDFExportOptions,
   reportType: "overdue" | "all" | "current",
   bulkOptions: BulkReportOptions,
-): Promise<void> {
+): Promise<Blob> {
   try {
-    // Prepare account data with progress tracking for large datasets
     const accountsData: PatientAccountData[] = []
-    const batchSize = 20 // Process in batches to avoid blocking UI
+    const batchSize = 20
 
     for (let i = 0; i < accounts.length; i += batchSize) {
       const batch = accounts.slice(i, i + batchSize)
 
-      // Process batch
       for (const account of batch) {
         let paymentHistory = []
         let callHistory = []
@@ -110,7 +113,6 @@ export async function generateBulkAccountsPDF(
           callHistory = []
         }
 
-        // Apply date filters if specified
         let filteredPayments = paymentHistory
         let filteredCalls = callHistory
 
@@ -148,18 +150,15 @@ export async function generateBulkAccountsPDF(
         })
       }
 
-      // Allow UI to update between batches
       if (i + batchSize < accounts.length) {
         await new Promise((resolve) => setTimeout(resolve, 10))
       }
     }
 
-    // Generate PDF using bulk generator
     const bulkGenerator = new BulkPDFGenerator()
     bulkGenerator.generateBulkReport(accountsData, options, bulkOptions, reportType)
 
-    const filename = generateBulkPDFFilename(reportType, accountsData.length)
-    bulkGenerator.save(filename)
+    return bulkGenerator.output("blob")
   } catch (error) {
     console.error("Error generating bulk PDF:", error)
     throw new Error("Failed to generate bulk PDF report. Please try again.")
@@ -178,7 +177,6 @@ export function estimateProcessingTime(accountCount: number, options: PDFExportO
 // Function to check if browser supports PDF generation
 export function checkPDFSupport(): boolean {
   try {
-    // Check if required APIs are available
     return (
       typeof window !== "undefined" &&
       typeof Blob !== "undefined" &&
