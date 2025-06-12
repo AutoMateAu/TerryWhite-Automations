@@ -31,7 +31,7 @@ import { EditDueDateDialog } from "@/components/edit-due-date-dialog"
 import { generatePDFFilename } from "@/lib/pdf-generator"
 import { generateAccountPDF } from "@/utils/pdf-client"
 import { useRouter } from "next/navigation"
-import { SendPaymentLinkDialog } from "@/components/send-payment-link-dialog"
+// Removed SendPaymentLinkDialog import as it's no longer directly used for this action
 import type { CustomerAccount, PDFExportOptions } from "@/lib/types"
 
 interface CustomerAccountTableProps {
@@ -51,7 +51,7 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
   const [isCallHistoryDialogOpen, setIsCallHistoryDialogOpen] = useState(false)
   const [isPDFExportDialogOpen, setIsPDFExportDialogOpen] = useState(false)
   const [isEditDueDateDialogOpen, setIsEditDueDateDialogOpen] = useState(false)
-  const [isSendPaymentLinkDialogOpen, setIsSendPaymentLinkDialogOpen] = useState(false)
+  // Removed isSendPaymentLinkDialogOpen state as it's no longer needed
 
   const [selectedAccount, setSelectedAccount] = useState<CustomerAccount | null>(null)
 
@@ -127,9 +127,14 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
     setIsEditDueDateDialogOpen(true)
   }
 
+  // Modified to directly open the link
   const handleOpenSendPaymentLink = (account: CustomerAccount) => {
-    setSelectedAccount(account)
-    setIsSendPaymentLinkDialogOpen(true)
+    const paymentLink = `https://demo.paybyweb.nab.com.au/SecureBillPayment/securebill/nab/payTemplate.vm?&bill_name=${encodeURIComponent(account.patientName)}`
+    window.open(paymentLink, "_blank") // Open in a new tab
+    toast({
+      title: "Opening Demo Payment Link",
+      description: "The example payment link has been opened in a new tab.",
+    })
   }
 
   const handleDownloadSinglePDF = async (account: CustomerAccount) => {
@@ -302,6 +307,7 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
                         <DropdownMenuItem onClick={() => router.push(`/accounts/${account.id}`)}>
                           View Details
                         </DropdownMenuItem>
+                        {/* Directly call the function to open the link */}
                         <DropdownMenuItem onClick={() => handleOpenSendPaymentLink(account)} disabled={!account.phone}>
                           <Phone className="mr-2 h-4 w-4" /> Send Payment Link (SMS)
                         </DropdownMenuItem>
@@ -395,7 +401,8 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
         </DialogContent>
       </Dialog>
 
-      {/* Send Payment Link Dialog */}
+      {/* Removed Send Payment Link Dialog as it's no longer needed for direct navigation */}
+      {/*
       <Dialog open={isSendPaymentLinkDialogOpen} onOpenChange={setIsSendPaymentLinkDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           {selectedAccount && (
@@ -403,6 +410,7 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
           )}
         </DialogContent>
       </Dialog>
+      */}
     </div>
   )
 }
