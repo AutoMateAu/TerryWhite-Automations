@@ -6,21 +6,22 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button"
 import { Printer, Share2, FileText, UserCircle, CalendarClock } from "lucide-react"
 import type { DischargedPatient } from "@/lib/types"
-import { mockDischargedPatients } from "@/lib/data" // Using mock data
+import { getDischargedForms } from "@/services/accounting-service" // Import the new server action
 import { Badge } from "@/components/ui/badge"
 
 export default function DischargePage() {
   const [dischargedForms, setDischargedForms] = useState<DischargedPatient[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // In a real app, this data might be fetched or come from a global state
-    // For now, we use the mockDischargedPatients array which is updated by TemplatePage
-    setDischargedForms(
-      [...mockDischargedPatients].sort(
-        (a, b) => new Date(b.dischargeTimestamp).getTime() - new Date(a.dischargeTimestamp).getTime(),
-      ),
-    )
-  }, []) // Re-fetch or update when component mounts or mock data changes (if it were reactive)
+    const fetchForms = async () => {
+      setLoading(true)
+      const forms = await getDischargedForms()
+      setDischargedForms(forms)
+      setLoading(false)
+    }
+    fetchForms()
+  }, [])
 
   const handlePrint = (patientName: string) => {
     alert(`Printing form for ${patientName}... (Not implemented)`)
@@ -29,6 +30,14 @@ export default function DischargePage() {
 
   const handleSendToHospital = (patientName: string) => {
     alert(`Sending form for ${patientName} to hospital... (Not implemented)`)
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8 text-center">
+        <p>Loading discharge summaries...</p>
+      </div>
+    )
   }
 
   return (
@@ -55,6 +64,16 @@ export default function DischargePage() {
                     <UserCircle className="h-5 w-5 text-primary" />
                     <span className="font-medium">{form.name}</span>
                     <span className="text-sm text-muted-foreground">(MRN: {form.mrn})</span>
+                    {form.templateType && (
+                      <Badge variant="secondary" className="ml-2">
+                        {form.templateType.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                      </Badge>
+                    )}
+                    {form.hospitalName && (
+                      <Badge variant="outline" className="ml-1">
+                        {form.hospitalName}
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <CalendarClock className="h-4 w-4" />
@@ -67,32 +86,53 @@ export default function DischargePage() {
                   <CardHeader>
                     <CardTitle>Medication Plan for {form.name}</CardTitle>
                     <CardDescription>
-                      DOB: {new Date(form.dob).toLocaleDateString()} | Allergies: {form.allergies || "N/A"}
+                      DOB: {form.dob ? new Date(form.dob).toLocaleDateString() : "N/A"} | Allergies:{" "}
+                      {form.allergies || "N/A"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <h4 className="font-semibold mb-2">Medications:</h4>
-                    {form.medications.map((med, index) => (
-                      <div key={med.id} className="mb-3 p-2 border rounded-md text-sm">
-                        <p>
-                          <strong>{med.name || "Unnamed Medication"}</strong>
-                        </p>
-                        <p>
-                          Status: <Badge variant="outline">{med.status || "N/A"}</Badge>
-                        </p>
-                        <p>Comments: {med.comments || "None"}</p>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-1 mt-1">
-                          {Object.entries(med.times).map(
-                            ([time, dose]) =>
-                              dose && (
-                                <p key={time} className="text-xs">
-                                  <strong>{time.toUpperCase()}:</strong> {dose}
-                                </p>
-                              ),
+                    {form.medications && form.medications.length > 0 ? (
+                      form.medications.map((med: any, index: number) => (
+                        <div key={med.id || index} className="mb-3 p-2 border rounded-md text-sm">
+                          <p>
+                            <strong>{med.name || "Unnamed Medication"}</strong>
+                          </p>
+                          {form.templateType === "before-admission" ? (
+                            <>
+                              <p>Dosage/Frequency: {med.dosageFrequency || "N/A"}</p>
+                              <p>
+                                Home/New: <Badge variant="outline">{med.homeNewStatus || "N/A"}</Badge>
+                              </p>
+                              <p>
+                                Charted: <Badge variant="outline">{med.chartedStatus || "N/A"}</Badge>
+                              </p>
+                              <p>Comments/Actions: {med.commentsActions || "None"}</p>
+                              <p>Dr Sign: {med.drSignActionCompleted || "N/A"}</p>
+                            </>
+                          ) : (
+                            <>
+                              <p>
+                                Status: <Badge variant="outline">{med.status || "N/A"}</Badge>
+                              </p>
+                              <p>Comments: {med.comments || "None"}</p>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-1 mt-1">
+                                {Object.entries(med.times || {}).map(
+                                  ([time, dose]) =>
+                                    dose && (
+                                      <p key={time} className="text-xs">
+                                        <strong>{time.toUpperCase()}:</strong> {dose}
+                                      </p>
+                                    ),
+                                )}
+                              </div>
+                            </>
                           )}
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No medications listed.</p>
+                    )}
                     <div className="mt-4 pt-3 border-t text-xs text-muted-foreground">
                       <p>
                         Admission: {form.admissionDate ? new Date(form.admissionDate).toLocaleDateString() : "N/A"} |
@@ -102,6 +142,24 @@ export default function DischargePage() {
                         Pharmacist: {form.pharmacist || "N/A"} | List Prepared:{" "}
                         {form.dateListPrepared ? new Date(form.dateListPrepared).toLocaleDateString() : "N/A"}
                       </p>
+                      {form.templateType === "before-admission" && (
+                        <>
+                          <p>
+                            Concession: {form.concession || "N/A"} | Health Fund: {form.healthFund || "N/A"}
+                          </p>
+                          <p>Reason for Admission: {form.reasonForAdmission || "N/A"}</p>
+                          <p>Relevant Past Medical History: {form.relevantPastMedicalHistory || "N/A"}</p>
+                          <p>Community Pharmacist: {form.communityPharmacist || "N/A"}</p>
+                          <p>General Practitioner: {form.generalPractitioner || "N/A"}</p>
+                          <p>Medication Risks/Comments: {form.medicationRisksComments || "N/A"}</p>
+                          <p>Sources of History: {form.sourcesOfHistory || "N/A"}</p>
+                          <p>Pharmacist Signature: {form.pharmacistSignature || "N/A"}</p>
+                          <p>
+                            Date/Time Signed:{" "}
+                            {form.dateTimeSigned ? new Date(form.dateTimeSigned).toLocaleString() : "N/A"}
+                          </p>
+                        </>
+                      )}
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-end gap-2">

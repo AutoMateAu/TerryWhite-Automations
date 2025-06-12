@@ -10,6 +10,7 @@ import { DialogHeader, DialogTitle, DialogContent, DialogFooter, DialogClose } f
 import { PlusCircle, Trash2 } from "lucide-react"
 import type { PatientProfile } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
+import { formatAustralianPhoneNumber, getPhoneNumberMaxLength } from "@/utils/phone-formatter"
 
 interface AddPatientFormProps {
   onPatientAdd: (newPatient: Omit<PatientProfile, "id">) => void
@@ -23,6 +24,7 @@ const initialFormState: Omit<PatientProfile, "id"> = {
   medicare: "",
   allergies: "",
   mrn: "",
+  phone: "",
   currentMedications: [initialMedication],
 }
 
@@ -55,6 +57,11 @@ export function AddPatientForm({ onPatientAdd }: AddPatientFormProps) {
     }
     const newMedications = formData.currentMedications.filter((_, i) => i !== index)
     setFormData((prev) => ({ ...prev, currentMedications: newMedications }))
+  }
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatAustralianPhoneNumber(e.target.value)
+    setFormData((prev) => ({ ...prev, phone: formatted }))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -96,10 +103,22 @@ export function AddPatientForm({ onPatientAdd }: AddPatientFormProps) {
                 <Input id="dob" name="dob" type="date" value={formData.dob} onChange={handleInputChange} />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handlePhoneChange}
+                  placeholder="0412 345 678 or (02) 9876 5432"
+                  maxLength={getPhoneNumberMaxLength(formData.phone)}
+                />
+                <p className="text-xs text-muted-foreground">Mobile: 04XX XXX XXX • Landline: (0X) XXXX XXXX</p>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="medicare">Medicare Number</Label>
                 <Input id="medicare" name="medicare" value={formData.medicare} onChange={handleInputChange} />
               </div>
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2 md:col-span-1">
                 <Label htmlFor="address">Address</Label>
                 <Input id="address" name="address" value={formData.address} onChange={handleInputChange} />
               </div>

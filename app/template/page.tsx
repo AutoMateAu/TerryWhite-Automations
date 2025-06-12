@@ -1,267 +1,117 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlusCircle, Trash2, Send } from "lucide-react"
-import type { PatientFormData, Medication } from "@/lib/types"
-import { useToast } from "@/components/ui/use-toast"
-import { useRouter } from "next/navigation"
-import { mockDischargedPatients } from "@/lib/data" // For simulating data transfer
-import { MedicationSearch } from "@/components/medication-search"
+import { PlusCircle, Hospital, FileText, ArrowRight } from "lucide-react"
+import MedicationPlanForm from "@/components/medication-plan-form" // Import the renamed component
 
-const initialMedication: Medication = {
-  id: Date.now().toString(),
-  name: "",
-  times: { "7am": "", "8am": "", Noon: "", "2pm": "", "6pm": "", "8pm": "", "10pm": "" },
-  status: "",
-  comments: "",
-}
+// Mock data for hospitals and template types
+const hospitalTemplates = [
+  { id: "hosp-1", name: "Eastern Suburbs Private Hospital" },
+  { id: "hosp-2", name: "Arcadia Pittwater" },
+  { id: "hosp-3", name: "IMH Hirondelle Private Hospital" },
+]
 
-const initialFormData: PatientFormData = {
-  name: "",
-  address: "",
-  medicare: "",
-  allergies: "",
-  dob: "",
-  mrn: "",
-  admissionDate: "",
-  dischargeDate: "",
-  pharmacist: "",
-  dateListPrepared: "",
-  medications: [initialMedication],
-}
+export default function TemplateSelectionPage() {
+  const [selectedTemplate, setSelectedTemplate] = useState<{
+    type: "before-admission" | "after-admission" | "new" | "hospital-specific" | null
+    hospitalName?: string
+  } | null>(null)
 
-export default function TemplatePage() {
-  const [formData, setFormData] = useState<PatientFormData>(initialFormData)
-  const { toast } = useToast()
-  const router = useRouter()
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleMedicationChange = (
-    index: number,
-    field: keyof Medication | `times.${keyof Medication["times"]}`,
-    value: string,
+  const handleSelectTemplate = (
+    type: "before-admission" | "after-admission" | "new" | "hospital-specific",
+    hospitalName?: string,
   ) => {
-    const newMedications = [...formData.medications]
-    if (field.startsWith("times.")) {
-      const timeKey = field.split(".")[1] as keyof Medication["times"]
-      newMedications[index].times[timeKey] = value
-    } else {
-      ;(newMedications[index] as any)[field] = value
-    }
-    setFormData((prev) => ({ ...prev, medications: newMedications }))
+    setSelectedTemplate({ type, hospitalName })
   }
 
-  const handleMedicationNameChange = (index: number, value: string) => {
-    const newMedications = [...formData.medications]
-    newMedications[index].name = value
-    setFormData((prev) => ({ ...prev, medications: newMedications }))
+  const handleBackToSelection = () => {
+    setSelectedTemplate(null)
   }
 
-  const addMedicationRow = () => {
-    setFormData((prev) => ({
-      ...prev,
-      medications: [...prev.medications, { ...initialMedication, id: Date.now().toString() }],
-    }))
+  if (selectedTemplate) {
+    return (
+      <MedicationPlanForm
+        templateType={selectedTemplate.type!}
+        hospitalName={selectedTemplate.hospitalName}
+        onBack={handleBackToSelection}
+      />
+    )
   }
-
-  const removeMedicationRow = (index: number) => {
-    if (formData.medications.length === 1) {
-      toast({ title: "Cannot remove last medication row", variant: "destructive" })
-      return
-    }
-    const newMedications = formData.medications.filter((_, i) => i !== index)
-    setFormData((prev) => ({ ...prev, medications: newMedications }))
-  }
-
-  const handleSubmitToDischarge = () => {
-    // Simulate sending data to discharge
-    // In a real app, this would involve an API call or state management update
-    const newDischargedPatient: PatientFormData & { id: string; dischargeTimestamp: string } = {
-      ...formData,
-      id: `discharge-${Date.now()}`,
-      dischargeTimestamp: new Date().toISOString(),
-    }
-    mockDischargedPatients.push(newDischargedPatient) // Add to mock data
-
-    toast({
-      title: "Template Sent to Discharge",
-      description: `Medication plan for ${formData.name} has been prepared.`,
-    })
-    setFormData(initialFormData) // Reset form
-    router.push("/discharge") // Navigate to discharge page
-  }
-
-  const timeSlots: (keyof Medication["times"])[] = ["7am", "8am", "Noon", "2pm", "6pm", "8pm", "10pm"]
 
   return (
-    <div className="container mx-auto py-8">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Medication Management Plan</CardTitle>
+    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-blue-50 animate-gradient-shift bg-[length:200%_200%]">
+      <Card className="max-w-6xl mx-auto rounded-3xl shadow-2xl backdrop-blur-lg bg-white/80 border border-white/30 animate-fade-in-up">
+        <CardHeader className="pb-4 border-b border-white/20 bg-gradient-to-r from-gray-100/50 to-blue-100/50 rounded-t-3xl">
+          <CardTitle className="text-3xl font-extrabold text-gray-900 drop-shadow-sm">
+            Select a Medication Plan Template
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Patient Information Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 border p-4 rounded-md">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" name="name" value={formData.name} onChange={handleInputChange} />
-            </div>
-            <div>
-              <Label htmlFor="dob">DOB</Label>
-              <Input id="dob" name="dob" type="date" value={formData.dob} onChange={handleInputChange} />
-            </div>
-            <div>
-              <Label htmlFor="address">Address</Label>
-              <Input id="address" name="address" value={formData.address} onChange={handleInputChange} />
-            </div>
-            <div>
-              <Label htmlFor="mrn">MRN</Label>
-              <Input id="mrn" name="mrn" value={formData.mrn} onChange={handleInputChange} />
-            </div>
-            <div>
-              <Label htmlFor="medicare">Medicare</Label>
-              <Input id="medicare" name="medicare" value={formData.medicare} onChange={handleInputChange} />
-            </div>
-            <div>
-              <Label htmlFor="admissionDate">Admission Date</Label>
-              <Input
-                id="admissionDate"
-                name="admissionDate"
-                type="date"
-                value={formData.admissionDate}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div>
-              <Label htmlFor="allergies">Allergies</Label>
-              <Input id="allergies" name="allergies" value={formData.allergies} onChange={handleInputChange} />
-            </div>
-            <div>
-              <Label htmlFor="dischargeDate">Discharge Date</Label>
-              <Input
-                id="dischargeDate"
-                name="dischargeDate"
-                type="date"
-                value={formData.dischargeDate}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div>
-              <Label htmlFor="pharmacist">Pharmacist</Label>
-              <Input id="pharmacist" name="pharmacist" value={formData.pharmacist} onChange={handleInputChange} />
-            </div>
-            <div>
-              <Label htmlFor="dateListPrepared">Date List Prepared</Label>
-              <Input
-                id="dateListPrepared"
-                name="dateListPrepared"
-                type="date"
-                value={formData.dateListPrepared}
-                onChange={handleInputChange}
-              />
+        <CardContent className="space-y-8 p-6">
+          {/* Main Template Types */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Button
+              onClick={() => handleSelectTemplate("before-admission")}
+              className="h-auto py-6 text-lg font-semibold rounded-xl
+                         bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700
+                         hover:from-blue-100 hover:to-blue-200
+                         shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]
+                         flex flex-col items-center justify-center space-y-2"
+            >
+              <FileText className="h-8 w-8 mb-2" />
+              <span>Medication Plan Before Admission</span>
+            </Button>
+            <Button
+              onClick={() => handleSelectTemplate("after-admission")}
+              className="h-auto py-6 text-lg font-semibold rounded-xl
+                         bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700
+                         hover:from-indigo-100 hover:to-indigo-200
+                         shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]
+                         flex flex-col items-center justify-center space-y-2"
+            >
+              <FileText className="h-8 w-8 mb-2" />
+              <span>Medication Plan After Admission</span>
+            </Button>
+          </div>
+
+          {/* Hospital-Specific Templates */}
+          <div>
+            <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Hospital-Specific Templates</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {hospitalTemplates.map((hospital) => (
+                <Button
+                  key={hospital.id}
+                  onClick={() => handleSelectTemplate("hospital-specific", hospital.name)}
+                  className="h-auto py-4 text-base font-medium rounded-lg
+                             bg-gradient-to-r from-green-50 to-green-100 text-green-700
+                             hover:from-green-100 hover:to-green-200
+                             shadow-sm hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-[1.01]
+                             flex items-center justify-center space-x-2"
+                >
+                  <Hospital className="h-5 w-5" />
+                  <span>{hospital.name} Template</span>
+                  <ArrowRight className="h-4 w-4 ml-auto" />
+                </Button>
+              ))}
             </div>
           </div>
 
-          {/* Medication Table Section */}
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-gray-100 dark:bg-gray-800">
-                <TableRow>
-                  <TableHead className="w-[250px]">Medication</TableHead>
-                  {timeSlots.map((slot) => (
-                    <TableHead key={slot} className="min-w-[70px] text-center">
-                      {slot.toUpperCase()}
-                    </TableHead>
-                  ))}
-                  <TableHead className="min-w-[150px]">Medication Status</TableHead>
-                  <TableHead className="min-w-[200px]">Comments</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {formData.medications.map((med, index) => (
-                  <TableRow key={med.id}>
-                    <TableCell>
-                      <MedicationSearch
-                        value={med.name}
-                        onChange={(value) => handleMedicationNameChange(index, value)}
-                        placeholder="Search medication..."
-                      />
-                    </TableCell>
-                    {timeSlots.map((slot) => (
-                      <TableCell key={slot}>
-                        <Input
-                          value={med.times[slot]}
-                          onChange={(e) => handleMedicationChange(index, `times.${slot}`, e.target.value)}
-                          className="text-center text-xs p-1 h-8"
-                        />
-                      </TableCell>
-                    ))}
-                    <TableCell>
-                      <Input
-                        value={med.status}
-                        onChange={(e) => handleMedicationChange(index, "status", e.target.value)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Textarea
-                        value={med.comments}
-                        onChange={(e) => handleMedicationChange(index, "comments", e.target.value)}
-                        rows={1}
-                        className="min-h-[38px]"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeMedicationRow(index)}
-                        disabled={formData.medications.length === 1}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          <Button variant="outline" onClick={addMedicationRow} className="mt-2">
-            <PlusCircle className="h-4 w-4 mr-2" /> Add Medication
-          </Button>
-
-          {/* Footer Text Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-xs text-muted-foreground bg-gray-100 dark:bg-gray-800 p-4 rounded-md">
-            <p>
-              This list is your medication management plan as determined by your doctor at iMH Hirondelle Private
-              Hospital, at the time of discharge listed above. The list is confirmed as accurate when signed by a
-              medical practitioner, below. Please see your General Practitioner soon after discharge from hospital for
-              review of your medications.
-            </p>
-            <p>
-              TerryWhite Chemmart Manly Corso Pharmacy is the authorised pharmacy for iMH Hirondelle Private Hospital.
-              To speak to a pharmacist or pay your pharmacy statement call 02 9977 2095. Open 7:30am to 7:30pm every
-              day. Address: 72 The Corso Manly 2095. Email: pharmacist@manlypharmacy.com.au
-            </p>
+          {/* Create New Template */}
+          <div className="pt-4 border-t border-white/20">
+            <Button
+              onClick={() => handleSelectTemplate("new")}
+              className="w-full h-auto py-6 text-lg font-semibold rounded-xl
+                         bg-gradient-to-r from-slate-50 to-slate-100 text-slate-700
+                         hover:from-slate-100 hover:to-slate-200
+                         shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]
+                         flex flex-col items-center justify-center space-y-2"
+            >
+              <PlusCircle className="h-8 w-8 mb-2" />
+              <span>Create New Template</span>
+            </Button>
           </div>
         </CardContent>
-        <CardFooter>
-          <Button onClick={handleSubmitToDischarge} size="lg" className="ml-auto">
-            <Send className="h-4 w-4 mr-2" /> Send to Discharge
-          </Button>
-        </CardFooter>
       </Card>
     </div>
   )
