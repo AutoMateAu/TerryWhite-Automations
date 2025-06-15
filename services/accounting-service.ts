@@ -232,6 +232,46 @@ export async function getCustomerAccountById(id: string) {
   }
 }
 
+// NEW: Get a single customer account by patient ID
+export async function getCustomerAccountByPatientId(patientId: string) {
+  const tablesExist = await checkTablesExist()
+  if (!tablesExist) {
+    console.warn("Required tables do not exist. Cannot fetch customer account by patient ID.")
+    return null
+  }
+
+  const supabase = createClient()
+  try {
+    const { data, error } = await supabase.from("customer_accounts").select("*").eq("patient_id", patientId).single()
+
+    if (error && error.code !== "PGRST116") {
+      console.error("Error fetching customer account by patient ID:", error)
+      return null
+    }
+    if (!data) return null
+
+    const phone = data.phone || (await getPatientPhoneFromDB(data.patient_id, data.mrn))
+
+    return {
+      id: data.id,
+      patientId: data.patient_id,
+      patientName: data.patient_name,
+      mrn: data.mrn,
+      phone: phone,
+      totalOwed: data.total_owed,
+      lastPaymentDate: data.last_payment_date,
+      lastPaymentAmount: data.last_payment_amount,
+      status: calculateAccountStatus(data),
+      dischargeFormIds: [], // Not directly stored here, fetch separately if needed
+      createdAt: data.created_at,
+      dueDate: data.due_date,
+    } as CustomerAccount
+  } catch (error) {
+    console.error("Error in getCustomerAccountByPatientId:", error)
+    return null
+  }
+}
+
 // Get all patients
 export async function getPatients(): Promise<PatientProfile[]> {
   const tablesExist = await checkTablesExist()
@@ -260,6 +300,39 @@ export async function getPatients(): Promise<PatientProfile[]> {
   } catch (error) {
     console.error("Error in getPatients:", error)
     return []
+  }
+}
+
+// NEW: Get a single patient by ID
+export async function getPatientById(id: string): Promise<PatientProfile | null> {
+  const tablesExist = await checkTablesExist()
+  if (!tablesExist) {
+    console.warn("Required tables do not exist. Cannot fetch patient by ID.")
+    return null
+  }
+
+  const supabase = createClient()
+  try {
+    const { data, error } = await supabase.from("patients").select("*").eq("id", id).single()
+    if (error && error.code !== "PGRST116") {
+      console.error("Error fetching patient by ID:", error)
+      return null
+    }
+    if (!data) return null
+
+    return {
+      id: data.id,
+      name: data.name,
+      dob: data.dob,
+      address: data.address || "",
+      medicare: data.medicare || "",
+      allergies: data.allergies || "",
+      mrn: data.mrn,
+      phone: data.phone || null,
+    } as PatientProfile
+  } catch (error) {
+    console.error("Error in getPatientById:", error)
+    return null
   }
 }
 
@@ -427,6 +500,64 @@ export async function getDischargedForms(): Promise<DischargedPatient[]> {
     })) as DischargedPatient[]
   } catch (error) {
     console.error("Error in getDischargedForms:", error)
+    return []
+  }
+}
+
+// NEW: Get discharged forms by patient ID
+export async function getDischargeFormsByPatientId(patientId: string): Promise<DischargedPatient[]> {
+  const tablesExist = await checkTablesExist()
+  if (!tablesExist) {
+    console.warn("Required tables do not exist. Cannot fetch discharged forms by patient ID.")
+    return []
+  }
+
+  const supabase = createClient()
+  try {
+    const { data, error } = await supabase
+      .from("discharged_patient_forms")
+      .select("*")
+      .eq("patient_id", patientId)
+      .order("discharge_timestamp", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching discharged forms by patient ID:", error)
+      return []
+    }
+
+    return data.map((form) => ({
+      id: form.id,
+      patientId: form.patient_id || "",
+      name: form.name,
+      address: form.address,
+      medicare: form.medicare,
+      allergies: form.allergies,
+      dob: form.dob,
+      mrn: form.mrn,
+      phone: form.phone,
+      admissionDate: form.admission_date,
+      dischargeDate: form.discharge_date,
+      pharmacist: form.pharmacist,
+      dateListPrepared: form.date_list_prepared,
+      concession: form.concession,
+      healthFund: form.health_fund,
+      reasonForAdmission: form.reason_for_admission,
+      relevantPastMedicalHistory: form.relevant_past_medical_history,
+      communityPharmacist: form.community_pharmacist,
+      generalPractitioner: form.general_practitioner,
+      medicationRisksComments: form.medication_risks_comments,
+      sourcesOfHistory: form.sources_of_history,
+      pharmacistSignature: form.pharmacist_signature,
+      dateTimeSigned: form.date_time_signed,
+      dischargeTimestamp: form.discharge_timestamp,
+      templateType: form.template_type || "new",
+      hospitalName: form.hospital_name,
+      medications: form.medications,
+      createdAt: form.created_at,
+      updatedAt: form.updated_at,
+    })) as DischargedPatient[]
+  } catch (error) {
+    console.error("Error in getDischargeFormsByPatientId:", error)
     return []
   }
 }

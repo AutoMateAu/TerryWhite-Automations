@@ -11,12 +11,13 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 import { AddPatientForm } from "@/components/add-patient-form"
 import { useToast } from "@/components/ui/use-toast"
+import Link from "next/link" // Import Link
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<PatientProfile[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = true
   const { toast } = useToast()
 
   useEffect(() => {
@@ -139,11 +140,11 @@ export default function PatientsPage() {
                     </span>
                   </div>
 
-                  {/* Current Medications are now part of discharge forms, not patient profile directly */}
-                  <h4 className="font-semibold mt-4 pt-3 border-t">Associated Medication Plans:</h4>
-                  <p className="text-sm text-muted-foreground">
-                    View full medication plans in the Discharge Summaries section.
-                  </p>
+                  <div className="mt-4 pt-3 border-t">
+                    <Link href={`/patients/${patient.id}`} passHref>
+                      <Button variant="outline">View Full Details</Button>
+                    </Link>
+                  </div>
                 </CardContent>
               </Card>
             </AccordionContent>
