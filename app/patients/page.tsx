@@ -17,7 +17,7 @@ export default function PatientsPage() {
   const [patients, setPatients] = useState<PatientProfile[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [loading, setLoading] = true
+  const [loading, setLoading] = useState(true) // Corrected this line
   const { toast } = useToast()
 
   useEffect(() => {
