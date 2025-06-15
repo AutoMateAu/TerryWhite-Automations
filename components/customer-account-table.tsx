@@ -326,7 +326,7 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
           </DialogHeader>
           {selectedAccount && (
             <RecordPaymentForm
-              account={selectedAccount} // Changed from accountId to account
+              account={selectedAccount}
               onSuccess={() => setIsRecordPaymentDialogOpen(false)}
               onCancel={() => setIsRecordPaymentDialogOpen(false)}
             />
@@ -396,7 +396,15 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
             <DialogDescription>Update the payment due date for this account.</DialogDescription>
           </DialogHeader>
           {selectedAccount && (
-            <EditDueDateDialog account={selectedAccount} onClose={() => setIsEditDueDateDialogOpen(false)} />
+            <EditDueDateDialog
+              account={selectedAccount}
+              onSuccess={() => {
+                setIsEditDueDateDialogOpen(false)
+                // Optionally, refresh the page or re-fetch data to show updated due date
+                router.refresh()
+              }}
+              onCancel={() => setIsEditDueDateDialogOpen(false)}
+            />
           )}
         </DialogContent>
       </Dialog>
