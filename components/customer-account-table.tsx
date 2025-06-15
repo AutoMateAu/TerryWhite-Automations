@@ -369,9 +369,11 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Call History for {selectedAccount?.patientName}</DialogTitle>
-            <DialogDescription>View all recorded calls for this account.</DialogDescription>
+            <DialogDescription>
+              Phone call records for {selectedAccount?.patientName} ({selectedAccount?.phone || "Phone not available"})
+            </DialogDescription>
           </DialogHeader>
-          {selectedAccount && <CallHistory accountId={selectedAccount.id} />}
+          {selectedAccount && <CallHistory account={selectedAccount} />}
         </DialogContent>
       </Dialog>
 
