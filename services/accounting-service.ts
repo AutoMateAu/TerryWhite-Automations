@@ -1199,13 +1199,6 @@ export async function updateDischargedForm(
   return { success: true, message: "Discharge form updated successfully." }
 }
 
-  // New helper function: Insert a payment cleanly
-export async function insertPayment(formData: {
-  customer_account_id: string
-  amount: number
-  payment_date: string
-  notes?: string
-}): Promise<{ success: boolean; message: string }> {
   const supabase = createClient()
 
   const { data, error } = await supabase.from("payments").insert({
@@ -1222,7 +1215,6 @@ export async function insertPayment(formData: {
 
   revalidatePath("/accounting")
   revalidatePath(`/accounts/${formData.customer_account_id}`)
-
   return { success: true, message: "Payment recorded successfully." }
 }
 
