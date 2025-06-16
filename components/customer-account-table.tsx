@@ -31,7 +31,6 @@ import { EditDueDateDialog } from "@/components/edit-due-date-dialog"
 import { generatePDFFilename } from "@/lib/pdf-generator"
 import { generateAccountPDF } from "@/utils/pdf-client"
 import { useRouter } from "next/navigation"
-// Removed SendPaymentLinkDialog import as it's no longer directly used for this action
 import type { CustomerAccount, PDFExportOptions } from "@/lib/types"
 
 interface CustomerAccountTableProps {
@@ -51,7 +50,6 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
   const [isCallHistoryDialogOpen, setIsCallHistoryDialogOpen] = useState(false)
   const [isPDFExportDialogOpen, setIsPDFExportDialogOpen] = useState(false)
   const [isEditDueDateDialogOpen, setIsEditDueDateDialogOpen] = useState(false)
-  // Removed isSendPaymentLinkDialogOpen state as it's no longer needed
 
   const [selectedAccount, setSelectedAccount] = useState<CustomerAccount | null>(null)
 
@@ -127,9 +125,8 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
     setIsEditDueDateDialogOpen(true)
   }
 
-  // Modified to directly open the link
   const handleOpenSendPaymentLink = (account: CustomerAccount) => {
-    const paymentLink = `https://demo.paybyweb.nab.com.au/SecureBillPayment/securebill/nab/payTemplate.vm?&bill_name=`
+    const paymentLink = `https://demo.paybyweb.nab.com.au/SecureBillPayment/securebill/nab/payTemplate.vm?&bill_name=${encodeURIComponent(account.patientName)}`
     window.open(paymentLink, "_blank") // Open in a new tab
     toast({
       title: "Opening Demo Payment Link",
@@ -307,8 +304,7 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
                         <DropdownMenuItem onClick={() => router.push(`/accounts/${account.id}`)}>
                           View Details
                         </DropdownMenuItem>
-                        {/* Directly call the function to open the link */}
-                        <DropdownMenuItem onClick={() => handleOpenSendPaymentLink(account)}>
+                        <DropdownMenuItem onClick={() => handleOpenSendPaymentLink(account)} disabled={!account.phone}>
                           <Phone className="mr-2 h-4 w-4" /> Send Payment Link (SMS)
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -329,7 +325,11 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
             <DialogDescription>Enter the payment details below.</DialogDescription>
           </DialogHeader>
           {selectedAccount && (
-            <RecordPaymentForm accountId={selectedAccount.id} onClose={() => setIsRecordPaymentDialogOpen(false)} />
+            <RecordPaymentForm
+              account={selectedAccount}
+              onSuccess={() => setIsRecordPaymentDialogOpen(false)}
+              onCancel={() => setIsRecordPaymentDialogOpen(false)}
+            />
           )}
         </DialogContent>
       </Dialog>
@@ -369,9 +369,11 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Call History for {selectedAccount?.patientName}</DialogTitle>
-            <DialogDescription>View all recorded calls for this account.</DialogDescription>
+            <DialogDescription>
+              Phone call records for {selectedAccount?.patientName} ({selectedAccount?.phone || "Phone not available"})
+            </DialogDescription>
           </DialogHeader>
-          {selectedAccount && <CallHistory accountId={selectedAccount.id} />}
+          {selectedAccount && <CallHistory account={selectedAccount} />}
         </DialogContent>
       </Dialog>
 
@@ -396,21 +398,18 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
             <DialogDescription>Update the payment due date for this account.</DialogDescription>
           </DialogHeader>
           {selectedAccount && (
-            <EditDueDateDialog account={selectedAccount} onClose={() => setIsEditDueDateDialogOpen(false)} />
+            <EditDueDateDialog
+              account={selectedAccount}
+              onSuccess={() => {
+                setIsEditDueDateDialogOpen(false)
+                // Optionally, refresh the page or re-fetch data to show updated due date
+                router.refresh()
+              }}
+              onCancel={() => setIsEditDueDateDialogOpen(false)}
+            />
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Removed Send Payment Link Dialog as it's no longer needed for direct navigation */}
-      {/*
-    <Dialog open={isSendPaymentLinkDialogOpen} onOpenChange={setIsSendPaymentLinkDialogOpen}>
-      <DialogContent className="sm:max-w-[500px]">
-        {selectedAccount && (
-          <SendPaymentLinkDialog account={selectedAccount} onClose={() => setIsSendPaymentLinkDialogOpen(false)} />
-        )}
-      </DialogContent>
-    </Dialog>
-    */}
     </div>
   )
 }

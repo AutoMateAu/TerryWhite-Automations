@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Textarea, type TextareaProps } from "@/components/ui/textarea"
+import { Textarea, type TextareaProps } from "@/components/ui/textarea" // Keep this import
 import { cn } from "@/lib/utils"
 
 export interface AutoResizeTextareaProps extends TextareaProps {}
@@ -38,4 +38,4 @@ const AutoResizeTextarea = React.forwardRef<HTMLTextAreaElement, AutoResizeTexta
 )
 AutoResizeTextarea.displayName = "AutoResizeTextarea"
 
-export { AutoResizeTextarea }
+export { AutoResizeTextarea, Textarea } // Added Textarea to named exports

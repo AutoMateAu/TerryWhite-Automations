@@ -8,9 +8,9 @@ import MedicationPlanForm from "@/components/medication-plan-form" // Import the
 
 // Mock data for hospitals and template types
 const hospitalTemplates = [
-  { id: "hosp-1", name: "Eastern Suburbs Private Hospital" },
-  { id: "hosp-2", name: "Arcadia Pittwater" },
-  { id: "hosp-3", name: "IMH Hirondelle Private Hospital" },
+  { id: "hosp-1", name: "St. Jude's Hospital" },
+  { id: "hosp-2", name: "Mercy General Hospital" },
+  { id: "hosp-3", name: "City Medical Center" },
 ]
 
 export default function TemplateSelectionPage() {

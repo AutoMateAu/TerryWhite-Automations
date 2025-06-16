@@ -29,7 +29,7 @@ export function SendPaymentLinkDialog({ isOpen, onClose, account }: SendPaymentL
   )
 
   const handleOpenPaymentLink = () => {
-    const paymentLink = `https://demo.paybyweb.nab.com.au/SecureBillPayment/securebill/nab/payTemplate.vm?&bill_name=`
+    const paymentLink = `https://demo.paybyweb.nab.com.au/SecureBillPayment/securebill/nab/payTemplate.vm?&bill_name=${encodeURIComponent(account.patientName)}`
     window.open(paymentLink, "_blank") // Open in a new tab
     toast({
       title: "Opening Payment Link",
