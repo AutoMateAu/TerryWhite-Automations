@@ -1199,6 +1199,13 @@ export async function updateDischargedForm(
   return { success: true, message: "Discharge form updated successfully." }
 }
 
+  // New helper function: Insert a payment cleanly
+export async function insertPayment(formData: {
+  customer_account_id: string
+  amount: number
+  payment_date: string
+  notes?: string
+}): Promise<{ success: boolean; message: string }> {
   const supabase = createClient()
 
   const { data, error } = await supabase.from("payments").insert({
@@ -1215,6 +1222,7 @@ export async function updateDischargedForm(
 
   revalidatePath("/accounting")
   revalidatePath(`/accounts/${formData.customer_account_id}`)
+
   return { success: true, message: "Payment recorded successfully." }
 }
 
@@ -1261,7 +1269,10 @@ export async function getCustomerAccountById(
 export async function updateCustomerAccountDueDate(accountId: string, newDueDate: string) {
   const supabase = createClient()
 
-  const { error } = await supabase.from("customer_accounts").update({ due_date: newDueDate }).eq("id", accountId)
+  const { error } = await supabase
+    .from("customer_accounts")
+    .update({ due_date: newDueDate })
+    .eq("id", accountId)
 
   if (error) {
     console.error("Error updating due date:", error.message)
