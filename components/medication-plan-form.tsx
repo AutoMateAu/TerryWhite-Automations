@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea" // Changed to AutoResizeTextarea
+import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea"
 import { PlusIcon, EditIcon } from "lucide-react"
 import type { DischargedPatient, Medication, Hospital } from "@/lib/types"
 import { createDischargedForm, updateDischargedForm } from "@/services/accounting-service"
@@ -29,8 +29,8 @@ interface MedicationPlanFormProps {
   initialData?: DischargedPatient
 }
 
-export default function MedicationPlanForm({ initialData }: MedicationPlanFormProps) {
-  // Changed to default export
+// Changed to named export
+export function MedicationPlanForm({ initialData }: MedicationPlanFormProps) {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -217,7 +217,7 @@ export default function MedicationPlanForm({ initialData }: MedicationPlanFormPr
             <Label htmlFor="notes" className="text-right">
               Notes
             </Label>
-            <AutoResizeTextarea // Changed to AutoResizeTextarea
+            <AutoResizeTextarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -229,7 +229,7 @@ export default function MedicationPlanForm({ initialData }: MedicationPlanFormPr
             <Label htmlFor="template" className="text-right">
               Template
             </Label>
-            <AutoResizeTextarea // Changed to AutoResizeTextarea
+            <AutoResizeTextarea
               id="template"
               value={template}
               onChange={(e) => setTemplate(e.target.value)}
