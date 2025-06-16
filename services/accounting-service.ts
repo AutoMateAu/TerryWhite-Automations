@@ -1199,12 +1199,6 @@ export async function updateDischargedForm(
   return { success: true, message: "Discharge form updated successfully." }
 }
 
-export async function recordPayment(formData: {
-  customer_account_id: string
-  amount: number
-  payment_date: string
-  notes?: string
-}) {
   const supabase = createClient()
 
   const { data, error } = await supabase.from("payments").insert({
