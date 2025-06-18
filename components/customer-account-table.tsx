@@ -183,128 +183,226 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
   }
 
   return (
-    <div className="container mx-auto px-6 mt-10">
+    <div className="container mx-auto px-6 mt-10 animate-fade-in-up delay-300">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Customer Accounts</h2>
+        <h2 className="text-2xl font-bold text-deep-purple">Customer Accounts</h2>
         <div className="flex items-center space-x-4">
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-dark" />
             <Input
               type="text"
               placeholder="Search accounts..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 w-[250px]"
+              className="pl-8 w-[250px] border-light-pink focus:border-violet-highlight focus:ring-violet-highlight text-slate-dark"
             />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 bg-soft-offwhite text-slate-dark border-light-pink hover:bg-light-pink hover:text-deep-purple transition-colors"
+              >
                 <Filter className="h-4 w-4" />
                 Filter
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="px-4 py-2 text-sm font-medium">Filter by Status</div>
-              <DropdownMenuItem onSelect={() => setFilterStatus("all")}>All</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setFilterStatus("current")}>Current</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setFilterStatus("overdue")}>Overdue</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setFilterStatus("paid")}>Paid</DropdownMenuItem>
-              <div className="px-4 py-2 text-sm font-medium">Filter by Balance</div>
-              <DropdownMenuItem onSelect={() => setFilterBalance("all")}>All</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setFilterBalance("zero")}>Zero Balance</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setFilterBalance("non-zero")}>Non-Zero Balance</DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-56 bg-soft-offwhite border-light-pink text-slate-dark">
+              <div className="px-4 py-2 text-sm font-semibold text-deep-purple">Filter by Status</div>
+              <DropdownMenuItem
+                onSelect={() => setFilterStatus("all")}
+                className="hover:bg-light-pink hover:text-deep-purple"
+              >
+                All
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => setFilterStatus("current")}
+                className="hover:bg-light-pink hover:text-deep-purple"
+              >
+                Current
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => setFilterStatus("overdue")}
+                className="hover:bg-light-pink hover:text-deep-purple"
+              >
+                Overdue
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => setFilterStatus("paid")}
+                className="hover:bg-light-pink hover:text-deep-purple"
+              >
+                Paid
+              </DropdownMenuItem>
+              <div className="px-4 py-2 text-sm font-semibold text-deep-purple">Filter by Balance</div>
+              <DropdownMenuItem
+                onSelect={() => setFilterBalance("all")}
+                className="hover:bg-light-pink hover:text-deep-purple"
+              >
+                All
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => setFilterBalance("zero")}
+                className="hover:bg-light-pink hover:text-deep-purple"
+              >
+                Zero Balance
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => setFilterBalance("non-zero")}
+                className="hover:bg-light-pink hover:text-deep-purple"
+              >
+                Non-Zero Balance
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 bg-soft-offwhite text-slate-dark border-light-pink hover:bg-light-pink hover:text-deep-purple transition-colors"
+              >
                 {sortDirection === "asc" ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
                 Sort
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="px-4 py-2 text-sm font-medium">Sort by Column</div>
-              <DropdownMenuItem onSelect={() => setSortColumn("patientName")}>Patient Name</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setSortColumn("totalOwed")}>Amount Owed</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setSortColumn("status")}>Status</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setSortColumn("dueDate")}>Due Date</DropdownMenuItem>
-              <div className="px-4 py-2 text-sm font-medium">Sort Direction</div>
-              <DropdownMenuItem onSelect={() => setSortDirection("asc")}>Ascending</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setSortDirection("desc")}>Descending</DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-56 bg-soft-offwhite border-light-pink text-slate-dark">
+              <div className="px-4 py-2 text-sm font-semibold text-deep-purple">Sort by Column</div>
+              <DropdownMenuItem
+                onSelect={() => setSortColumn("patientName")}
+                className="hover:bg-light-pink hover:text-deep-purple"
+              >
+                Patient Name
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => setSortColumn("totalOwed")}
+                className="hover:bg-light-pink hover:text-deep-purple"
+              >
+                Amount Owed
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => setSortColumn("status")}
+                className="hover:bg-light-pink hover:text-deep-purple"
+              >
+                Status
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => setSortColumn("dueDate")}
+                className="hover:bg-light-pink hover:text-deep-purple"
+              >
+                Due Date
+              </DropdownMenuItem>
+              <div className="px-4 py-2 text-sm font-semibold text-deep-purple">Sort Direction</div>
+              <DropdownMenuItem
+                onSelect={() => setSortDirection("asc")}
+                className="hover:bg-light-pink hover:text-deep-purple"
+              >
+                Ascending
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => setSortDirection("desc")}
+                className="hover:bg-light-pink hover:text-deep-purple"
+              >
+                Descending
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
 
-      <div className="rounded-lg border shadow-sm overflow-hidden">
+      <div className="rounded-lg border border-light-pink shadow-sm overflow-hidden bg-soft-offwhite">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-light-pink">
             <TableRow>
-              <TableHead>Patient Name</TableHead>
-              <TableHead>MRN</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead className="text-right">Amount Owed</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
+              <TableHead className="text-deep-purple font-semibold">Patient Name</TableHead>
+              <TableHead className="text-deep-purple font-semibold">MRN</TableHead>
+              <TableHead className="text-deep-purple font-semibold">Phone</TableHead>
+              <TableHead className="text-right text-deep-purple font-semibold">Amount Owed</TableHead>
+              <TableHead className="text-deep-purple font-semibold">Due Date</TableHead>
+              <TableHead className="text-deep-purple font-semibold">Status</TableHead>
+              <TableHead className="w-[100px] text-deep-purple font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAndSortedAccounts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center text-gray-500">
+                <TableCell colSpan={7} className="h-24 text-center text-slate-dark font-medium">
                   No accounts found matching your criteria.
                 </TableCell>
               </TableRow>
             ) : (
               filteredAndSortedAccounts.map((account) => (
-                <TableRow key={account.id}>
-                  <TableCell className="font-medium">{account.patientName}</TableCell>
-                  <TableCell>{account.mrn}</TableCell>
-                  <TableCell>{account.phone ? formatAustralianPhoneNumber(account.phone) : "N/A"}</TableCell>
-                  <TableCell className="text-right">
+                <TableRow key={account.id} className="hover:bg-light-pink/30 transition-colors">
+                  <TableCell className="font-medium text-slate-dark">{account.patientName}</TableCell>
+                  <TableCell className="text-slate-dark">{account.mrn}</TableCell>
+                  <TableCell className="text-slate-dark">
+                    {account.phone ? formatAustralianPhoneNumber(account.phone) : "N/A"}
+                  </TableCell>
+                  <TableCell className="text-right text-slate-dark">
                     ${account.totalOwed.toLocaleString("en-AU", { minimumFractionDigits: 2 })}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-slate-dark">
                     {account.dueDate ? new Date(account.dueDate).toLocaleDateString("en-AU") : "N/A"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={getStatusBadgeVariant(account.status)}>
+                    <Badge variant={getStatusBadgeVariant(account.status)} className="font-medium">
                       {account.status.charAt(0).toUpperCase() + account.status.slice(1)}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className="text-slate-dark hover:bg-violet-highlight/20">
                           <MoreHorizontal className="h-4 w-4" />
                           <span className="sr-only">Actions</span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleOpenRecordPayment(account)}>
+                      <DropdownMenuContent align="end" className="bg-soft-offwhite border-light-pink text-slate-dark">
+                        <DropdownMenuItem
+                          onClick={() => handleOpenRecordPayment(account)}
+                          className="hover:bg-light-pink hover:text-deep-purple"
+                        >
                           <DollarSign className="mr-2 h-4 w-4" /> Record Payment
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleOpenPaymentHistory(account)}>
+                        <DropdownMenuItem
+                          onClick={() => handleOpenPaymentHistory(account)}
+                          className="hover:bg-light-pink hover:text-deep-purple"
+                        >
                           <History className="mr-2 h-4 w-4" /> Payment History
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleOpenAddCallLog(account)}>
+                        <DropdownMenuItem
+                          onClick={() => handleOpenAddCallLog(account)}
+                          className="hover:bg-light-pink hover:text-deep-purple"
+                        >
                           <MessageSquare className="mr-2 h-4 w-4" /> Add Call Log
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleOpenCallHistory(account)}>
+                        <DropdownMenuItem
+                          onClick={() => handleOpenCallHistory(account)}
+                          className="hover:bg-light-pink hover:text-deep-purple"
+                        >
                           <Phone className="mr-2 h-4 w-4" /> Call History
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleOpenEditDueDate(account)}>
+                        <DropdownMenuItem
+                          onClick={() => handleOpenEditDueDate(account)}
+                          className="hover:bg-light-pink hover:text-deep-purple"
+                        >
                           <CalendarDays className="mr-2 h-4 w-4" /> Edit Due Date
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleOpenPDFExport(account)}>
+                        <DropdownMenuItem
+                          onClick={() => handleOpenPDFExport(account)}
+                          className="hover:bg-light-pink hover:text-deep-purple"
+                        >
                           <FileText className="mr-2 h-4 w-4" /> Export PDF
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => router.push(`/accounts/${account.id}`)}>
+                        <DropdownMenuItem
+                          onClick={() => router.push(`/accounts/${account.id}`)}
+                          className="hover:bg-light-pink hover:text-deep-purple underline"
+                        >
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleOpenSendPaymentLink(account)} disabled={!account.phone}>
+                        <DropdownMenuItem
+                          onClick={() => handleOpenSendPaymentLink(account)}
+                          disabled={!account.phone}
+                          className="hover:bg-light-pink hover:text-deep-purple"
+                        >
                           <Phone className="mr-2 h-4 w-4" /> Send Payment Link (SMS)
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -319,10 +417,14 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
 
       {/* Record Payment Dialog */}
       <Dialog open={isRecordPaymentDialogOpen} onOpenChange={setIsRecordPaymentDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] bg-soft-offwhite border-light-pink text-slate-dark">
           <DialogHeader>
-            <DialogTitle>Record Payment for {selectedAccount?.patientName}</DialogTitle>
-            <DialogDescription>Enter the payment details below.</DialogDescription>
+            <DialogTitle className="text-xl font-semibold text-deep-purple">
+              Record Payment for {selectedAccount?.patientName}
+            </DialogTitle>
+            <DialogDescription className="text-slate-dark font-medium">
+              Enter the payment details below.
+            </DialogDescription>
           </DialogHeader>
           {selectedAccount && (
             <RecordPaymentForm
@@ -336,10 +438,14 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
 
       {/* Payment History Dialog */}
       <Dialog open={isPaymentHistoryDialogOpen} onOpenChange={setIsPaymentHistoryDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto bg-soft-offwhite border-light-pink text-slate-dark">
           <DialogHeader>
-            <DialogTitle>Payment History for {selectedAccount?.patientName}</DialogTitle>
-            <DialogDescription>View all recorded payments for this account.</DialogDescription>
+            <DialogTitle className="text-xl font-semibold text-deep-purple">
+              Payment History for {selectedAccount?.patientName}
+            </DialogTitle>
+            <DialogDescription className="text-slate-dark font-medium">
+              View all recorded payments for this account.
+            </DialogDescription>
           </DialogHeader>
           {selectedAccount && <PaymentHistory accountId={selectedAccount.id} />}
         </DialogContent>
@@ -347,10 +453,14 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
 
       {/* Add Call Log Dialog */}
       <Dialog open={isAddCallLogDialogOpen} onOpenChange={setIsAddCallLogDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] bg-soft-offwhite border-light-pink text-slate-dark">
           <DialogHeader>
-            <DialogTitle>Add Call Log for {selectedAccount?.patientName}</DialogTitle>
-            <DialogDescription>Record details of your conversation.</DialogDescription>
+            <DialogTitle className="text-xl font-semibold text-deep-purple">
+              Add Call Log for {selectedAccount?.patientName}
+            </DialogTitle>
+            <DialogDescription className="text-slate-dark font-medium">
+              Record details of your conversation.
+            </DialogDescription>
           </DialogHeader>
           {selectedAccount && (
             <AddCallLogForm
@@ -366,10 +476,12 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
 
       {/* Call History Dialog */}
       <Dialog open={isCallHistoryDialogOpen} onOpenChange={setIsCallHistoryDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto bg-soft-offwhite border-light-pink text-slate-dark">
           <DialogHeader>
-            <DialogTitle>Call History for {selectedAccount?.patientName}</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl font-semibold text-deep-purple">
+              Call History for {selectedAccount?.patientName}
+            </DialogTitle>
+            <DialogDescription className="text-slate-dark font-medium">
               Phone call records for {selectedAccount?.patientName} ({selectedAccount?.phone || "Phone not available"})
             </DialogDescription>
           </DialogHeader>
@@ -379,7 +491,7 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
 
       {/* PDF Export Dialog */}
       <Dialog open={isPDFExportDialogOpen} onOpenChange={setIsPDFExportDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-soft-offwhite border-light-pink text-slate-dark">
           {selectedAccount && (
             <PDFExportDialog
               accounts={[selectedAccount]}
@@ -392,10 +504,14 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
 
       {/* Edit Due Date Dialog */}
       <Dialog open={isEditDueDateDialogOpen} onOpenChange={setIsEditDueDateDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] bg-soft-offwhite border-light-pink text-slate-dark">
           <DialogHeader>
-            <DialogTitle>Edit Due Date for {selectedAccount?.patientName}</DialogTitle>
-            <DialogDescription>Update the payment due date for this account.</DialogDescription>
+            <DialogTitle className="text-xl font-semibold text-deep-purple">
+              Edit Due Date for {selectedAccount?.patientName}
+            </DialogTitle>
+            <DialogDescription className="text-slate-dark font-medium">
+              Update the payment due date for this account.
+            </DialogDescription>
           </DialogHeader>
           {selectedAccount && (
             <EditDueDateDialog

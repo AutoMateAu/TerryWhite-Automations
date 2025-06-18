@@ -2,8 +2,19 @@
 
 import { createClient } from "@/utils/supabase/server"
 import { revalidatePath } from "next/cache"
-import type { CustomerAccount, CallLog, Payment, PatientFormData, DischargedPatient, PatientProfile } from "@/lib/types"
+import type {
+  CustomerAccount,
+  CallLog,
+  Payment,
+  PatientFormData,
+  DischargedPatient,
+  PatientProfile,
+  PatientDocument,
+  Hospital, // Import Hospital type
+  DischargedForm, // Import DischargedForm type
+} from "@/lib/types"
 import { mockCustomerAccounts, mockPatients } from "@/lib/data" // Import mock data as fallback
+import { put } from "@vercel/blob" // Import Vercel Blob put function
 
 // Function to check if required tables exist
 export async function checkTablesExist() {
@@ -114,6 +125,22 @@ async function getPatientPhoneFromDB(patientId: string, mrn: string): Promise<st
   }
 }
 
+// NEW: Get all hospitals
+export async function getHospitals(): Promise<Hospital[]> {
+  const supabase = createClient()
+  try {
+    const { data, error } = await supabase.from("hospitals").select("*")
+    if (error) {
+      console.error("Error fetching hospitals:", error)
+      return []
+    }
+    return data as Hospital[]
+  } catch (error) {
+    console.error("Error in getHospitals:", error)
+    return []
+  }
+}
+
 // Get all customer accounts
 export async function getCustomerAccounts() {
   const tablesExist = await checkTablesExist()
@@ -125,26 +152,45 @@ export async function getCustomerAccounts() {
       const calculatedDueDate = new Date(baseDate)
       calculatedDueDate.setDate(calculatedDueDate.getDate() + 30)
 
+      const calculatedStatus =
+        account.totalOwed === 0
+          ? ("paid" as const)
+          : calculatedDueDate < new Date()
+            ? ("overdue" as const)
+            : ("current" as const)
+
+      let daysOutstanding = 0
+      if (calculatedStatus === "overdue") {
+        const today = new Date()
+        const diffTime = Math.abs(today.getTime() - calculatedDueDate.getTime())
+        daysOutstanding = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      } else if (calculatedStatus === "current" && account.totalOwed > 0) {
+        const today = new Date()
+        const diffTime = Math.abs(today.getTime() - new Date(account.createdAt).getTime())
+        daysOutstanding = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      }
+
       return {
         ...account,
         phone: account.phone || "Contact pharmacy for phone number", // Mock phone
-        status:
-          account.totalOwed === 0
-            ? ("paid" as const)
-            : calculatedDueDate < new Date()
-              ? ("overdue" as const)
-              : ("current" as const),
+        status: calculatedStatus,
         dueDate: calculatedDueDate.toISOString().split("T")[0], // Add calculated due date for mock data
+        hospitalId: "mock-hospital-id", // Placeholder for mock data
+        hospitalName: "Mock Hospital", // Placeholder for mock data
+        daysOutstanding: daysOutstanding,
+        patientType: account.hospitalId ? "in-patient" : "out-patient", // Infer patient type for mock data
       }
     })
   }
 
   const supabase = createClient()
+  const hospitals = await getHospitals() // Fetch hospitals to map IDs to names
+  const hospitalMap = new Map(hospitals.map((h) => [h.id, h.name]))
 
   try {
     const { data, error } = await supabase
       .from("customer_accounts")
-      .select("*")
+      .select("*, patients(hospital_id)") // Join with patients table to get hospital_id
       .order("total_owed", { ascending: false })
 
     if (error) {
@@ -156,6 +202,22 @@ export async function getCustomerAccounts() {
       data.map(async (account) => {
         const calculatedStatus = calculateAccountStatus(account)
         const phone = account.phone || (await getPatientPhoneFromDB(account.patient_id, account.mrn))
+        const hospitalId = (account.patients as any)?.hospital_id || null // Access hospital_id from joined data
+        const hospitalName = hospitalId ? hospitalMap.get(hospitalId) || null : null // Get hospital name
+        const patientType = hospitalId ? "in-patient" : "out-patient" // Infer patient type
+
+        let daysOutstanding = 0
+        if (calculatedStatus === "overdue" && account.due_date) {
+          const dueDate = new Date(account.due_date)
+          const today = new Date()
+          const diffTime = Math.abs(today.getTime() - dueDate.getTime())
+          daysOutstanding = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        } else if (calculatedStatus === "current" && account.total_owed > 0) {
+          const createdAt = new Date(account.created_at)
+          const today = new Date()
+          const diffTime = Math.abs(today.getTime() - createdAt.getTime())
+          daysOutstanding = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        }
 
         return {
           id: account.id,
@@ -170,6 +232,10 @@ export async function getCustomerAccounts() {
           dischargeFormIds: [], // Will fetch separately if needed
           createdAt: account.created_at,
           dueDate: account.due_date,
+          hospitalId: hospitalId, // Add hospitalId
+          hospitalName: hospitalName, // Add hospitalName
+          daysOutstanding: daysOutstanding, // Add daysOutstanding
+          patientType: patientType, // Add patientType
         }
       }),
     )
@@ -201,9 +267,15 @@ export async function getCustomerAccountById(id: string) {
   }
 
   const supabase = createClient()
+  const hospitals = await getHospitals()
+  const hospitalMap = new Map(hospitals.map((h) => [h.id, h.name]))
 
   try {
-    const { data, error } = await supabase.from("customer_accounts").select("*").eq("id", id).single()
+    const { data, error } = await supabase
+      .from("customer_accounts")
+      .select("*, patients(hospital_id)")
+      .eq("id", id)
+      .single()
 
     if (error) {
       console.error("Error fetching customer account:", error)
@@ -211,6 +283,9 @@ export async function getCustomerAccountById(id: string) {
     }
 
     const phone = data.phone || (await getPatientPhoneFromDB(data.patient_id, data.mrn))
+    const hospitalId = (data.patients as any)?.hospital_id || null
+    const hospitalName = hospitalId ? hospitalMap.get(hospitalId) || null : null
+    const patientType = hospitalId ? "in-patient" : "out-patient"
 
     return {
       id: data.id,
@@ -225,6 +300,9 @@ export async function getCustomerAccountById(id: string) {
       dischargeFormIds: [], // Will fetch separately if needed
       createdAt: data.created_at,
       dueDate: data.due_date,
+      hospitalId: hospitalId,
+      hospitalName: hospitalName,
+      patientType: patientType,
     } as CustomerAccount
   } catch (error) {
     console.error("Error in getCustomerAccountById:", error)
@@ -241,8 +319,15 @@ export async function getCustomerAccountByPatientId(patientId: string) {
   }
 
   const supabase = createClient()
+  const hospitals = await getHospitals()
+  const hospitalMap = new Map(hospitals.map((h) => [h.id, h.name]))
+
   try {
-    const { data, error } = await supabase.from("customer_accounts").select("*").eq("patient_id", patientId).single()
+    const { data, error } = await supabase
+      .from("customer_accounts")
+      .select("*, patients(hospital_id)")
+      .eq("patient_id", patientId)
+      .single()
 
     if (error && error.code !== "PGRST116") {
       console.error("Error fetching customer account by patient ID:", error)
@@ -251,6 +336,9 @@ export async function getCustomerAccountByPatientId(patientId: string) {
     if (!data) return null
 
     const phone = data.phone || (await getPatientPhoneFromDB(data.patient_id, data.mrn))
+    const hospitalId = (data.patients as any)?.hospital_id || null
+    const hospitalName = hospitalId ? hospitalMap.get(hospitalId) || null : null
+    const patientType = hospitalId ? "in-patient" : "out-patient"
 
     return {
       id: data.id,
@@ -265,6 +353,9 @@ export async function getCustomerAccountByPatientId(patientId: string) {
       dischargeFormIds: [], // Not directly stored here, fetch separately if needed
       createdAt: data.created_at,
       dueDate: data.due_date,
+      hospitalId: hospitalId,
+      hospitalName: hospitalName,
+      patientType: patientType,
     } as CustomerAccount
   } catch (error) {
     console.error("Error in getCustomerAccountByPatientId:", error)
@@ -448,7 +539,10 @@ export async function upsertPatient(
 }
 
 // Get all discharged forms
-export async function getDischargedForms(): Promise<DischargedPatient[]> {
+export async function getDischargedForms(
+  hospitalId?: string,
+  status?: "active" | "archived" | "draft",
+): Promise<DischargedForm[]> {
   const tablesExist = await checkTablesExist()
   if (!tablesExist) {
     console.warn("Required tables do not exist. Returning mock discharged patient data.")
@@ -456,11 +550,32 @@ export async function getDischargedForms(): Promise<DischargedPatient[]> {
   }
 
   const supabase = createClient()
+  let query = supabase.from("discharged_patient_forms").select(
+    `
+    *,
+    patients (
+      name,
+      dob,
+      allergies,
+      mrn,
+      hospital_id
+    ),
+    hospitals (
+      name
+    )
+  `,
+  )
+
+  if (hospitalId) {
+    query = query.eq("hospital_id", hospitalId)
+  }
+
+  if (status) {
+    query = query.eq("status", status)
+  }
+
   try {
-    const { data, error } = await supabase
-      .from("discharged_patient_forms")
-      .select("*")
-      .order("discharge_timestamp", { ascending: false })
+    const { data, error } = await query.order("discharge_timestamp", { ascending: false })
 
     if (error) {
       console.error("Error fetching discharged forms:", error)
@@ -469,7 +584,7 @@ export async function getDischargedForms(): Promise<DischargedPatient[]> {
 
     return data.map((form) => ({
       id: form.id,
-      patientId: form.patient_id || "", // Ensure patientId is not null
+      patient_id: form.patient_id || "", // Ensure patient_id is not null
       name: form.name,
       address: form.address,
       medicare: form.medicare,
@@ -493,11 +608,12 @@ export async function getDischargedForms(): Promise<DischargedPatient[]> {
       dateTimeSigned: form.date_time_signed,
       dischargeTimestamp: form.discharge_timestamp,
       templateType: form.template_type || "new", // Default to 'new' if not set
-      hospitalName: form.hospital_name,
+      hospitalName: (form.hospitals as any)?.name || form.hospital_name, // Use joined hospital name or fallback
       medications: form.medications, // JSONB column
       createdAt: form.created_at,
       updatedAt: form.updated_at,
-    })) as DischargedPatient[]
+      status: (form.status as "active" | "archived" | "draft") || "active", // Add status
+    })) as DischargedForm[]
   } catch (error) {
     console.error("Error in getDischargedForms:", error)
     return []
@@ -656,6 +772,48 @@ export async function getCallHistory(accountId: string): Promise<CallLog[]> {
     console.error("Error in getCallHistory:", error)
     return []
   }
+}
+
+export async function getRecentPayments(limit = 5): Promise<Payment[]> {
+  const tablesExist = await checkTablesExist()
+  if (!tablesExist) {
+    console.warn("Required tables do not exist. Please run the database setup scripts.")
+    return []
+  }
+
+  const supabase = createClient()
+
+  try {
+    const { data, error } = await supabase
+      .from("payment_records")
+      .select("*, customer_accounts(patient_name, mrn)") // Select payment details and related customer account info
+      .order("payment_date", { ascending: false })
+      .limit(limit)
+
+    if (error) {
+      console.error("Error fetching recent payments:", error)
+      return []
+    }
+
+    return (data || []).map((payment) => ({
+      id: payment.id,
+      accountId: payment.customer_id,
+      amount: payment.amount,
+      paymentDate: payment.payment_date,
+      method: payment.payment_method || "Unknown",
+      notes: payment.notes || "",
+      patientName: (payment.customer_accounts as any)?.patient_name || "Unknown Patient", // Access nested patient_name
+      mrn: (payment.customer_accounts as any)?.mrn || "N/A", // Access nested mrn
+    }))
+  } catch (error) {
+    console.error("Error in getRecentPayments:", error)
+    return []
+  }
+}
+
+export async function getOutstandingAccounts(): Promise<CustomerAccount[]> {
+  const allAccounts = await getCustomerAccounts() // Use the enhanced getCustomerAccounts
+  return allAccounts.filter((account) => account.totalOwed > 0)
 }
 
 // Add a new call log
@@ -942,7 +1100,7 @@ export async function submitMedicationPlanToDB(
         health_fund: formData.healthFund || null,
         reason_for_admission: formData.reasonForAdmission || null,
         relevant_past_medical_history: formData.relevantPastMedicalHistory || null,
-        community_pharmacist: formData.communityPharmacist || null,
+        community_pharmacist: formData.community_pharmacist || null,
         general_practitioner: formData.generalPractitioner || null,
         medication_risks_comments: formData.medicationRisksComments || null,
         sources_of_history: formData.sourcesOfHistory || null,
@@ -1009,5 +1167,103 @@ export async function submitMedicationPlanToDB(
   } catch (e: any) {
     console.error("Unexpected error in submitMedicationPlanToDB:", e)
     return { success: false, error: e.message || "An unexpected error occurred." }
+  }
+}
+
+// Placeholder for saving patient notes (requires new DB table: patient_notes)
+export async function savePatientNotes(patientId: string, notes: string) {
+  console.log(`Simulating saving notes for patient ${patientId}:`, notes)
+  // In a real application, you would insert/update a 'patient_notes' table here.
+  // Example:
+  // const supabase = createClient();
+  // const { data, error } = await supabase.from('patient_notes').upsert({ patient_id: patientId, notes: notes }, { onConflict: ['patient_id'] });
+  // if (error) { console.error("Error saving notes:", error); return { success: false, error: error.message }; }
+  revalidatePath(`/patients/${patientId}`) // Revalidate the patient's page
+  return { success: true }
+}
+
+// Server action for uploading patient documents to Vercel Blob
+export async function uploadPatientDocument(patientId: string, file: File) {
+  try {
+    // 1. Upload file to Vercel Blob
+    const { url } = await put(file.name, file, { access: "public" })
+
+    // 2. Save document metadata to Supabase (requires a 'patient_documents' table)
+    const supabase = createClient()
+    const { error } = await supabase.from("patient_documents").insert({
+      patient_id: patientId,
+      file_name: file.name,
+      file_url: url,
+      file_type: file.type,
+      uploaded_at: new Date().toISOString(),
+    })
+
+    if (error) {
+      console.error("Error saving document metadata to DB:", error)
+      // If DB save fails, you might want to delete the blob or log for manual cleanup
+      return { success: false, error: error.message }
+    }
+
+    revalidatePath(`/patients/${patientId}`) // Revalidate the patient's page to show new document
+    return { success: true, url }
+  } catch (error: any) {
+    console.error("Error in uploadPatientDocument:", error)
+    return { success: false, error: error.message || "An unexpected error occurred during upload." }
+  }
+}
+
+// NEW: Get patient documents
+export async function getPatientDocuments(patientId: string): Promise<PatientDocument[]> {
+  const supabase = createClient()
+  try {
+    const { data, error } = await supabase
+      .from("patient_documents")
+      .select("*")
+      .eq("patient_id", patientId)
+      .order("uploaded_at", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching patient documents:", error)
+      return []
+    }
+
+    return data.map((doc) => ({
+      id: doc.id,
+      patientId: doc.patient_id,
+      fileName: doc.file_name,
+      fileUrl: doc.file_url,
+      fileType: doc.file_type,
+      uploadedAt: doc.uploaded_at,
+    })) as PatientDocument[]
+  } catch (error) {
+    console.error("Error in getPatientDocuments:", error)
+    return []
+  }
+}
+
+export async function markTaskAsComplete(accountId: string): Promise<{ success: boolean; message: string }> {
+  const tablesExist = await checkTablesExist()
+  if (!tablesExist) {
+    return { success: false, message: "Database tables not set up yet." }
+  }
+
+  const supabase = createClient()
+
+  try {
+    const { error } = await supabase
+      .from("customer_accounts")
+      .update({ status: "paid", total_owed: 0 }) // Mark as paid and set owed to 0
+      .eq("id", accountId)
+
+    if (error) {
+      console.error("Error marking task as complete:", error)
+      return { success: false, message: error.message }
+    }
+
+    revalidatePath("/dashboard") // Revalidate dashboard to reflect changes
+    return { success: true, message: "Task marked as complete successfully!" }
+  } catch (error: any) {
+    console.error("Error in markTaskAsComplete:", error)
+    return { success: false, message: error.message || "An unexpected error occurred." }
   }
 }

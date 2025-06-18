@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react" // Import useEffect
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,7 +11,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { PlusCircle, Trash2, Send, Printer, FileSpreadsheet, ArrowLeft } from "lucide-react"
 import type { PatientFormData, Medication, MedicationWithComment } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/navigation" // Keep useRouter for potential future redirects outside drawer
 import { MedicationSearch } from "@/components/medication-search"
 import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea"
 import { MedicationStatusCombobox } from "@/components/medication-status-combobox"
@@ -19,12 +19,15 @@ import { HomeNewStatusCombobox } from "@/components/home-new-status-combobox"
 import { ChartedStatusCombobox } from "@/components/charted-status-combobox"
 import { exportMedicationsToExcel } from "@/lib/export-excel"
 import { submitMedicationPlanToDB } from "@/services/accounting-service" // Import the new server action
+import { PDFGenerator, generatePDFFilename } from "@/lib/pdf-generator" // Import PDF generation utilities
 
 // Define props for the MedicationPlanForm
 interface MedicationPlanFormProps {
   templateType: "before-admission" | "after-admission" | "new" | "hospital-specific"
   hospitalName?: string
-  onBack: () => void // Callback to go back to template selection
+  onBack: () => void // Callback to go back to the main discharge summaries page
+  // onCloseDrawer?: () => void // Removed
+  initialPatientData?: Partial<PatientFormData> // New prop for pre-filling patient data
 }
 
 // Helper function to create an empty medication row based on template type
@@ -43,21 +46,22 @@ const createEmptyMedication = (templateType: MedicationPlanFormProps["templateTy
     return {
       id: Date.now().toString() + Math.random(),
       name: "",
-      times: { "7am": "", "8am": "", Noon: "", "2pm": "", "6pm": "", "8pm": "", "10pm": "" },
+      times: { "7am": "", "8am": "", Noon: "", "2pm": "", "5pm": "", "8pm": "", "10pm": "" }, // Changed 6pm to 5pm
       status: "",
       comments: "",
+      category: "", // Ensure category is initialized for grouping
     }
   }
 }
 
-const initialFormData: PatientFormData = {
+const initialFormDataBase: PatientFormData = {
   name: "",
   address: "",
   medicare: "",
   allergies: "",
   dob: "",
   mrn: "",
-  phone: "", // Default for general template
+  phone: "",
   admissionDate: "",
   dischargeDate: "",
   pharmacist: "",
@@ -72,13 +76,21 @@ const initialFormData: PatientFormData = {
   sourcesOfHistory: "",
   pharmacistSignature: "",
   dateTimeSigned: "",
-  medications: [], // Will be initialized based on templateType in useState
+  medications: [],
+  commentsStoppedMedications: "", // Added for the new PDF section
 }
 
-export default function MedicationPlanForm({ templateType, hospitalName, onBack }: MedicationPlanFormProps) {
+export default function MedicationPlanForm({
+  templateType,
+  hospitalName,
+  onBack,
+  // onCloseDrawer, // Removed
+  initialPatientData,
+}: MedicationPlanFormProps) {
   const [formData, setFormData] = useState<PatientFormData>(() => {
     const baseData = {
-      ...initialFormData,
+      ...initialFormDataBase,
+      ...initialPatientData, // Apply initial patient data
       dateListPrepared: new Date().toISOString().split("T")[0],
     }
 
@@ -92,8 +104,18 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
     return baseData
   })
 
+  // Update form data if initialPatientData changes (e.g., when switching patient type in drawer)
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...initialFormDataBase,
+      ...initialPatientData,
+      dateListPrepared: new Date().toISOString().split("T")[0],
+      medications: prev.medications.length > 0 ? prev.medications : [createEmptyMedication(templateType)], // Keep existing meds if any, otherwise re-init
+    }))
+  }, [initialPatientData, templateType])
+
   const { toast } = useToast()
-  const router = useRouter()
+  const router = useRouter() // Keep useRouter for potential future redirects outside drawer
 
   const getTitle = () => {
     switch (templateType) {
@@ -138,6 +160,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
         ;(newMedications[index] as any).commentsActions = medicationWithComment.comment || ""
       } else {
         ;(newMedications[index] as any).comments = medicationWithComment.comment || ""
+        ;(newMedications[index] as any).category = medicationWithComment.category || "" // Set category from search
       }
 
       if (index === formData.medications.length - 1) {
@@ -149,6 +172,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
         ;(newMedications[index] as any).commentsActions = ""
       } else {
         ;(newMedications[index] as any).comments = ""
+        ;(newMedications[index] as any).category = ""
       }
     }
     setFormData((prev) => ({ ...prev, medications: newMedications }))
@@ -193,11 +217,30 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
   }
 
   const handleSaveAndPrint = () => {
+    const medicationsWithData = formData.medications.filter((med) => !isMedicationRowEmpty(med))
+
+    if (!formData.name || !formData.mrn || !formData.dob || medicationsWithData.length === 0) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in patient name, MRN, DOB, and add at least one medication before printing.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const pdfGenerator = new PDFGenerator()
+
+    if (templateType === "after-admission" || templateType === "hospital-specific") {
+      pdfGenerator.generateDischargeMedicationSummaryPDF(formData, hospitalName)
+      pdfGenerator.save(generatePDFFilename("discharge-summary", formData.name))
+    } else {
+      pdfGenerator.generateMedicationPlanPDF(formData, templateType)
+      pdfGenerator.save(generatePDFFilename("medication-plan", formData.name, templateType))
+    }
+
     toast({
-      title: "Save & Print",
-      description:
-        "This feature is not yet implemented for direct printing. Please use 'Send to Discharge' and print from there.",
-      variant: "default",
+      title: "Medication Plan Generated",
+      description: "The medication plan has been downloaded as a PDF.",
     })
   }
 
@@ -242,13 +285,8 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
         title: "Template Sent to Discharge",
         description: `Medication plan for ${formData.name} has been prepared and saved.`,
       })
-      // Reset form after successful submission
-      setFormData({
-        ...initialFormData,
-        medications: [createEmptyMedication(templateType)],
-        dateListPrepared: new Date().toISOString().split("T")[0],
-      })
-      router.push("/discharge") // Redirect to discharge page
+      // Always redirect to the main discharge page after submission
+      router.push("/discharge")
     } else {
       toast({
         title: "Submission Failed",
@@ -258,7 +296,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
     }
   }
 
-  const timeSlots: (keyof Medication["times"])[] = ["7am", "8am", "Noon", "2pm", "6pm", "8pm", "10pm"]
+  const timeSlots: (keyof Medication["times"])[] = ["7am", "8am", "Noon", "2pm", "5pm", "8pm", "10pm"] // Changed 6pm to 5pm
 
   return (
     <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-purple-50 animate-gradient-shift bg-[length:200%_200%]">
@@ -268,10 +306,10 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
           <Button
             variant="ghost"
             size="sm"
-            onClick={onBack}
+            onClick={onBack} // This now goes back to the main discharge summaries page
             className="text-gray-700 hover:bg-gray-100/50 transition-all duration-200"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Templates
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Discharges
           </Button>
         </CardHeader>
         <CardContent className="space-y-6 p-6">
@@ -287,7 +325,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
@@ -300,7 +338,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   type="date"
                   value={formData.dob}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
@@ -312,7 +350,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   name="mrn"
                   value={formData.mrn}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
@@ -324,7 +362,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   name="medicare"
                   value={formData.medicare || ""}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1 col-span-full md:col-span-2">
@@ -336,7 +374,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
@@ -348,7 +386,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   name="concession"
                   value={formData.concession || ""}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
@@ -360,7 +398,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   name="healthFund"
                   value={formData.healthFund || ""}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
@@ -372,7 +410,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   name="allergies"
                   value={formData.allergies}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
             </div>
@@ -387,7 +425,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
@@ -400,7 +438,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   type="date"
                   value={formData.dob}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
@@ -412,7 +450,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   name="mrn"
                   value={formData.mrn}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
@@ -424,7 +462,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   name="phone"
                   value={formData.phone || ""}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                   placeholder="Phone number"
                 />
               </div>
@@ -437,7 +475,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
@@ -449,7 +487,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   name="medicare"
                   value={formData.medicare}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
@@ -461,7 +499,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   name="allergies"
                   value={formData.allergies}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
@@ -474,7 +512,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   type="date"
                   value={formData.admissionDate || ""}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
@@ -487,7 +525,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   type="date"
                   value={formData.dischargeDate || ""}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
@@ -499,14 +537,37 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   name="pharmacist"
                   value={formData.pharmacist || ""}
                   onChange={handleInputChange}
-                  className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs font-medium text-gray-700">List Prepared</Label>
-                <div className="h-9 px-3 py-2 bg-white/90 rounded-md flex items-center text-sm text-gray-600 border border-white/50">
+                <div className="h-9 px-3 py-2 bg-white/90 rounded-md flex items-center text-sm text-gray-600 border border-gray-300 shadow-sm">
                   {new Date().toLocaleDateString()}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Medications Stopped During Hospital (for after-admission template) */}
+          {(templateType === "after-admission" || templateType === "hospital-specific") && (
+            <div className="space-y-4 mt-6 p-4 rounded-xl bg-white/70 shadow-inner border border-white/40">
+              <div className="space-y-1">
+                <Label htmlFor="commentsStoppedMedications" className="text-xs font-medium text-gray-700">
+                  MEDICATIONS STOPPED DURING HOSPITAL
+                </Label>
+                <p className="text-xs text-gray-600 italic">Do not take these medications unless advised by your GP.</p>
+                <Label htmlFor="commentsStoppedMedications" className="text-xs font-medium text-gray-700">
+                  Comments:
+                </Label>
+                <AutoResizeTextarea
+                  id="commentsStoppedMedications"
+                  name="commentsStoppedMedications"
+                  value={formData.commentsStoppedMedications || ""}
+                  onChange={handleInputChange}
+                  placeholder="Enter comments about stopped medications..."
+                  className="text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+                />
               </div>
             </div>
           )}
@@ -566,7 +627,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                           <Input
                             value={(med as Medication).dosageFrequency || ""}
                             onChange={(e) => handleMedicationChange(index, "dosageFrequency", e.target.value)}
-                            className="text-xs p-1 h-8 bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                            className="text-xs p-1 h-8 bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                           />
                         </TableCell>
                         <TableCell className="py-1">
@@ -586,14 +647,14 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                             value={(med as Medication).commentsActions || ""}
                             onChange={(e) => handleMedicationChange(index, "commentsActions", e.target.value)}
                             placeholder="Enter comments/actions..."
-                            className="text-xs bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                            className="text-xs bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                           />
                         </TableCell>
                         <TableCell className="py-1">
                           <Input
                             value={(med as Medication).drSignActionCompleted || ""}
                             onChange={(e) => handleMedicationChange(index, "drSignActionCompleted", e.target.value)}
-                            className="text-xs p-1 h-8 bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                            className="text-xs p-1 h-8 bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                           />
                         </TableCell>
                       </>
@@ -604,7 +665,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                             <Input
                               value={(med as Medication).times?.[slot] || ""}
                               onChange={(e) => handleMedicationChange(index, `times.${slot}`, e.target.value)}
-                              className="text-center text-xs p-1 h-8 bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                              className="text-center text-xs p-1 h-8 bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                             />
                           </TableCell>
                         ))}
@@ -619,7 +680,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                             value={(med as Medication).comments || ""}
                             onChange={(e) => handleMedicationChange(index, "comments", e.target.value)}
                             placeholder="Enter comments..."
-                            className="text-xs bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                            className="text-xs bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                           />
                         </TableCell>
                       </>
@@ -644,9 +705,9 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
             variant="outline"
             onClick={addMedicationRow}
             className="mt-4 h-9 text-sm font-semibold rounded-lg px-4 py-2
-                       bg-gradient-to-r from-emerald-50 to-emerald-100 text-gray-800
-                       hover:from-emerald-100 hover:to-emerald-200
-                       shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]"
+                      bg-gradient-to-r from-emerald-50 to-emerald-100 text-gray-800
+                      hover:from-emerald-100 hover:to-emerald-200
+                      shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]"
           >
             <PlusCircle className="h-4 w-4 mr-2" /> Add Medication
           </Button>
@@ -665,7 +726,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                     value={formData.reasonForAdmission || ""}
                     onChange={handleInputChange}
                     placeholder="Enter reason for admission..."
-                    className="text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                    className="text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                   />
                 </div>
                 <div className="space-y-1">
@@ -678,7 +739,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                     value={formData.relevantPastMedicalHistory || ""}
                     onChange={handleInputChange}
                     placeholder="Enter relevant past medical history..."
-                    className="text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                    className="text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                   />
                 </div>
                 <div className="space-y-1">
@@ -690,7 +751,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                     name="communityPharmacist"
                     value={formData.communityPharmacist || ""}
                     onChange={handleInputChange}
-                    className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                    className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                   />
                 </div>
                 <div className="space-y-1">
@@ -702,7 +763,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                     name="generalPractitioner"
                     value={formData.generalPractitioner || ""}
                     onChange={handleInputChange}
-                    className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                    className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                   />
                 </div>
               </div>
@@ -716,7 +777,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   value={formData.medicationRisksComments || ""}
                   onChange={handleInputChange}
                   placeholder="Enter medication risks and pharmacist's comments..."
-                  className="text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1">
@@ -729,7 +790,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                   value={formData.sourcesOfHistory || ""}
                   onChange={handleInputChange}
                   placeholder="Enter sources of history..."
-                  className="text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                  className="text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/40">
@@ -742,7 +803,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                     name="pharmacistSignature"
                     value={formData.pharmacistSignature || ""}
                     onChange={handleInputChange}
-                    className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                    className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                   />
                 </div>
                 <div className="space-y-1">
@@ -755,7 +816,7 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
                     type="datetime-local"
                     value={formData.dateTimeSigned || ""}
                     onChange={handleInputChange}
-                    className="h-9 text-sm bg-white/90 border-white/50 focus:border-blue-300 focus:ring-1 focus:ring-blue-300 transition-all duration-200"
+                    className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
                   />
                 </div>
               </div>
@@ -783,8 +844,8 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
             variant="outline"
             size="sm"
             className="h-10 text-sm font-semibold rounded-lg px-5 py-2
-                       bg-gradient-to-r from-cyan-50 to-cyan-100 text-gray-800
-                       hover:from-cyan-100 hover:to-cyan-200
+                       bg-gradient-to-r from-blue-500 to-purple-500 text-white
+                       hover:from-blue-600 hover:to-purple-600
                        shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]"
           >
             <FileSpreadsheet className="h-4 w-4 mr-2" /> Download Excel
@@ -794,8 +855,8 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
             variant="outline"
             size="sm"
             className="h-10 text-sm font-semibold rounded-lg px-5 py-2
-                       bg-gradient-to-r from-blue-50 to-blue-100 text-gray-800
-                       hover:from-blue-100 hover:to-blue-200
+                       bg-gradient-to-r from-blue-500 to-purple-500 text-white
+                       hover:from-blue-600 hover:to-purple-600
                        shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]"
           >
             <Printer className="h-4 w-4 mr-2" /> Save & Print
@@ -804,8 +865,8 @@ export default function MedicationPlanForm({ templateType, hospitalName, onBack 
             onClick={handleSubmitToDischarge}
             size="sm"
             className="h-10 text-sm font-semibold rounded-lg px-5 py-2
-                       bg-gradient-to-r from-purple-50 to-purple-100 text-gray-800
-                       hover:from-purple-100 hover:to-purple-200
+                       bg-gradient-to-r from-blue-500 to-purple-500 text-white
+                       hover:from-blue-600 hover:to-purple-600
                        shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]"
           >
             <Send className="h-4 w-4 mr-2" /> Send to Discharge

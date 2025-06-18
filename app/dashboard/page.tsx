@@ -1,183 +1,266 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { BellIcon, DollarSign, Users, Clock } from "lucide-react"
+import { getRecentPayments, getOutstandingAccounts, getPatients } from "@/services/accounting-service"
+import type { Payment, CustomerAccount, PatientProfile } from "@/lib/types"
+import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import {
-  MessageSquare,
-  CalendarCheck,
-  AlertTriangle,
-  BarChart2,
-  TrendingUp,
-  Activity,
-  Building2,
-} from "lucide-react"
-import { mockNotifications } from "@/lib/data"
-import type { NotificationItem } from "@/lib/types"
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts"
 
-const sampleSalesData = [
-  { name: "Mon", value: 400 },
-  { name: "Tue", value: 520 },
-  { name: "Wed", value: 150 },
-  { name: "Thu", value: 430 },
-  { name: "Fri", value: 540 },
-  { name: "Sat", value: 350 },
-  { name: "Sun", value: 290 },
-]
+export default function Dashboard() {
+  const [recentPayments, setRecentPayments] = useState<Payment[]>([])
+  const [outstandingAccounts, setOutstandingAccounts] = useState<CustomerAccount[]>([])
+  const [patients, setPatients] = useState<PatientProfile[]>([])
 
-const salesByHospital = [
-  { name: "Hospital A", value: 30 },
-  { name: "Hospital B", value: 40 },
-  { name: "Hospital C", value: 30 },
-]
-
-const COLORS = ["#4F46E5", "#3B82F6", "#06B6D4"]
-
-export default function DashboardPage() {
-  const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  // Mock notifications for "Your Tasks"
+  const [notifications, setNotifications] = useState([
+    {
+      id: "1",
+      type: "reminder",
+      message: "Follow up with John Doe regarding medication refill.",
+      dueDate: "2025-06-20",
+      completed: false,
+    },
+    {
+      id: "2",
+      type: "alert",
+      message: "New patient registration requires review.",
+      dueDate: "2025-06-15",
+      completed: false,
+    },
+    {
+      id: "3",
+      type: "message",
+      message: "Team meeting at 10 AM in conference room B.",
+      dueDate: "2025-06-18",
+      completed: true,
+    },
+    {
+      id: "4",
+      type: "reminder",
+      message: "Prepare discharge forms for patient Jane Smith.",
+      dueDate: "2025-06-10",
+      completed: false,
+    },
+  ])
 
   useEffect(() => {
-    setNotifications(
-      mockNotifications.sort(
-        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-      ),
-    )
+    async function fetchData() {
+      try {
+        const payments = await getRecentPayments(5)
+        setRecentPayments(payments)
+
+        const outstanding = await getOutstandingAccounts()
+        setOutstandingAccounts(outstanding)
+
+        const patientsData = await getPatients()
+        setPatients(patientsData)
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error)
+      }
+    }
+    fetchData()
   }, [])
 
-  const toggleCompletion = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isCompleted: !n.isCompleted } : n)),
-    )
-  }
+  const overdueTasks = notifications.filter((task) => !task.completed && new Date(task.dueDate) < new Date())
 
   return (
-    <div className="min-h-screen bg-gray-50 px-6 py-10">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-4xl font-bold text-gray-800">Good Morning, John Doe</h1>
-          <p className="text-gray-500">Your performance summary this week</p>
+    <div className="flex flex-col min-h-screen bg-soft-offwhite p-8 font-sans">
+      <header className="mb-10 animate-fade-in-up">
+        <h1 className="text-5xl font-bold text-deep-purple mb-2">Dashboard</h1>
+        <p className="text-lg font-medium text-slate-dark">Overview of your pharmacy operations.</p>
+      </header>
+      <main className="flex-1 grid grid-cols-1 gap-8">
+        {/* Quick Stats - Now full width and thin */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="animate-fade-in-up delay-100 bg-white shadow-lg rounded-xl h-[100px] flex items-center justify-between p-4">
+            <div className="flex items-center gap-4">
+              <Users className="h-8 w-8 text-violet-highlight" />
+              <div>
+                <CardTitle className="text-xl font-semibold text-deep-purple">Total Patients</CardTitle>
+                <div className="text-3xl font-bold text-slate-dark">{patients.length}</div>
+              </div>
+            </div>
+            <p className="text-sm font-medium text-gray-500 hidden md:block">Registered patients</p>
+          </Card>
+
+          <Card className="animate-fade-in-up delay-200 bg-white shadow-lg rounded-xl h-[100px] flex items-center justify-between p-4">
+            <div className="flex items-center gap-4">
+              <DollarSign className="h-8 w-8 text-violet-highlight" />
+              <div>
+                <CardTitle className="text-xl font-semibold text-deep-purple">Outstanding Balance</CardTitle>
+                <div className="text-3xl font-bold text-slate-dark">
+                  ${outstandingAccounts.reduce((sum, acc) => sum + acc.totalOwed, 0).toFixed(2)}
+                </div>
+              </div>
+            </div>
+            <p className="text-sm font-medium text-gray-500 hidden md:block">Total amount owed</p>
+          </Card>
+
+          <Card className="animate-fade-in-up delay-300 bg-white shadow-lg rounded-xl h-[100px] flex items-center justify-between p-4">
+            <div className="flex items-center gap-4">
+              <Clock className="h-8 w-8 text-violet-highlight" />
+              <div>
+                <CardTitle className="text-xl font-semibold text-deep-purple">Overdue Tasks</CardTitle>
+                <div className="text-3xl font-bold text-slate-dark">{overdueTasks.length}</div>
+              </div>
+            </div>
+            <p className="text-sm font-medium text-gray-500 hidden md:block">Tasks past due date</p>
+          </Card>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-        <Card className="shadow-xl rounded-2xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl text-blue-700">
-              <BarChart2 className="h-5 w-5" /> Revenue Analytics
-            </CardTitle>
+        {/* Your Tasks */}
+        <Card className="animate-fade-in-up delay-400 bg-white shadow-lg rounded-xl">
+          <CardHeader className="flex flex-row items-center justify-between p-6">
+            <CardTitle className="text-2xl font-semibold text-deep-purple">Your Tasks</CardTitle>
+            <Button variant="ghost" className="text-violet-highlight underline">
+              View All
+            </Button>
           </CardHeader>
-          <CardContent className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={sampleSalesData}>
-                <XAxis dataKey="name" stroke="#4F46E5" />
-                <YAxis stroke="#4F46E5" />
-                <Tooltip />
-                <Line type="monotone" dataKey="value" stroke="#4F46E5" strokeWidth={3} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
+          <CardContent className="p-6 pt-0">
+            <ul className="space-y-6">
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <li
+                    key={notification.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg transition-all duration-300 hover:bg-gray-100"
+                  >
+                    <div className="flex items-center gap-4">
+                      <BellIcon className="h-6 w-6 text-light-pink" />
+                      <div>
+                        <p className="text-lg font-semibold text-slate-dark">{notification.message}</p>
+                        <p className="text-sm font-medium text-gray-500">Due: {notification.dueDate}</p>
+                      </div>
+                    </div>
+                    <Badge
+                      variant={notification.completed ? "secondary" : "default"}
+                      className={`font-medium ${
+                        notification.completed ? "bg-green-100 text-green-800" : "bg-light-pink text-deep-purple"
+                      }`}
+                    >
+                      {notification.completed ? "Completed" : notification.type}
+                    </Badge>
+                  </li>
+                ))
+              ) : (
+                <p className="text-center text-gray-500 font-medium p-4">No tasks to display.</p>
+              )}
+            </ul>
           </CardContent>
         </Card>
 
-        <Card className="shadow-xl rounded-2xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl text-blue-700">
-              <Building2 className="h-5 w-5" /> Sales Analytics by Hospital
-            </CardTitle>
+        {/* Recent Payments */}
+        <Card className="animate-fade-in-up delay-500 bg-white shadow-lg rounded-xl">
+          <CardHeader className="flex flex-row items-center justify-between p-6">
+            <CardTitle className="text-2xl font-semibold text-deep-purple">Recent Payments</CardTitle>
+            <Link href="/accounting" className="text-violet-highlight underline font-medium">
+              View All
+            </Link>
           </CardHeader>
-          <CardContent className="flex justify-center items-center h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={salesByHospital}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label
-                >
-                  {salesByHospital.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-xl rounded-2xl col-span-1 lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl text-green-700">
-              <TrendingUp className="h-5 w-5" /> Tasks
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {notifications.map(
-              (item) =>
-                !item.isCompleted && (
-                  <div
-                    key={item.id}
-                    className="p-3 rounded-md border bg-white shadow-sm flex justify-between items-start"
+          <CardContent className="p-6 pt-0">
+            <ul className="space-y-6">
+              {recentPayments.length > 0 ? (
+                recentPayments.map((payment) => (
+                  <li
+                    key={payment.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg transition-all duration-300 hover:bg-gray-100"
                   >
                     <div>
-                      <p className="font-semibold text-gray-800">{item.title}</p>
-                      <p className="text-sm text-gray-600 mt-1">{item.content}</p>
+                      <p className="text-lg font-semibold text-slate-dark">${payment.amount.toFixed(2)}</p>
+                      <p className="text-sm font-medium text-gray-500">
+                        {payment.patientName} ({payment.mrn})
+                      </p>
                     </div>
-                    <Checkbox
-                      checked={item.isCompleted}
-                      onCheckedChange={() => toggleCompletion(item.id)}
-                      className="mt-1"
-                    />
-                  </div>
-                ),
-            )}
+                    <p className="text-sm font-medium text-gray-500">
+                      {new Date(payment.paymentDate).toLocaleDateString()}
+                    </p>
+                  </li>
+                ))
+              ) : (
+                <p className="text-center text-gray-500 font-medium p-4">No recent payments.</p>
+              )}
+            </ul>
           </CardContent>
         </Card>
-      </div>
 
-      <Card className="shadow-xl rounded-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl text-indigo-700">
-            <Activity className="h-5 w-5" /> Activity (Completed)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {notifications.map(
-            (item) =>
-              item.isCompleted && (
-                <div
-                  key={item.id}
-                  className="p-3 rounded-md border bg-gray-100 flex justify-between items-start"
-                >
-                  <div>
-                    <p className="font-semibold text-gray-700 line-through">{item.title}</p>
-                    <p className="text-sm text-gray-500 mt-1">{item.content}</p>
-                  </div>
-                  <Badge variant="secondary">Done</Badge>
-                </div>
-              ),
-          )}
-        </CardContent>
-      </Card>
+        {/* Outstanding Tasks */}
+        {overdueTasks.length > 0 && (
+          <Card className="animate-fade-in-up delay-600 bg-white shadow-lg rounded-xl">
+            <CardHeader className="p-6">
+              <CardTitle className="text-2xl font-semibold text-deep-purple flex items-center gap-4">
+                <Clock className="h-7 w-7 text-red-500" />
+                Outstanding Tasks
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <ul className="space-y-6">
+                {overdueTasks.map((task) => (
+                  <li
+                    key={task.id}
+                    className="flex items-center justify-between p-4 bg-red-50 border border-red-200 rounded-lg transition-all duration-300 hover:bg-red-100"
+                  >
+                    <div className="flex items-center gap-4">
+                      <BellIcon className="h-6 w-6 text-red-500" />
+                      <div>
+                        <p className="text-lg font-semibold text-slate-dark">{task.message}</p>
+                        <p className="text-sm font-medium text-red-600">Overdue since: {task.dueDate}</p>
+                      </div>
+                    </div>
+                    <Badge variant="destructive" className="bg-red-500 text-white font-medium">
+                      Overdue
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Outstanding Accounts */}
+        <Card className="animate-fade-in-up delay-700 bg-white shadow-lg rounded-xl">
+          <CardHeader className="flex flex-row items-center justify-between p-6">
+            <CardTitle className="text-2xl font-semibold text-deep-purple">Outstanding Accounts</CardTitle>
+            <Link href="/accounting" className="text-violet-highlight underline font-medium">
+              View All
+            </Link>
+          </CardHeader>
+          <CardContent className="p-6 pt-0">
+            <ul className="space-y-6">
+              {outstandingAccounts.length > 0 ? (
+                outstandingAccounts.map((account) => (
+                  <li
+                    key={account.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg transition-all duration-300 hover:bg-gray-100"
+                  >
+                    <div>
+                      <p className="text-lg font-semibold text-slate-dark">
+                        {account.patientName} - ${account.totalOwed.toFixed(2)}
+                      </p>
+                      <p className="text-sm font-medium text-gray-500">
+                        {account.hospitalId ? `Hospital: ${account.hospitalId}` : "Hospital: N/A"}
+                        {" | "}
+                        Outstanding for: {account.daysOutstanding} days
+                      </p>
+                    </div>
+                    <Badge
+                      variant={account.status === "overdue" ? "destructive" : "default"}
+                      className={`font-medium ${
+                        account.status === "overdue" ? "bg-red-500 text-white" : "bg-light-pink text-deep-purple"
+                      }`}
+                    >
+                      {account.status.charAt(0).toUpperCase() + account.status.slice(1)}
+                    </Badge>
+                  </li>
+                ))
+              ) : (
+                <p className="text-center text-gray-500 font-medium p-4">No outstanding accounts.</p>
+              )}
+            </ul>
+          </CardContent>
+        </Card>
+      </main>
     </div>
   )
 }

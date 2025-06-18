@@ -53,6 +53,12 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Custom colors for the pharmacy app
+        "deep-purple": "#4A148C", // Darker purple for headings/strong text
+        "violet-highlight": "#8E24AA", // Brighter purple for accents/buttons
+        "light-pink": "#E1BEE7", // Light pink/purple for borders/backgrounds
+        "soft-offwhite": "#F8F8F8", // Slightly off-white for general backgrounds
+        "slate-dark": "#334155", // Dark slate for general text
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -68,20 +74,20 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        "gradient-shift": {
-          "0%": { backgroundPosition: "0% 50%" },
-          "50%": { backgroundPosition: "100% 50%" },
-          "100%": { backgroundPosition: "0% 50%" },
-        },
         "fade-in-up": {
-          "0%": { opacity: "0", transform: "translateY(10px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
+          "0%": {
+            opacity: "0",
+            transform: "translateY(20px)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)",
+          },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "gradient-shift": "gradient-shift 10s ease infinite",
         "fade-in-up": "fade-in-up 0.5s ease-out forwards",
       },
     },
