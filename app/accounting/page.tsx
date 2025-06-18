@@ -6,17 +6,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Database, AlertTriangle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { checkTablesExist, getCustomerAccounts } from "@/services/accounting-service" // Import getCustomerAccounts
+import { checkTablesExist, getCustomerAccounts } from "@/services/accounting-service"
 import { SetupGuide } from "@/components/setup-guide"
 import AccountingOverview from "@/components/accounting-overview"
 import CustomerAccountTable from "@/components/customer-account-table"
-import type { CustomerAccount } from "@/lib/types" // Import CustomerAccount type
+import type { CustomerAccount } from "@/lib/types"
 
 export default function AccountingPage() {
   const [isUsingMockData, setIsUsingMockData] = useState(false)
   const [showSetupGuide, setShowSetupGuide] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [customerAccounts, setCustomerAccounts] = useState<CustomerAccount[]>([]) // State to hold accounts
+  const [customerAccounts, setCustomerAccounts] = useState<CustomerAccount[]>([])
 
   const { toast } = useToast()
 
@@ -25,6 +25,7 @@ export default function AccountingPage() {
       try {
         const tablesExist = await checkTablesExist()
         setIsUsingMockData(!tablesExist)
+
         if (!tablesExist) {
           toast({
             title: "Using mock data",
@@ -42,55 +43,69 @@ export default function AccountingPage() {
           description: "Failed to load accounting data.",
           variant: "destructive",
         })
-        setIsUsingMockData(true) // Assume mock data if fetch fails
+        setIsUsingMockData(true)
       } finally {
         setIsLoading(false)
       }
     }
+
     fetchData()
   }, [toast])
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8">
-        <h1 className="text-3xl font-bold mb-8">Accounting</h1>
+      <div className="container mx-auto py-12 px-6">
+        <h1 className="text-3xl font-bold mb-8 text-deep-purple">Accounting</h1>
         <div className="flex justify-center items-center h-64">
-          <p>Loading accounting dashboard...</p>
+          <p className="text-slate-dark font-medium">Loading accounting dashboard...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <>
-      <AccountingOverview accounts={customerAccounts} /> {/* Pass accounts to AccountingOverview */}
-      <CustomerAccountTable accounts={customerAccounts} /> {/* Pass accounts to CustomerAccountTable */}
+    <div className="min-h-screen px-6 md:px-12 py-12 bg-soft-offwhite">
+      {/* Section 1: Overview Cards */}
+      <AccountingOverview accounts={customerAccounts} />
+
+      {/* Section 2: Table */}
+      <div className="mt-12">
+        <CustomerAccountTable accounts={customerAccounts} />
+      </div>
+
+      {/* Section 3: Alert + Setup Guide Button */}
       {isUsingMockData && (
-        <div className="container mx-auto px-6 mt-6">
-          <Alert variant="warning" className="mb-6">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Using Mock Data</AlertTitle>
-            <AlertDescription>
+        <div className="mt-10 animate-fade-in-up delay-600">
+          <Alert variant="warning" className="mb-6 bg-white border-light-pink text-slate-dark">
+            <AlertTriangle className="h-4 w-4 text-light-pink" />
+            <AlertTitle className="font-semibold text-deep-purple">Using Mock Data</AlertTitle>
+            <AlertDescription className="font-medium">
               You're currently viewing mock data. To set up the database with real data, click the "Setup Database"
               button.
             </AlertDescription>
           </Alert>
-          <div className="flex flex-col items-end mb-4">
-            <Button onClick={() => setShowSetupGuide(true)} variant="outline">
+          <div className="flex justify-end">
+            <Button
+              onClick={() => setShowSetupGuide(true)}
+              variant="outline"
+              className="bg-violet-highlight text-white hover:bg-deep-purple hover:text-white transition-colors underline"
+            >
               <Database className="mr-2 h-4 w-4" />
               Setup Database
             </Button>
           </div>
         </div>
       )}
+
+      {/* Dialog: Setup Guide */}
       <Dialog open={showSetupGuide} onOpenChange={setShowSetupGuide}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Database Setup Guide</DialogTitle>
+            <DialogTitle className="text-2xl font-semibold text-deep-purple">Database Setup Guide</DialogTitle>
           </DialogHeader>
           <SetupGuide onClose={() => setShowSetupGuide(false)} />
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   )
 }

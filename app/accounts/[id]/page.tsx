@@ -598,7 +598,11 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
       </Dialog>
 
       <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
-        <DialogContent>{account && <PaymentHistory account={account} />}</DialogContent>
+<Dialog open={...} onOpenChange={...}>
+  <DialogContent>
+    {account && <Component account={account} />}
+  </DialogContent>
+</Dialog>
       </Dialog>
 
       <Dialog open={isCallHistoryDialogOpen} onOpenChange={setIsCallHistoryDialogOpen}>

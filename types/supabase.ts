@@ -203,6 +203,7 @@ export interface Database {
           phone: string | null
           created_at: string
           updated_at: string
+          hospital_id: string | null // Added hospital_id
         }
         Insert: {
           id?: string
@@ -215,6 +216,7 @@ export interface Database {
           phone?: string | null
           created_at?: string
           updated_at?: string
+          hospital_id?: string | null
         }
         Update: {
           id?: string
@@ -227,6 +229,7 @@ export interface Database {
           phone?: string | null
           created_at?: string
           updated_at?: string
+          hospital_id?: string | null
         }
       }
     }

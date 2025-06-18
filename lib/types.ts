@@ -1,8 +1,38 @@
-import type { Json } from "@/types/supabase"
 
-export interface PatientProfile {
+export type UserProfile = {
+  id: string
+  email: string
+  username: string | null
+  role: "admin" | "user" | "guest"
+  hospital_id: string | null
+}
+
+export type Hospital = {
   id: string
   name: string
+  address: string | null
+  phone: string | null
+  email: string | null
+}
+
+export type PatientProfile = {
+  id: string
+  name: string
+  dob: string | null
+  address: string | null
+  medicare: string | null
+  allergies: string | null
+  mrn: string | null
+  phone: string | null
+  hospital_id?: string | null
+}
+
+
+export type Medication = {
+  id: string
+  name: string
+
+=======
   dob: string
   address: string
   medicare: string
@@ -54,10 +84,18 @@ export interface Payment {
 
 export interface CallLog {
   id: string
-  accountId: string
-  callDate: string
-  comments: string
+  patient_id: string
+  hospital_id: string | null
+  discharge_date: string
+  medications_at_discharge: Medication[] | null
+  follow_up_plan: string | null
+  discharge_summary_text: string | null
+  template_name: string | null
+  template_content: string | null
+  created_at: string
+  status?: "active" | "archived" | "draft" // Added status field
 }
+
 
 // Medication types for the form and database
 export interface Medication {
@@ -110,9 +148,11 @@ export interface PatientFormData {
 
 // DischargedPatient type for the database, reflecting the full form data
 export interface DischargedPatient {
+
   id: string
   patientId: string // Link to the patients table
   name: string
+
   address: string | null
   medicare: string | null
   allergies: string | null
