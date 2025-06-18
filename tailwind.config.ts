@@ -56,14 +56,18 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Minimalist color palette
-        "text-primary": "#1A1A1A", // Near black for main text
-        "bg-light": "#F9F9F9", // Very light grey for general backgrounds
-        "border-light": "#E0E0E0", // Slightly darker light grey for borders
+        // Minimalist color palette based on the provided image
+        "bg-page": "#F8F8F8", // Very light grey for page background
+        "bg-card": "#FFFFFF", // White for card backgrounds
+        "border-card": "#E0E0E0", // Light grey for card borders
+        "text-dark": "#1A1A1A", // Near black for main headings and strong text
+        "text-medium": "#606060", // Medium grey for secondary text
+        "text-light": "#909090", // Light grey for subtle text
+        "chart-line-dark": "#606060", // Darker grey for chart lines
+        "chart-line-light": "#A0A0A0", // Lighter grey for chart lines
         "accent-purple": "#6A0DAD", // A subtle, deep purple for accents
-        "status-overdue": "#EF4444", // Red for overdue status
-        "status-current": "#22C55E", // Green for current status
-        "status-paid": "#9CA3AF", // Grey for paid status
+        "status-overdue": "#EF4444", // Red for overdue status (if needed, keeping for consistency)
+        "status-current": "#22C55E", // Green for current status (if needed)
       },
       borderRadius: {
         lg: "var(--radius)",
