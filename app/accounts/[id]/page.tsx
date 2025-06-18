@@ -461,125 +461,126 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
       {/* All Dialogs (moved from accounting/page.tsx) */}
       <Dialog open={!!dischargeForm} onOpenChange={() => setDischargeForm(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {dischargeForm ? `Discharge Summary - ${dischargeForm.name}` : "Discharge Summary"}
-            </DialogTitle>
-          </DialogHeader>
           {dischargeForm && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <strong>DOB:</strong> {dischargeForm.dob ? new Date(dischargeForm.dob).toLocaleDateString() : "N/A"}
+            <>
+              <DialogHeader>
+                <DialogTitle>Discharge Summary - {dischargeForm.name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <strong>DOB:</strong> {dischargeForm.dob ? new Date(dischargeForm.dob).toLocaleDateString() : "N/A"}
+                  </div>
+                  <div>
+                    <strong>MRN:</strong> {dischargeForm.mrn}
+                  </div>
+                  <div>
+                    <strong>Phone:</strong> {dischargeForm.phone || "Not provided"}
+                  </div>
+                  <div>
+                    <strong>Allergies:</strong> {dischargeForm.allergies || "N/A"}
+                  </div>
+                  <div>
+                    <strong>Discharge Date:</strong>{" "}
+                    {dischargeForm.dischargeDate ? new Date(dischargeForm.dischargeDate).toLocaleDateString() : "N/A"}
+                  </div>
                 </div>
-                <div>
-                  <strong>MRN:</strong> {dischargeForm.mrn}
-                </div>
-                <div>
-                  <strong>Phone:</strong> {dischargeForm.phone || "Not provided"}
-                </div>
-                <div>
-                  <strong>Allergies:</strong> {dischargeForm.allergies || "N/A"}
-                </div>
-                <div>
-                  <strong>Discharge Date:</strong>{" "}
-                  {dischargeForm.dischargeDate ? new Date(dischargeForm.dischargeDate).toLocaleDateString() : "N/A"}
-                </div>
-              </div>
 
-              <div>
-                <h4 className="font-semibold mb-2">Medications:</h4>
-                {dischargeForm.medications.length === 0 ? (
-                  <p className="text-muted-foreground">No medications listed.</p>
-                ) : (
-                  dischargeForm.medications.map(
-                    (
-                      med: any,
-                      index: number, // Cast med to any for flexible access
-                    ) => (
-                      <div key={med.id || index} className="mb-3 p-3 border rounded-md text-sm">
-                        <p>
-                          <strong>{med.name || "Unnamed Medication"}</strong>
-                        </p>
-                        {/* Conditional rendering based on template type */}
-                        {dischargeForm.templateType === "before-admission" ? (
-                          <>
-                            <p>Dosage & Frequency: {med.dosageFrequency || "N/A"}</p>
-                            <p>
-                              Home med or New: <Badge variant="outline">{med.homeNewStatus || "N/A"}</Badge>
-                            </p>
-                            <p>
-                              Currently Charted?: <Badge variant="outline">{med.chartedStatus || "N/A"}</Badge>
-                            </p>
-                            <p>Comments/Actions: {med.commentsActions || "None"}</p>
-                            <p>Dr to sign when action completed: {med.drSignActionCompleted || "N/A"}</p>
-                          </>
-                        ) : (
-                          <>
-                            <p>
-                              Status: <Badge variant="outline">{med.status || "N/A"}</Badge>
-                            </p>
-                            <p>Comments: {med.comments || "None"}</p>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-1 mt-2">
-                              {Object.entries(med.times || {}).map(
-                                ([time, dose]) =>
-                                  dose && (
-                                    <p key={time} className="text-xs">
-                                      <strong>{time.toUpperCase()}:</strong> {dose}
-                                    </p>
-                                  ),
-                              )}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ),
-                  )
+                <div>
+                  <h4 className="font-semibold mb-2">Medications:</h4>
+                  {dischargeForm.medications.length === 0 ? (
+                    <p className="text-muted-foreground">No medications listed.</p>
+                  ) : (
+                    dischargeForm.medications.map(
+                      (
+                        med: any,
+                        index: number, // Cast med to any for flexible access
+                      ) => (
+                        <div key={med.id || index} className="mb-3 p-3 border rounded-md text-sm">
+                          <p>
+                            <strong>{med.name || "Unnamed Medication"}</strong>
+                          </p>
+                          {/* Conditional rendering based on template type */}
+                          {dischargeForm.templateType === "before-admission" ? (
+                            <>
+                              <p>Dosage & Frequency: {med.dosageFrequency || "N/A"}</p>
+                              <p>
+                                Home med or New: <Badge variant="outline">{med.homeNewStatus || "N/A"}</Badge>
+                              </p>
+                              <p>
+                                Currently Charted?: <Badge variant="outline">{med.chartedStatus || "N/A"}</Badge>
+                              </p>
+                              <p>Comments/Actions: {med.commentsActions || "None"}</p>
+                              <p>Dr to sign when action completed: {med.drSignActionCompleted || "N/A"}</p>
+                            </>
+                          ) : (
+                            <>
+                              <p>
+                                Status: <Badge variant="outline">{med.status || "N/A"}</Badge>
+                              </p>
+                              <p>Comments: {med.comments || "None"}</p>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-1 mt-2">
+                                {Object.entries(med.times || {}).map(
+                                  ([time, dose]) =>
+                                    dose && (
+                                      <p key={time} className="text-xs">
+                                        <strong>{time.toUpperCase()}:</strong> {dose}
+                                      </p>
+                                    ),
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ),
+                    )
+                  )}
+                </div>
+
+                {dischargeForm.templateType === "before-admission" && (
+                  <div className="space-y-2 text-sm">
+                    <p>
+                      <strong>Concession:</strong> {dischargeForm.concession || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Health Fund:</strong> {dischargeForm.healthFund || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Reason for Admission:</strong> {dischargeForm.reasonForAdmission || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Relevant Past Medical History:</strong>{" "}
+                      {dischargeForm.relevantPastMedicalHistory || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Community Pharmacist:</strong> {dischargeForm.communityPharmacist || "N/A"}
+                    </p>
+                    <p>
+                      <strong>General Practitioner:</strong> {dischargeForm.generalPractitioner || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Medication Risks Identified & Pharmacist's Comments:</strong>{" "}
+                      {dischargeForm.medicationRisksComments || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Sources of History:</strong> {dischargeForm.sourcesOfHistory || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Pharmacist Signature:</strong> {dischargeForm.pharmacistSignature || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Date/Time Signed:</strong>{" "}
+                      {dischargeForm.dateTimeSigned ? new Date(dischargeForm.dateTimeSigned).toLocaleString() : "N/A"}
+                    </p>
+                  </div>
                 )}
-              </div>
 
-              {dischargeForm.templateType === "before-admission" && (
-                <div className="space-y-2 text-sm">
-                  <p>
-                    <strong>Concession:</strong> {dischargeForm.concession || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Health Fund:</strong> {dischargeForm.healthFund || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Reason for Admission:</strong> {dischargeForm.reasonForAdmission || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Relevant Past Medical History:</strong> {dischargeForm.relevantPastMedicalHistory || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Community Pharmacist:</strong> {dischargeForm.communityPharmacist || "N/A"}
-                  </p>
-                  <p>
-                    <strong>General Practitioner:</strong> {dischargeForm.generalPractitioner || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Medication Risks Identified & Pharmacist's Comments:</strong>{" "}
-                    {dischargeForm.medicationRisksComments || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Sources of History:</strong> {dischargeForm.sourcesOfHistory || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Pharmacist Signature:</strong> {dischargeForm.pharmacistSignature || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Date/Time Signed:</strong>{" "}
-                    {dischargeForm.dateTimeSigned ? new Date(dischargeForm.dateTimeSigned).toLocaleString() : "N/A"}
-                  </p>
+                <div className="pt-3 border-t text-xs text-muted-foreground">
+                  <p>Pharmacist: {dischargeForm.pharmacist || "N/A"}</p>
+                  <p>Prepared: {new Date(dischargeForm.dischargeTimestamp).toLocaleString()}</p>
                 </div>
-              )}
-
-              <div className="pt-3 border-t text-xs text-muted-foreground">
-                <p>Pharmacist: {dischargeForm.pharmacist || "N/A"}</p>
-                <p>Prepared: {new Date(dischargeForm.dischargeTimestamp).toLocaleString()}</p>
               </div>
-            </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
@@ -597,7 +598,11 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
       </Dialog>
 
       <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
-        <DialogContent>{account && <PaymentHistory account={account} />}</Dialog>
+<Dialog open={...} onOpenChange={...}>
+  <DialogContent>
+    {account && <Component account={account} />}
+  </DialogContent>
+</Dialog>
       </Dialog>
 
       <Dialog open={isCallHistoryDialogOpen} onOpenChange={setIsCallHistoryDialogOpen}>

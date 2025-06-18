@@ -2,6 +2,7 @@
 
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
+
 import type {
   CustomerAccount,
   Payment,
@@ -13,6 +14,7 @@ import type {
   PatientDocument,
   PatientFormData, // Import PatientFormData
 } from "./types"
+
 
 export interface PatientAccountData {
   account: CustomerAccount
@@ -51,9 +53,11 @@ export class PDFGenerator {
     this.currentY = Math.max(this.currentY, newY)
   }
 
+
   private sanitizeText(text: string | number | undefined | null): string {
     if (text === undefined || text === null) return ""
     if (typeof text !== "string") return String(text) // Ensure text is a string
+
     return text
       .replace(/[^\x20-\x7E\u00A0-\u00FF]/g, "")
       .replace(/\s+/g, " ")
@@ -162,6 +166,7 @@ export class PDFGenerator {
     // Add footer
     this.addFooter()
   }
+
 
   // NEW: Comprehensive Patient Report Generation
   generatePatientReportPDF(
@@ -351,6 +356,7 @@ export class PDFGenerator {
     // Custom footer for this template
     this.addDischargeSummaryFooter()
   }
+
 
   private addHeader(title: string): void {
     // Company header background
@@ -891,6 +897,7 @@ export class PDFGenerator {
   output(type: "blob"): Blob {
     return this.doc.output(type)
   }
+
 
   // NEW: Add Patient Details Section
   private addPatientDetailsSection(patient: PatientProfile): void {
@@ -1512,11 +1519,13 @@ export function generatePDFFilename(
   patientName?: string,
   suffix = "multiple",
 ): string {
+
   const date = new Date().toISOString().split("T")[0]
 
   if (type === "single" && patientName) {
     const sanitizedName = patientName.replace(/[^a-z0-9]/gi, "-").toLowerCase()
     return `account-report-${sanitizedName}-${date}.pdf`
+
   } else if (type === "patient-report" && patientName) {
     const sanitizedName = patientName.replace(/[^a-z0-9]/gi, "-").toLowerCase()
     return `patient-report-${sanitizedName}-${date}.pdf`
@@ -1531,6 +1540,7 @@ export function generatePDFFilename(
     // Handle new type
     const sanitizedName = patientName.replace(/[^a-z0-9]/gi, "-").toLowerCase()
     return `discharge-summary-${sanitizedName}-${date}.pdf`
+
   } else {
     return `accounts-report-${suffix || "multiple"}-${date}.pdf`
   }

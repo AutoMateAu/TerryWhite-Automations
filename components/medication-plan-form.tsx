@@ -2,7 +2,9 @@
 
 import type React from "react"
 
+
 import { useState, useEffect } from "react" // Import useEffect
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,7 +13,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { PlusCircle, Trash2, Send, Printer, FileSpreadsheet, ArrowLeft } from "lucide-react"
 import type { PatientFormData, Medication, MedicationWithComment } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
+
 import { useRouter } from "next/navigation" // Keep useRouter for potential future redirects outside drawer
+
 import { MedicationSearch } from "@/components/medication-search"
 import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea"
 import { MedicationStatusCombobox } from "@/components/medication-status-combobox"
@@ -19,15 +23,19 @@ import { HomeNewStatusCombobox } from "@/components/home-new-status-combobox"
 import { ChartedStatusCombobox } from "@/components/charted-status-combobox"
 import { exportMedicationsToExcel } from "@/lib/export-excel"
 import { submitMedicationPlanToDB } from "@/services/accounting-service" // Import the new server action
+
 import { PDFGenerator, generatePDFFilename } from "@/lib/pdf-generator" // Import PDF generation utilities
+
 
 // Define props for the MedicationPlanForm
 interface MedicationPlanFormProps {
   templateType: "before-admission" | "after-admission" | "new" | "hospital-specific"
   hospitalName?: string
+
   onBack: () => void // Callback to go back to the main discharge summaries page
   // onCloseDrawer?: () => void // Removed
   initialPatientData?: Partial<PatientFormData> // New prop for pre-filling patient data
+
 }
 
 // Helper function to create an empty medication row based on template type
@@ -46,6 +54,7 @@ const createEmptyMedication = (templateType: MedicationPlanFormProps["templateTy
     return {
       id: Date.now().toString() + Math.random(),
       name: "",
+
       times: { "7am": "", "8am": "", Noon: "", "2pm": "", "5pm": "", "8pm": "", "10pm": "" }, // Changed 6pm to 5pm
       status: "",
       comments: "",
@@ -117,6 +126,7 @@ export default function MedicationPlanForm({
   const { toast } = useToast()
   const router = useRouter() // Keep useRouter for potential future redirects outside drawer
 
+
   const getTitle = () => {
     switch (templateType) {
       case "before-admission":
@@ -160,7 +170,9 @@ export default function MedicationPlanForm({
         ;(newMedications[index] as any).commentsActions = medicationWithComment.comment || ""
       } else {
         ;(newMedications[index] as any).comments = medicationWithComment.comment || ""
+
         ;(newMedications[index] as any).category = medicationWithComment.category || "" // Set category from search
+
       }
 
       if (index === formData.medications.length - 1) {
@@ -172,7 +184,9 @@ export default function MedicationPlanForm({
         ;(newMedications[index] as any).commentsActions = ""
       } else {
         ;(newMedications[index] as any).comments = ""
+
         ;(newMedications[index] as any).category = ""
+
       }
     }
     setFormData((prev) => ({ ...prev, medications: newMedications }))
@@ -217,16 +231,27 @@ export default function MedicationPlanForm({
   }
 
   const handleSaveAndPrint = () => {
-    const medicationsWithData = formData.medications.filter((med) => !isMedicationRowEmpty(med))
 
-    if (!formData.name || !formData.mrn || !formData.dob || medicationsWithData.length === 0) {
+    toast({
+      title: "Save & Print",
+      description:
+        "This feature is not yet implemented for direct printing. Please use 'Send to Discharge' and print from there.",
+      variant: "default",
+    })
+  }
+
+  const handleDownloadExcel = () => {
+    const medicationsToExport = formData.medications.filter((med) => !isMedicationRowEmpty(med))
+    if (medicationsToExport.length === 0) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in patient name, MRN, DOB, and add at least one medication before printing.",
+        title: "No Medications to Export",
+        description: "Please add at least one medication to export to Excel.",
+
         variant: "destructive",
       })
       return
     }
+
 
     const pdfGenerator = new PDFGenerator()
 
@@ -261,6 +286,7 @@ export default function MedicationPlanForm({
     })
   }
 
+
   const handleSubmitToDischarge = async () => {
     const medicationsWithData = formData.medications.filter((med) => !isMedicationRowEmpty(med))
 
@@ -285,8 +311,14 @@ export default function MedicationPlanForm({
         title: "Template Sent to Discharge",
         description: `Medication plan for ${formData.name} has been prepared and saved.`,
       })
-      // Always redirect to the main discharge page after submission
-      router.push("/discharge")
+
+      // Reset form after successful submission
+      setFormData({
+        ...initialFormData,
+        medications: [createEmptyMedication(templateType)],
+        dateListPrepared: new Date().toISOString().split("T")[0],
+      })
+      router.push("/discharge") // Redirect to discharge page
     } else {
       toast({
         title: "Submission Failed",
@@ -298,6 +330,7 @@ export default function MedicationPlanForm({
 
   const timeSlots: (keyof Medication["times"])[] = ["7am", "8am", "Noon", "2pm", "5pm", "8pm", "10pm"] // Changed 6pm to 5pm
 
+
   return (
     <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-purple-50 animate-gradient-shift bg-[length:200%_200%]">
       <Card className="max-w-6xl mx-auto rounded-3xl shadow-2xl backdrop-blur-lg bg-white/80 border border-white/30 animate-fade-in-up">
@@ -306,10 +339,12 @@ export default function MedicationPlanForm({
           <Button
             variant="ghost"
             size="sm"
+
             onClick={onBack} // This now goes back to the main discharge summaries page
             className="text-gray-700 hover:bg-gray-100/50 transition-all duration-200"
           >
             <ArrowLeft className="h-4 w-4 mr-2" /> Back to Discharges
+
           </Button>
         </CardHeader>
         <CardContent className="space-y-6 p-6">
@@ -325,7 +360,9 @@ export default function MedicationPlanForm({
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
@@ -338,7 +375,9 @@ export default function MedicationPlanForm({
                   type="date"
                   value={formData.dob}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
@@ -350,7 +389,9 @@ export default function MedicationPlanForm({
                   name="mrn"
                   value={formData.mrn}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
@@ -362,7 +403,9 @@ export default function MedicationPlanForm({
                   name="medicare"
                   value={formData.medicare || ""}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1 col-span-full md:col-span-2">
@@ -374,7 +417,9 @@ export default function MedicationPlanForm({
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
@@ -386,7 +431,9 @@ export default function MedicationPlanForm({
                   name="concession"
                   value={formData.concession || ""}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
@@ -398,7 +445,9 @@ export default function MedicationPlanForm({
                   name="healthFund"
                   value={formData.healthFund || ""}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
@@ -410,7 +459,9 @@ export default function MedicationPlanForm({
                   name="allergies"
                   value={formData.allergies}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
             </div>
@@ -425,7 +476,9 @@ export default function MedicationPlanForm({
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
@@ -439,6 +492,7 @@ export default function MedicationPlanForm({
                   value={formData.dob}
                   onChange={handleInputChange}
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
@@ -450,7 +504,9 @@ export default function MedicationPlanForm({
                   name="mrn"
                   value={formData.mrn}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
@@ -462,7 +518,9 @@ export default function MedicationPlanForm({
                   name="phone"
                   value={formData.phone || ""}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                   placeholder="Phone number"
                 />
               </div>
@@ -475,7 +533,9 @@ export default function MedicationPlanForm({
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
@@ -487,7 +547,9 @@ export default function MedicationPlanForm({
                   name="medicare"
                   value={formData.medicare}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
@@ -499,7 +561,9 @@ export default function MedicationPlanForm({
                   name="allergies"
                   value={formData.allergies}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
@@ -512,7 +576,9 @@ export default function MedicationPlanForm({
                   type="date"
                   value={formData.admissionDate || ""}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
@@ -525,7 +591,9 @@ export default function MedicationPlanForm({
                   type="date"
                   value={formData.dischargeDate || ""}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
@@ -537,17 +605,22 @@ export default function MedicationPlanForm({
                   name="pharmacist"
                   value={formData.pharmacist || ""}
                   onChange={handleInputChange}
+
                   className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs font-medium text-gray-700">List Prepared</Label>
+
                 <div className="h-9 px-3 py-2 bg-white/90 rounded-md flex items-center text-sm text-gray-600 border border-gray-300 shadow-sm">
+
                   {new Date().toLocaleDateString()}
                 </div>
               </div>
             </div>
           )}
+
 
           {/* Medications Stopped During Hospital (for after-admission template) */}
           {(templateType === "after-admission" || templateType === "hospital-specific") && (
@@ -571,6 +644,7 @@ export default function MedicationPlanForm({
               </div>
             </div>
           )}
+
 
           {/* Medication Table Section */}
           <div className="overflow-x-auto rounded-xl shadow-lg border border-white/40 bg-white/70">
@@ -627,7 +701,9 @@ export default function MedicationPlanForm({
                           <Input
                             value={(med as Medication).dosageFrequency || ""}
                             onChange={(e) => handleMedicationChange(index, "dosageFrequency", e.target.value)}
+
                             className="text-xs p-1 h-8 bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                           />
                         </TableCell>
                         <TableCell className="py-1">
@@ -647,14 +723,18 @@ export default function MedicationPlanForm({
                             value={(med as Medication).commentsActions || ""}
                             onChange={(e) => handleMedicationChange(index, "commentsActions", e.target.value)}
                             placeholder="Enter comments/actions..."
+
                             className="text-xs bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                           />
                         </TableCell>
                         <TableCell className="py-1">
                           <Input
                             value={(med as Medication).drSignActionCompleted || ""}
                             onChange={(e) => handleMedicationChange(index, "drSignActionCompleted", e.target.value)}
+
                             className="text-xs p-1 h-8 bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                           />
                         </TableCell>
                       </>
@@ -665,7 +745,9 @@ export default function MedicationPlanForm({
                             <Input
                               value={(med as Medication).times?.[slot] || ""}
                               onChange={(e) => handleMedicationChange(index, `times.${slot}`, e.target.value)}
+
                               className="text-center text-xs p-1 h-8 bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                             />
                           </TableCell>
                         ))}
@@ -680,7 +762,9 @@ export default function MedicationPlanForm({
                             value={(med as Medication).comments || ""}
                             onChange={(e) => handleMedicationChange(index, "comments", e.target.value)}
                             placeholder="Enter comments..."
+
                             className="text-xs bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                           />
                         </TableCell>
                       </>
@@ -708,6 +792,7 @@ export default function MedicationPlanForm({
                       bg-gradient-to-r from-emerald-50 to-emerald-100 text-gray-800
                       hover:from-emerald-100 hover:to-emerald-200
                       shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]"
+
           >
             <PlusCircle className="h-4 w-4 mr-2" /> Add Medication
           </Button>
@@ -726,7 +811,9 @@ export default function MedicationPlanForm({
                     value={formData.reasonForAdmission || ""}
                     onChange={handleInputChange}
                     placeholder="Enter reason for admission..."
+
                     className="text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                   />
                 </div>
                 <div className="space-y-1">
@@ -739,7 +826,9 @@ export default function MedicationPlanForm({
                     value={formData.relevantPastMedicalHistory || ""}
                     onChange={handleInputChange}
                     placeholder="Enter relevant past medical history..."
+
                     className="text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                   />
                 </div>
                 <div className="space-y-1">
@@ -751,7 +840,9 @@ export default function MedicationPlanForm({
                     name="communityPharmacist"
                     value={formData.communityPharmacist || ""}
                     onChange={handleInputChange}
+
                     className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                   />
                 </div>
                 <div className="space-y-1">
@@ -763,7 +854,9 @@ export default function MedicationPlanForm({
                     name="generalPractitioner"
                     value={formData.generalPractitioner || ""}
                     onChange={handleInputChange}
+
                     className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                   />
                 </div>
               </div>
@@ -777,7 +870,9 @@ export default function MedicationPlanForm({
                   value={formData.medicationRisksComments || ""}
                   onChange={handleInputChange}
                   placeholder="Enter medication risks and pharmacist's comments..."
+
                   className="text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="space-y-1">
@@ -790,7 +885,9 @@ export default function MedicationPlanForm({
                   value={formData.sourcesOfHistory || ""}
                   onChange={handleInputChange}
                   placeholder="Enter sources of history..."
+
                   className="text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/40">
@@ -803,7 +900,9 @@ export default function MedicationPlanForm({
                     name="pharmacistSignature"
                     value={formData.pharmacistSignature || ""}
                     onChange={handleInputChange}
+
                     className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                   />
                 </div>
                 <div className="space-y-1">
@@ -816,7 +915,9 @@ export default function MedicationPlanForm({
                     type="datetime-local"
                     value={formData.dateTimeSigned || ""}
                     onChange={handleInputChange}
+
                     className="h-9 text-sm bg-white/90 border border-gray-300 shadow-sm focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all duration-200"
+
                   />
                 </div>
               </div>
@@ -844,8 +945,10 @@ export default function MedicationPlanForm({
             variant="outline"
             size="sm"
             className="h-10 text-sm font-semibold rounded-lg px-5 py-2
+
                        bg-gradient-to-r from-blue-500 to-purple-500 text-white
                        hover:from-blue-600 hover:to-purple-600
+
                        shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]"
           >
             <FileSpreadsheet className="h-4 w-4 mr-2" /> Download Excel
@@ -855,8 +958,10 @@ export default function MedicationPlanForm({
             variant="outline"
             size="sm"
             className="h-10 text-sm font-semibold rounded-lg px-5 py-2
+
                        bg-gradient-to-r from-blue-500 to-purple-500 text-white
                        hover:from-blue-600 hover:to-purple-600
+
                        shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]"
           >
             <Printer className="h-4 w-4 mr-2" /> Save & Print
@@ -865,8 +970,10 @@ export default function MedicationPlanForm({
             onClick={handleSubmitToDischarge}
             size="sm"
             className="h-10 text-sm font-semibold rounded-lg px-5 py-2
+
                        bg-gradient-to-r from-blue-500 to-purple-500 text-white
                        hover:from-blue-600 hover:to-purple-600
+
                        shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02]"
           >
             <Send className="h-4 w-4 mr-2" /> Send to Discharge
