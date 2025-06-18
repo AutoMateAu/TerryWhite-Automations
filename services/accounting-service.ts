@@ -13,8 +13,8 @@ import type {
   Hospital, // Import Hospital type
   DischargedForm, // Import DischargedForm type
 } from "@/lib/types"
-
 import { mockCustomerAccounts, mockPatients } from "@/lib/data" // Import mock data as fallback
+import { put } from "@vercel/blob" // Import Vercel Blob put function
 
 // Function to check if required tables exist
 export async function checkTablesExist() {
@@ -539,12 +539,10 @@ export async function upsertPatient(
 }
 
 // Get all discharged forms
-
 export async function getDischargedForms(
   hospitalId?: string,
   status?: "active" | "archived" | "draft",
 ): Promise<DischargedForm[]> {
-
   const tablesExist = await checkTablesExist()
   if (!tablesExist) {
     console.warn("Required tables do not exist. Returning mock discharged patient data.")
@@ -579,7 +577,6 @@ export async function getDischargedForms(
   try {
     const { data, error } = await query.order("discharge_timestamp", { ascending: false })
 
-
     if (error) {
       console.error("Error fetching discharged forms:", error)
       return []
@@ -611,9 +608,7 @@ export async function getDischargedForms(
       dateTimeSigned: form.date_time_signed,
       dischargeTimestamp: form.discharge_timestamp,
       templateType: form.template_type || "new", // Default to 'new' if not set
-
       hospitalName: (form.hospitals as any)?.name || form.hospital_name, // Use joined hospital name or fallback
-
       medications: form.medications, // JSONB column
       createdAt: form.created_at,
       updatedAt: form.updated_at,

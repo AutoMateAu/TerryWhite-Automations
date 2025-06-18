@@ -191,7 +191,6 @@ export default function DischargePage() {
                       </Badge>
                     )}
                   </div>
-
                   <div className="flex items-center gap-3 text-base text-gray-500">
                     {" "}
                     {/* Increased gap, font size */}
@@ -200,7 +199,6 @@ export default function DischargePage() {
                   </div>
                 </div>
               </AccordionTrigger>
-
               <AccordionContent className="p-6 border-t border-light-pink/50 bg-white">
                 {" "}
                 {/* Increased padding */}
@@ -309,7 +307,6 @@ export default function DischargePage() {
                       )}
                     </div>
                   </CardContent>
-
                   <CardFooter className="flex justify-end gap-3 pt-6 border-t border-light-pink/50">
                     {" "}
                     {/* Increased gap, pt */}

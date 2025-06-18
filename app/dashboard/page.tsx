@@ -150,6 +150,7 @@ export default function Dashboard() {
             </ul>
           </CardContent>
         </Card>
+
         {/* Recent Payments */}
         <Card className="animate-fade-in-up delay-500 bg-white shadow-lg rounded-xl">
           <CardHeader className="flex flex-row items-center justify-between p-6">
@@ -183,6 +184,7 @@ export default function Dashboard() {
             </ul>
           </CardContent>
         </Card>
+
         {/* Outstanding Tasks */}
         {overdueTasks.length > 0 && (
           <Card className="animate-fade-in-up delay-600 bg-white shadow-lg rounded-xl">
@@ -215,6 +217,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         )}
+
         {/* Outstanding Accounts */}
         <Card className="animate-fade-in-up delay-700 bg-white shadow-lg rounded-xl">
           <CardHeader className="flex flex-row items-center justify-between p-6">
@@ -258,7 +261,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </main>
-
     </div>
   )
 }
