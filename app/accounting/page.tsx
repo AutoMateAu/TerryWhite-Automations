@@ -54,17 +54,17 @@ export default function AccountingPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-12 px-6 bg-soft-offwhite">
-        <h1 className="text-3xl font-bold mb-8 text-deep-purple">Accounting</h1>
+      <div className="container mx-auto py-12 px-6 bg-bg-light">
+        <h1 className="text-3xl font-bold mb-8 text-text-primary">Accounting</h1>
         <div className="flex justify-center items-center h-64">
-          <p className="text-slate-dark font-medium">Loading accounting dashboard...</p>
+          <p className="text-text-primary text-sm">Loading accounting dashboard...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen px-6 md:px-12 py-12 bg-soft-offwhite">
+    <div className="min-h-screen px-6 md:px-12 py-12 bg-bg-light text-text-primary">
       {/* Section 1: Overview Cards */}
       <AccountingOverview accounts={customerAccounts} />
 
@@ -76,10 +76,10 @@ export default function AccountingPage() {
       {/* Section 3: Alert + Setup Guide Button */}
       {isUsingMockData && (
         <div className="mt-10 animate-fade-in-up delay-600">
-          <Alert variant="warning" className="mb-6 bg-white border-light-pink text-slate-dark">
-            <AlertTriangle className="h-4 w-4 text-light-pink" />
-            <AlertTitle className="font-semibold text-deep-purple">Using Mock Data</AlertTitle>
-            <AlertDescription className="font-medium">
+          <Alert variant="warning" className="mb-6 bg-white border border-border-light text-text-primary">
+            <AlertTriangle className="h-4 w-4 text-accent-purple" />
+            <AlertTitle className="font-semibold text-text-primary text-sm">Using Mock Data</AlertTitle>
+            <AlertDescription className="text-text-primary text-xs">
               You're currently viewing mock data. To set up the database with real data, click the "Setup Database"
               button.
             </AlertDescription>
@@ -88,9 +88,9 @@ export default function AccountingPage() {
             <Button
               onClick={() => setShowSetupGuide(true)}
               variant="outline"
-              className="bg-violet-highlight text-white hover:bg-deep-purple hover:text-white transition-colors underline"
+              className="bg-accent-purple text-white hover:bg-accent-purple/90 border-accent-purple text-xs px-4 py-2"
             >
-              <Database className="mr-2 h-4 w-4" />
+              <Database className="mr-2 h-3 w-3" />
               Setup Database
             </Button>
           </div>
@@ -99,9 +99,9 @@ export default function AccountingPage() {
 
       {/* Dialog: Setup Guide */}
       <Dialog open={showSetupGuide} onOpenChange={setShowSetupGuide}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white text-text-primary">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold text-deep-purple">Database Setup Guide</DialogTitle>
+            <DialogTitle className="text-xl font-semibold text-text-primary">Database Setup Guide</DialogTitle>
           </DialogHeader>
           <SetupGuide onClose={() => setShowSetupGuide(false)} />
         </DialogContent>

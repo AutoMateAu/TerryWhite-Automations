@@ -57,26 +57,26 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
     switch (activeTab) {
       case "overdue":
         return (
-          <Card className="rounded-xl shadow-md border border-violet-highlight">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-deep-purple text-lg font-semibold">
-                <FileText className="h-5 w-5 text-violet-highlight" /> Overdue Accounts
+          <Card className="rounded-lg shadow-sm border border-border-light bg-white p-6">
+            <CardHeader className="p-0 mb-4">
+              <CardTitle className="flex items-center gap-2 text-text-primary text-base font-semibold">
+                <FileText className="h-4 w-4 text-accent-purple" /> Overdue Accounts
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="p-0 space-y-3">
               {overdueAccounts.length > 0 ? (
                 overdueAccounts.map((account) => (
-                  <div key={account.id} className="flex justify-between items-center">
+                  <div key={account.id} className="flex justify-between items-center text-sm">
                     <div>
-                      <p className="text-sm font-medium text-slate-dark">{account.patientName}</p>
+                      <p className="font-medium text-text-primary">{account.patientName}</p>
                       <p className="text-xs text-gray-500">
                         {account.hospitalName || "N/A"}
                         {account.daysOutstanding && (
-                          <span className="ml-1 text-light-pink">({account.daysOutstanding} days)</span>
+                          <span className="ml-1 text-status-overdue">({account.daysOutstanding} days)</span>
                         )}
                       </p>
                     </div>
-                    <p className="text-sm font-bold text-violet-highlight">
+                    <p className="font-bold text-accent-purple">
                       ${account.totalOwed.toLocaleString("en-AU", { minimumFractionDigits: 2 })}
                     </p>
                   </div>
@@ -89,28 +89,28 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
         )
       case "total-outstanding":
         return (
-          <Card className="rounded-xl shadow-md border border-violet-highlight">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-deep-purple text-lg font-semibold">
-                <DollarSign className="h-5 w-5 text-violet-highlight" /> Total Outstanding
+          <Card className="rounded-lg shadow-sm border border-border-light bg-white p-6">
+            <CardHeader className="p-0 mb-4">
+              <CardTitle className="flex items-center gap-2 text-text-primary text-base font-semibold">
+                <DollarSign className="h-4 w-4 text-accent-purple" /> Total Outstanding
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="p-0 space-y-3">
               {accounts.filter((acc) => acc.totalOwed > 0).length > 0 ? (
                 accounts
                   .filter((acc) => acc.totalOwed > 0)
                   .map((account) => (
-                    <div key={account.id} className="flex justify-between items-center">
+                    <div key={account.id} className="flex justify-between items-center text-sm">
                       <div>
-                        <p className="text-sm font-medium text-slate-dark">{account.patientName}</p>
+                        <p className="font-medium text-text-primary">{account.patientName}</p>
                         <p className="text-xs text-gray-500">
                           {account.hospitalName || "N/A"}
                           {account.daysOutstanding && (
-                            <span className="ml-1 text-light-pink">({account.daysOutstanding} days)</span>
+                            <span className="ml-1 text-status-overdue">({account.daysOutstanding} days)</span>
                           )}
                         </p>
                       </div>
-                      <p className="text-sm font-bold text-violet-highlight">
+                      <p className="font-bold text-accent-purple">
                         ${account.totalOwed.toLocaleString("en-AU", { minimumFractionDigits: 2 })}
                       </p>
                     </div>
@@ -123,26 +123,26 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
         )
       case "current":
         return (
-          <Card className="rounded-xl shadow-md border border-violet-highlight">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-deep-purple text-lg font-semibold">
-                <Calendar className="h-5 w-5 text-violet-highlight" /> Current Accounts
+          <Card className="rounded-lg shadow-sm border border-border-light bg-white p-6">
+            <CardHeader className="p-0 mb-4">
+              <CardTitle className="flex items-center gap-2 text-text-primary text-base font-semibold">
+                <Calendar className="h-4 w-4 text-accent-purple" /> Current Accounts
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="p-0 space-y-3">
               {currentAccounts.length > 0 ? (
                 currentAccounts.map((account) => (
-                  <div key={account.id} className="flex justify-between items-center">
+                  <div key={account.id} className="flex justify-between items-center text-sm">
                     <div>
-                      <p className="text-sm font-medium text-slate-dark">{account.patientName}</p>
+                      <p className="font-medium text-text-primary">{account.patientName}</p>
                       <p className="text-xs text-gray-500">
                         {account.hospitalName || "N/A"}
                         {account.daysOutstanding && (
-                          <span className="ml-1 text-light-pink">({account.daysOutstanding} days)</span>
+                          <span className="ml-1 text-status-overdue">({account.daysOutstanding} days)</span>
                         )}
                       </p>
                     </div>
-                    <p className="text-sm font-bold text-violet-highlight">
+                    <p className="font-bold text-accent-purple">
                       ${account.totalOwed.toLocaleString("en-AU", { minimumFractionDigits: 2 })}
                     </p>
                   </div>
@@ -155,27 +155,27 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
         )
       case "in-patient":
         return (
-          <Card className="rounded-xl shadow-md border border-violet-highlight">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-deep-purple text-lg font-semibold">
-                <Hospital className="h-5 w-5 text-violet-highlight" /> In-patient Accounts
+          <Card className="rounded-lg shadow-sm border border-border-light bg-white p-6">
+            <CardHeader className="p-0 mb-4">
+              <CardTitle className="flex items-center gap-2 text-text-primary text-base font-semibold">
+                <Hospital className="h-4 w-4 text-accent-purple" /> In-patient Accounts
               </CardTitle>
-              <p className="text-sm text-gray-500">Patients currently admitted</p>
+              <p className="text-xs text-gray-500">Patients currently admitted</p>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="p-0 space-y-3">
               {outstandingInPatients.length > 0 ? (
                 outstandingInPatients.map((account) => (
-                  <div key={account.id} className="flex justify-between items-center">
+                  <div key={account.id} className="flex justify-between items-center text-sm">
                     <div>
-                      <p className="text-sm font-medium text-slate-dark">{account.patientName}</p>
+                      <p className="font-medium text-text-primary">{account.patientName}</p>
                       <p className="text-xs text-gray-500">
                         {account.hospitalName || "N/A"}
                         {account.daysOutstanding && (
-                          <span className="ml-1 text-light-pink">({account.daysOutstanding} days)</span>
+                          <span className="ml-1 text-status-overdue">({account.daysOutstanding} days)</span>
                         )}
                       </p>
                     </div>
-                    <p className="text-sm font-bold text-violet-highlight">
+                    <p className="font-bold text-accent-purple">
                       ${account.totalOwed.toLocaleString("en-AU", { minimumFractionDigits: 2 })}
                     </p>
                   </div>
@@ -188,26 +188,26 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
         )
       case "out-patient":
         return (
-          <Card className="rounded-xl shadow-md border border-violet-highlight">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-deep-purple text-lg font-semibold">
-                <Home className="h-5 w-5 text-violet-highlight" /> Out-patient Accounts
+          <Card className="rounded-lg shadow-sm border border-border-light bg-white p-6">
+            <CardHeader className="p-0 mb-4">
+              <CardTitle className="flex items-center gap-2 text-text-primary text-base font-semibold">
+                <Home className="h-4 w-4 text-accent-purple" /> Out-patient Accounts
               </CardTitle>
-              <p className="text-sm text-gray-500">Patients not currently admitted</p>
+              <p className="text-xs text-gray-500">Patients not currently admitted</p>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="p-0 space-y-3">
               {outstandingOutPatients.length > 0 ? (
                 outstandingOutPatients.map((account) => (
-                  <div key={account.id} className="flex justify-between items-center">
+                  <div key={account.id} className="flex justify-between items-center text-sm">
                     <div>
-                      <p className="text-sm font-medium text-slate-dark">{account.patientName}</p>
+                      <p className="font-medium text-text-primary">{account.patientName}</p>
                       <p className="text-xs text-gray-500">
                         {account.daysOutstanding && (
-                          <span className="text-light-pink">({account.daysOutstanding} days)</span>
+                          <span className="text-status-overdue">({account.daysOutstanding} days)</span>
                         )}
                       </p>
                     </div>
-                    <p className="text-sm font-bold text-violet-highlight">
+                    <p className="font-bold text-accent-purple">
                       ${account.totalOwed.toLocaleString("en-AU", { minimumFractionDigits: 2 })}
                     </p>
                   </div>
@@ -224,92 +224,102 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
   }
 
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-6 bg-soft-offwhite">
+    <div className="px-4 md:px-6 lg:px-8 py-6 bg-bg-light text-text-primary">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-slate-dark">Accounting Dashboard</h1>
-        <p className="text-base text-gray-500">Real-time patient billing insights and overdue monitoring</p>
+        <h1 className="text-3xl font-bold text-text-primary">Accounting Dashboard</h1>
+        <p className="text-sm text-gray-600">Real-time patient billing insights and overdue monitoring</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Card className="rounded-xl shadow-md border border-violet-highlight">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-deep-purple">Total Outstanding</CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card className="rounded-lg shadow-sm border border-border-light bg-white p-6">
+          <CardHeader className="pb-2 p-0">
+            <CardTitle className="text-sm font-semibold text-text-primary">Total Outstanding</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-violet-highlight">
+          <CardContent className="p-0">
+            <div className="text-2xl font-bold text-accent-purple">
               ${totalOutstanding.toLocaleString("en-AU", { minimumFractionDigits: 2 })}
             </div>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs text-gray-600">
               Across {accounts.filter((acc) => acc.totalOwed > 0).length} accounts
             </p>
           </CardContent>
         </Card>
 
-        <Card className="rounded-xl shadow-md border border-violet-highlight">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-deep-purple">Overdue Accounts</CardTitle>
+        <Card className="rounded-lg shadow-sm border border-border-light bg-white p-6">
+          <CardHeader className="pb-2 p-0">
+            <CardTitle className="text-sm font-semibold text-text-primary">Overdue Accounts</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-light-pink">{overdueAccounts.length}</div>
-            <p className="text-sm text-gray-500">
+          <CardContent className="p-0">
+            <div className="text-2xl font-bold text-status-overdue">{overdueAccounts.length}</div>
+            <p className="text-xs text-gray-600">
               ${totalOverdueAmount.toLocaleString("en-AU", { minimumFractionDigits: 2 })} total
             </p>
             <Button
               variant="outline"
               size="sm"
-              className="mt-4 w-full bg-violet-highlight text-white hover:bg-deep-purple hover:text-white transition-colors underline"
+              className="mt-4 w-full bg-accent-purple text-white hover:bg-accent-purple/90 border-accent-purple text-xs px-3 py-1.5"
               onClick={() => setShowBulkExportDialog(true)}
               disabled={overdueAccounts.length === 0}
             >
-              <FileText className="h-4 w-4 mr-2" />
+              <FileText className="h-3 w-3 mr-1.5" />
               Generate Overdue Report
             </Button>
           </CardContent>
         </Card>
 
-        <Card className="rounded-xl shadow-md border border-violet-highlight">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-deep-purple">Current Accounts</CardTitle>
+        <Card className="rounded-lg shadow-sm border border-border-light bg-white p-6">
+          <CardHeader className="pb-2 p-0">
+            <CardTitle className="text-sm font-semibold text-text-primary">Current Accounts</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-violet-highlight">{currentAccounts.length}</div>
-            <p className="text-sm text-gray-500">
+          <CardContent className="p-0">
+            <div className="text-2xl font-bold text-accent-purple">{currentAccounts.length}</div>
+            <p className="text-xs text-gray-600">
               ${totalCurrentAmount.toLocaleString("en-AU", { minimumFractionDigits: 2 })} total
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <Card className="rounded-xl shadow-md border border-violet-highlight">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-deep-purple">Amount Fluctuations (Past Week)</CardTitle>
-            <p className="text-sm text-gray-500">Overview of total outstanding amounts</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Card className="rounded-lg shadow-sm border border-border-light bg-white p-6">
+          <CardHeader className="p-0 mb-4">
+            <CardTitle className="text-base font-semibold text-text-primary">Amount Fluctuations (Past Week)</CardTitle>
+            <p className="text-xs text-gray-600">Overview of total outstanding amounts</p>
           </CardHeader>
-          <CardContent className="h-72">
+          <CardContent className="h-72 p-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={amountFluctuationsData}>
-                <XAxis dataKey="name" stroke="#8E24AA" />
-                <YAxis stroke="#8E24AA" />
-                <Tooltip />
-                <Line type="monotone" dataKey="value" stroke="#8E24AA" strokeWidth={2} dot={false} />
+                <XAxis dataKey="name" stroke="#A0A0A0" tickLine={false} axisLine={false} style={{ fontSize: "10px" }} />
+                <YAxis stroke="#A0A0A0" tickLine={false} axisLine={false} style={{ fontSize: "10px" }} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "#FFFFFF", border: "1px solid #E0E0E0", borderRadius: "4px" }}
+                  itemStyle={{ color: "#1A1A1A", fontSize: "12px" }}
+                  labelStyle={{ color: "#6A0DAD", fontSize: "12px" }}
+                />
+                <Line type="monotone" dataKey="value" stroke="#6A0DAD" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="rounded-xl shadow-md border border-violet-highlight">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-deep-purple">Revenue Fluctuations (Past Week)</CardTitle>
-            <p className="text-sm text-gray-500">Overview of total revenue generated</p>
+        <Card className="rounded-lg shadow-sm border border-border-light bg-white p-6">
+          <CardHeader className="p-0 mb-4">
+            <CardTitle className="text-base font-semibold text-text-primary">
+              Revenue Fluctuations (Past Week)
+            </CardTitle>
+            <p className="text-xs text-gray-600">Overview of total revenue generated</p>
           </CardHeader>
-          <CardContent className="h-72">
+          <CardContent className="h-72 p-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={revenueFluctuationsData}>
-                <XAxis dataKey="name" stroke="#8E24AA" />
-                <YAxis stroke="#8E24AA" />
-                <Tooltip />
-                <Line type="monotone" dataKey="value" stroke="#8E24AA" strokeWidth={2} dot={false} />
+                <XAxis dataKey="name" stroke="#A0A0A0" tickLine={false} axisLine={false} style={{ fontSize: "10px" }} />
+                <YAxis stroke="#A0A0A0" tickLine={false} axisLine={false} style={{ fontSize: "10px" }} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "#FFFFFF", border: "1px solid #E0E0E0", borderRadius: "4px" }}
+                  itemStyle={{ color: "#1A1A1A", fontSize: "12px" }}
+                  labelStyle={{ color: "#6A0DAD", fontSize: "12px" }}
+                />
+                <Line type="monotone" dataKey="value" stroke="#6A0DAD" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -317,12 +327,12 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
       </div>
 
       {/* Tab-like navigation */}
-      <div className="flex space-x-2 mb-6 border-b border-light-pink pb-2">
+      <div className="flex space-x-2 mb-6 border-b border-border-light pb-2">
         <Button
           variant="ghost"
           onClick={() => setActiveTab("overdue")}
-          className={`text-deep-purple font-semibold ${
-            activeTab === "overdue" ? "border-b-2 border-violet-highlight" : ""
+          className={`text-text-primary text-sm font-medium px-4 py-2 rounded-md ${
+            activeTab === "overdue" ? "border-b-2 border-accent-purple text-accent-purple" : "hover:bg-gray-100"
           }`}
         >
           Overdue Accounts
@@ -330,8 +340,10 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
         <Button
           variant="ghost"
           onClick={() => setActiveTab("total-outstanding")}
-          className={`text-deep-purple font-semibold ${
-            activeTab === "total-outstanding" ? "border-b-2 border-violet-highlight" : ""
+          className={`text-text-primary text-sm font-medium px-4 py-2 rounded-md ${
+            activeTab === "total-outstanding"
+              ? "border-b-2 border-accent-purple text-accent-purple"
+              : "hover:bg-gray-100"
           }`}
         >
           Total Outstanding
@@ -339,8 +351,8 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
         <Button
           variant="ghost"
           onClick={() => setActiveTab("current")}
-          className={`text-deep-purple font-semibold ${
-            activeTab === "current" ? "border-b-2 border-violet-highlight" : ""
+          className={`text-text-primary text-sm font-medium px-4 py-2 rounded-md ${
+            activeTab === "current" ? "border-b-2 border-accent-purple text-accent-purple" : "hover:bg-gray-100"
           }`}
         >
           Current Accounts
@@ -348,8 +360,8 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
         <Button
           variant="ghost"
           onClick={() => setActiveTab("in-patient")}
-          className={`text-deep-purple font-semibold ${
-            activeTab === "in-patient" ? "border-b-2 border-violet-highlight" : ""
+          className={`text-text-primary text-sm font-medium px-4 py-2 rounded-md ${
+            activeTab === "in-patient" ? "border-b-2 border-accent-purple text-accent-purple" : "hover:bg-gray-100"
           }`}
         >
           In-patient Accounts
@@ -357,8 +369,8 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
         <Button
           variant="ghost"
           onClick={() => setActiveTab("out-patient")}
-          className={`text-deep-purple font-semibold ${
-            activeTab === "out-patient" ? "border-b-2 border-violet-highlight" : ""
+          className={`text-text-primary text-sm font-medium px-4 py-2 rounded-md ${
+            activeTab === "out-patient" ? "border-b-2 border-accent-purple text-accent-purple" : "hover:bg-gray-100"
           }`}
         >
           Out-patient Accounts
@@ -369,7 +381,7 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
       <div className="mb-8">{renderTabContent()}</div>
 
       <Dialog open={showBulkExportDialog} onOpenChange={setShowBulkExportDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white text-text-primary">
           <BulkPDFExportDialog
             accounts={accounts}
             reportType="overdue"

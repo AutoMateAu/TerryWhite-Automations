@@ -183,72 +183,72 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
   }
 
   return (
-    <div className="container mx-auto px-6 mt-10 animate-fade-in-up delay-300">
+    <div className="container mx-auto px-6 mt-10 animate-fade-in-up delay-300 text-text-primary">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-deep-purple">Customer Accounts</h2>
+        <h2 className="text-xl font-bold text-text-primary">Customer Accounts</h2>
         <div className="flex items-center space-x-4">
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-dark" />
+            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-500" />
             <Input
               type="text"
               placeholder="Search accounts..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 w-[250px] border-light-pink focus:border-violet-highlight focus:ring-violet-highlight text-slate-dark"
+              className="pl-8 w-[200px] border-border-light focus:border-accent-purple focus:ring-accent-purple text-sm"
             />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="flex items-center gap-2 bg-soft-offwhite text-slate-dark border-light-pink hover:bg-light-pink hover:text-deep-purple transition-colors"
+                className="flex items-center gap-2 bg-white text-text-primary border-border-light hover:bg-gray-100 transition-colors text-sm px-3 py-1.5"
               >
-                <Filter className="h-4 w-4" />
+                <Filter className="h-3.5 w-3.5" />
                 Filter
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-soft-offwhite border-light-pink text-slate-dark">
-              <div className="px-4 py-2 text-sm font-semibold text-deep-purple">Filter by Status</div>
+            <DropdownMenuContent align="end" className="w-56 bg-white border-border-light text-text-primary text-sm">
+              <div className="px-4 py-2 text-xs font-semibold text-gray-700">Filter by Status</div>
               <DropdownMenuItem
                 onSelect={() => setFilterStatus("all")}
-                className="hover:bg-light-pink hover:text-deep-purple"
+                className="hover:bg-gray-100 hover:text-accent-purple text-xs"
               >
                 All
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => setFilterStatus("current")}
-                className="hover:bg-light-pink hover:text-deep-purple"
+                className="hover:bg-gray-100 hover:text-accent-purple text-xs"
               >
                 Current
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => setFilterStatus("overdue")}
-                className="hover:bg-light-pink hover:text-deep-purple"
+                className="hover:bg-gray-100 hover:text-accent-purple text-xs"
               >
                 Overdue
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => setFilterStatus("paid")}
-                className="hover:bg-light-pink hover:text-deep-purple"
+                className="hover:bg-gray-100 hover:text-accent-purple text-xs"
               >
                 Paid
               </DropdownMenuItem>
-              <div className="px-4 py-2 text-sm font-semibold text-deep-purple">Filter by Balance</div>
+              <div className="px-4 py-2 text-xs font-semibold text-gray-700">Filter by Balance</div>
               <DropdownMenuItem
                 onSelect={() => setFilterBalance("all")}
-                className="hover:bg-light-pink hover:text-deep-purple"
+                className="hover:bg-gray-100 hover:text-accent-purple text-xs"
               >
                 All
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => setFilterBalance("zero")}
-                className="hover:bg-light-pink hover:text-deep-purple"
+                className="hover:bg-gray-100 hover:text-accent-purple text-xs"
               >
                 Zero Balance
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => setFilterBalance("non-zero")}
-                className="hover:bg-light-pink hover:text-deep-purple"
+                className="hover:bg-gray-100 hover:text-accent-purple text-xs"
               >
                 Non-Zero Balance
               </DropdownMenuItem>
@@ -258,48 +258,48 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="flex items-center gap-2 bg-soft-offwhite text-slate-dark border-light-pink hover:bg-light-pink hover:text-deep-purple transition-colors"
+                className="flex items-center gap-2 bg-white text-text-primary border-border-light hover:bg-gray-100 transition-colors text-sm px-3 py-1.5"
               >
-                {sortDirection === "asc" ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+                {sortDirection === "asc" ? <SortAsc className="h-3.5 w-3.5" /> : <SortDesc className="h-3.5 w-3.5" />}
                 Sort
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-soft-offwhite border-light-pink text-slate-dark">
-              <div className="px-4 py-2 text-sm font-semibold text-deep-purple">Sort by Column</div>
+            <DropdownMenuContent align="end" className="w-56 bg-white border-border-light text-text-primary text-sm">
+              <div className="px-4 py-2 text-xs font-semibold text-gray-700">Sort by Column</div>
               <DropdownMenuItem
                 onSelect={() => setSortColumn("patientName")}
-                className="hover:bg-light-pink hover:text-deep-purple"
+                className="hover:bg-gray-100 hover:text-accent-purple text-xs"
               >
                 Patient Name
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => setSortColumn("totalOwed")}
-                className="hover:bg-light-pink hover:text-deep-purple"
+                className="hover:bg-gray-100 hover:text-accent-purple text-xs"
               >
                 Amount Owed
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => setSortColumn("status")}
-                className="hover:bg-light-pink hover:text-deep-purple"
+                className="hover:bg-gray-100 hover:text-accent-purple text-xs"
               >
                 Status
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => setSortColumn("dueDate")}
-                className="hover:bg-light-pink hover:text-deep-purple"
+                className="hover:bg-gray-100 hover:text-accent-purple text-xs"
               >
                 Due Date
               </DropdownMenuItem>
-              <div className="px-4 py-2 text-sm font-semibold text-deep-purple">Sort Direction</div>
+              <div className="px-4 py-2 text-xs font-semibold text-gray-700">Sort Direction</div>
               <DropdownMenuItem
                 onSelect={() => setSortDirection("asc")}
-                className="hover:bg-light-pink hover:text-deep-purple"
+                className="hover:bg-gray-100 hover:text-accent-purple text-xs"
               >
                 Ascending
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => setSortDirection("desc")}
-                className="hover:bg-light-pink hover:text-deep-purple"
+                className="hover:bg-gray-100 hover:text-accent-purple text-xs"
               >
                 Descending
               </DropdownMenuItem>
@@ -308,102 +308,114 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
         </div>
       </div>
 
-      <div className="rounded-lg border border-light-pink shadow-sm overflow-hidden bg-soft-offwhite">
+      <div className="rounded-lg border border-border-light shadow-sm overflow-hidden bg-white">
         <Table>
-          <TableHeader className="bg-light-pink">
+          <TableHeader className="bg-bg-light">
             <TableRow>
-              <TableHead className="text-deep-purple font-semibold">Patient Name</TableHead>
-              <TableHead className="text-deep-purple font-semibold">MRN</TableHead>
-              <TableHead className="text-deep-purple font-semibold">Phone</TableHead>
-              <TableHead className="text-right text-deep-purple font-semibold">Amount Owed</TableHead>
-              <TableHead className="text-deep-purple font-semibold">Due Date</TableHead>
-              <TableHead className="text-deep-purple font-semibold">Status</TableHead>
-              <TableHead className="w-[100px] text-deep-purple font-semibold">Actions</TableHead>
+              <TableHead className="text-text-primary font-semibold text-xs py-3">Patient Name</TableHead>
+              <TableHead className="text-text-primary font-semibold text-xs py-3">MRN</TableHead>
+              <TableHead className="text-text-primary font-semibold text-xs py-3">Phone</TableHead>
+              <TableHead className="text-right text-text-primary font-semibold text-xs py-3">Amount Owed</TableHead>
+              <TableHead className="text-text-primary font-semibold text-xs py-3">Due Date</TableHead>
+              <TableHead className="text-text-primary font-semibold text-xs py-3">Status</TableHead>
+              <TableHead className="w-[100px] text-text-primary font-semibold text-xs py-3">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAndSortedAccounts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center text-slate-dark font-medium">
+                <TableCell colSpan={7} className="h-24 text-center text-gray-500 text-sm">
                   No accounts found matching your criteria.
                 </TableCell>
               </TableRow>
             ) : (
               filteredAndSortedAccounts.map((account) => (
-                <TableRow key={account.id} className="hover:bg-light-pink/30 transition-colors">
-                  <TableCell className="font-medium text-slate-dark">{account.patientName}</TableCell>
-                  <TableCell className="text-slate-dark">{account.mrn}</TableCell>
-                  <TableCell className="text-slate-dark">
+                <TableRow key={account.id} className="hover:bg-gray-50 transition-colors">
+                  <TableCell className="font-medium text-text-primary text-sm py-3">{account.patientName}</TableCell>
+                  <TableCell className="text-text-primary text-sm py-3">{account.mrn}</TableCell>
+                  <TableCell className="text-text-primary text-sm py-3">
                     {account.phone ? formatAustralianPhoneNumber(account.phone) : "N/A"}
                   </TableCell>
-                  <TableCell className="text-right text-slate-dark">
+                  <TableCell className="text-right text-text-primary text-sm py-3">
                     ${account.totalOwed.toLocaleString("en-AU", { minimumFractionDigits: 2 })}
                   </TableCell>
-                  <TableCell className="text-slate-dark">
+                  <TableCell className="text-text-primary text-sm py-3">
                     {account.dueDate ? new Date(account.dueDate).toLocaleDateString("en-AU") : "N/A"}
                   </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(account.status)} className="font-medium">
+                  <TableCell className="py-3">
+                    <Badge
+                      variant={getStatusBadgeVariant(account.status)}
+                      className={`font-medium text-xs px-2 py-0.5 ${
+                        account.status === "overdue"
+                          ? "bg-status-overdue text-white"
+                          : account.status === "current"
+                            ? "bg-status-current text-white"
+                            : "bg-status-paid text-white"
+                      }`}
+                    >
                       {account.status.charAt(0).toUpperCase() + account.status.slice(1)}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-slate-dark hover:bg-violet-highlight/20">
-                          <MoreHorizontal className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" className="text-gray-500 hover:bg-gray-100">
+                          <MoreHorizontal className="h-3.5 w-3.5" />
                           <span className="sr-only">Actions</span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-soft-offwhite border-light-pink text-slate-dark">
+                      <DropdownMenuContent
+                        align="end"
+                        className="bg-white border-border-light text-text-primary text-sm"
+                      >
                         <DropdownMenuItem
                           onClick={() => handleOpenRecordPayment(account)}
-                          className="hover:bg-light-pink hover:text-deep-purple"
+                          className="hover:bg-gray-100 hover:text-accent-purple text-xs"
                         >
-                          <DollarSign className="mr-2 h-4 w-4" /> Record Payment
+                          <DollarSign className="mr-2 h-3.5 w-3.5" /> Record Payment
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleOpenPaymentHistory(account)}
-                          className="hover:bg-light-pink hover:text-deep-purple"
+                          className="hover:bg-gray-100 hover:text-accent-purple text-xs"
                         >
-                          <History className="mr-2 h-4 w-4" /> Payment History
+                          <History className="mr-2 h-3.5 w-3.5" /> Payment History
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleOpenAddCallLog(account)}
-                          className="hover:bg-light-pink hover:text-deep-purple"
+                          className="hover:bg-gray-100 hover:text-accent-purple text-xs"
                         >
-                          <MessageSquare className="mr-2 h-4 w-4" /> Add Call Log
+                          <MessageSquare className="mr-2 h-3.5 w-3.5" /> Add Call Log
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleOpenCallHistory(account)}
-                          className="hover:bg-light-pink hover:text-deep-purple"
+                          className="hover:bg-gray-100 hover:text-accent-purple text-xs"
                         >
-                          <Phone className="mr-2 h-4 w-4" /> Call History
+                          <Phone className="mr-2 h-3.5 w-3.5" /> Call History
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleOpenEditDueDate(account)}
-                          className="hover:bg-light-pink hover:text-deep-purple"
+                          className="hover:bg-gray-100 hover:text-accent-purple text-xs"
                         >
-                          <CalendarDays className="mr-2 h-4 w-4" /> Edit Due Date
+                          <CalendarDays className="mr-2 h-3.5 w-3.5" /> Edit Due Date
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleOpenPDFExport(account)}
-                          className="hover:bg-light-pink hover:text-deep-purple"
+                          className="hover:bg-gray-100 hover:text-accent-purple text-xs"
                         >
-                          <FileText className="mr-2 h-4 w-4" /> Export PDF
+                          <FileText className="mr-2 h-3.5 w-3.5" /> Export PDF
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => router.push(`/accounts/${account.id}`)}
-                          className="hover:bg-light-pink hover:text-deep-purple underline"
+                          className="hover:bg-gray-100 hover:text-accent-purple text-xs underline"
                         >
                           View Details
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleOpenSendPaymentLink(account)}
                           disabled={!account.phone}
-                          className="hover:bg-light-pink hover:text-deep-purple"
+                          className="hover:bg-gray-100 hover:text-accent-purple text-xs"
                         >
-                          <Phone className="mr-2 h-4 w-4" /> Send Payment Link (SMS)
+                          <Phone className="mr-2 h-3.5 w-3.5" /> Send Payment Link (SMS)
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -417,14 +429,12 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
 
       {/* Record Payment Dialog */}
       <Dialog open={isRecordPaymentDialogOpen} onOpenChange={setIsRecordPaymentDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-soft-offwhite border-light-pink text-slate-dark">
+        <DialogContent className="sm:max-w-[425px] bg-white border-border-light text-text-primary">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-deep-purple">
+            <DialogTitle className="text-lg font-semibold text-text-primary">
               Record Payment for {selectedAccount?.patientName}
             </DialogTitle>
-            <DialogDescription className="text-slate-dark font-medium">
-              Enter the payment details below.
-            </DialogDescription>
+            <DialogDescription className="text-gray-600 text-sm">Enter the payment details below.</DialogDescription>
           </DialogHeader>
           {selectedAccount && (
             <RecordPaymentForm
@@ -438,12 +448,12 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
 
       {/* Payment History Dialog */}
       <Dialog open={isPaymentHistoryDialogOpen} onOpenChange={setIsPaymentHistoryDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto bg-soft-offwhite border-light-pink text-slate-dark">
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto bg-white border-border-light text-text-primary">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-deep-purple">
+            <DialogTitle className="text-lg font-semibold text-text-primary">
               Payment History for {selectedAccount?.patientName}
             </DialogTitle>
-            <DialogDescription className="text-slate-dark font-medium">
+            <DialogDescription className="text-gray-600 text-sm">
               View all recorded payments for this account.
             </DialogDescription>
           </DialogHeader>
@@ -453,12 +463,12 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
 
       {/* Add Call Log Dialog */}
       <Dialog open={isAddCallLogDialogOpen} onOpenChange={setIsAddCallLogDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-soft-offwhite border-light-pink text-slate-dark">
+        <DialogContent className="sm:max-w-[425px] bg-white border-border-light text-text-primary">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-deep-purple">
+            <DialogTitle className="text-lg font-semibold text-text-primary">
               Add Call Log for {selectedAccount?.patientName}
             </DialogTitle>
-            <DialogDescription className="text-slate-dark font-medium">
+            <DialogDescription className="text-gray-600 text-sm">
               Record details of your conversation.
             </DialogDescription>
           </DialogHeader>
@@ -476,12 +486,12 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
 
       {/* Call History Dialog */}
       <Dialog open={isCallHistoryDialogOpen} onOpenChange={setIsCallHistoryDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto bg-soft-offwhite border-light-pink text-slate-dark">
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto bg-white border-border-light text-text-primary">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-deep-purple">
+            <DialogTitle className="text-lg font-semibold text-text-primary">
               Call History for {selectedAccount?.patientName}
             </DialogTitle>
-            <DialogDescription className="text-slate-dark font-medium">
+            <DialogDescription className="text-gray-600 text-sm">
               Phone call records for {selectedAccount?.patientName} ({selectedAccount?.phone || "Phone not available"})
             </DialogDescription>
           </DialogHeader>
@@ -491,7 +501,7 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
 
       {/* PDF Export Dialog */}
       <Dialog open={isPDFExportDialogOpen} onOpenChange={setIsPDFExportDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-soft-offwhite border-light-pink text-slate-dark">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white border-border-light text-text-primary">
           {selectedAccount && (
             <PDFExportDialog
               accounts={[selectedAccount]}
@@ -504,12 +514,12 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
 
       {/* Edit Due Date Dialog */}
       <Dialog open={isEditDueDateDialogOpen} onOpenChange={setIsEditDueDateDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-soft-offwhite border-light-pink text-slate-dark">
+        <DialogContent className="sm:max-w-[425px] bg-white border-border-light text-text-primary">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-deep-purple">
+            <DialogTitle className="text-lg font-semibold text-text-primary">
               Edit Due Date for {selectedAccount?.patientName}
             </DialogTitle>
-            <DialogDescription className="text-slate-dark font-medium">
+            <DialogDescription className="text-gray-600 text-sm">
               Update the payment due date for this account.
             </DialogDescription>
           </DialogHeader>

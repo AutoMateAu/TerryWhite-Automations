@@ -19,6 +19,9 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["Inter", "sans-serif"], // Keeping Inter for a clean, modern look
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -53,12 +56,14 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Custom colors for the pharmacy app
-        "deep-purple": "#4A148C", // Darker purple for headings/strong text
-        "violet-highlight": "#8E24AA", // Brighter purple for accents/buttons
-        "light-pink": "#E1BEE7", // Light pink/purple for borders/backgrounds
-        "soft-offwhite": "#F8F8F8", // Slightly off-white for general backgrounds
-        "slate-dark": "#334155", // Dark slate for general text
+        // Minimalist color palette
+        "text-primary": "#1A1A1A", // Near black for main text
+        "bg-light": "#F9F9F9", // Very light grey for backgrounds
+        "border-light": "#E0E0E0", // Slightly darker light grey for borders
+        "accent-purple": "#6A0DAD", // A subtle, deep purple for accents
+        "status-overdue": "#EF4444", // Red for overdue status
+        "status-current": "#22C55E", // Green for current status
+        "status-paid": "#9CA3AF", // Grey for paid status
       },
       borderRadius: {
         lg: "var(--radius)",
