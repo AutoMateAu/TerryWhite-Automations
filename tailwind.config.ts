@@ -58,7 +58,7 @@ const config = {
         },
         // Minimalist color palette
         "text-primary": "#1A1A1A", // Near black for main text
-        "bg-light": "#F9F9F9", // Very light grey for backgrounds
+        "bg-light": "#F9F9F9", // Very light grey for general backgrounds
         "border-light": "#E0E0E0", // Slightly darker light grey for borders
         "accent-purple": "#6A0DAD", // A subtle, deep purple for accents
         "status-overdue": "#EF4444", // Red for overdue status
