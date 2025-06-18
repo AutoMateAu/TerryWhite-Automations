@@ -66,7 +66,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="col-span-3">
+          <Card className="col-span-full">
             <CardHeader>
               <CardTitle>Your Tasks</CardTitle>
             </CardHeader>
@@ -109,7 +109,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="col-span-full">
             <CardHeader>
               <CardTitle>Recent Payments</CardTitle>
             </CardHeader>
