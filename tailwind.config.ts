@@ -19,6 +19,9 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["Inter", "sans-serif"], // Added Inter as the primary sans-serif font
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -26,7 +29,7 @@ const config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
+          DEFAULT: "#6B21A8", // Deep Purple
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
@@ -42,7 +45,7 @@ const config = {
           foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
+          DEFAULT: "#F472B6", // Light Pink
           foreground: "hsl(var(--accent-foreground))",
         },
         popover: {
@@ -53,6 +56,12 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Custom colors from user request
+        "deep-purple": "#6B21A8",
+        "light-pink": "#F472B6",
+        "slate-dark": "#1F2937",
+        "soft-offwhite": "#F9FAFB",
+        "violet-highlight": "#8B5CF6",
       },
       borderRadius: {
         lg: "var(--radius)",

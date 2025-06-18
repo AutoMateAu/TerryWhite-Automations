@@ -1,336 +1,263 @@
-import type React from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { CardDescription } from "@/components/ui/card"
+"use client"
+
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getUserSessionAndProfile } from "@/lib/auth"
-import { redirect } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { BellIcon, DollarSign, Users, Clock } from "lucide-react"
+import { getRecentPayments, getOutstandingAccounts, getPatients } from "@/services/accounting-service"
+import type { Payment, CustomerAccount, PatientProfile } from "@/lib/types"
+import Link from "next/link"
+import { Badge } from "@/components/ui/badge"
 
-export default async function DashboardPage() {
-  const { session, profile, error } = await getUserSessionAndProfile()
+export default function Dashboard() {
+  const [recentPayments, setRecentPayments] = useState<Payment[]>([])
+  const [outstandingAccounts, setOutstandingAccounts] = useState<CustomerAccount[]>([])
+  const [patients, setPatients] = useState<PatientProfile[]>([])
 
-  if (error || !session) {
-    redirect("/login")
-  }
+  // Mock notifications for "Your Tasks"
+  const [notifications, setNotifications] = useState([
+    {
+      id: "1",
+      type: "reminder",
+      message: "Follow up with John Doe regarding medication refill.",
+      dueDate: "2025-06-20",
+      completed: false,
+    },
+    {
+      id: "2",
+      type: "alert",
+      message: "New patient registration requires review.",
+      dueDate: "2025-06-15",
+      completed: false,
+    },
+    {
+      id: "3",
+      type: "message",
+      message: "Team meeting at 10 AM in conference room B.",
+      dueDate: "2025-06-18",
+      completed: true,
+    },
+    {
+      id: "4",
+      type: "reminder",
+      message: "Prepare discharge forms for patient Jane Smith.",
+      dueDate: "2025-06-10",
+      completed: false,
+    },
+  ])
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const payments = await getRecentPayments(5)
+        setRecentPayments(payments)
+
+        const outstanding = await getOutstandingAccounts()
+        setOutstandingAccounts(outstanding)
+
+        const patientsData = await getPatients()
+        setPatients(patientsData)
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error)
+      }
+    }
+    fetchData()
+  }, [])
+
+  const overdueTasks = notifications.filter((task) => !task.completed && new Date(task.dueDate) < new Date())
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
-      <div className="flex items-center">
-        <h1 className="text-lg font-semibold md:text-2xl">
-          Welcome, {session.user.email}!
-          {profile?.role && <span className="ml-2 text-sm text-gray-500">({profile.role})</span>}
-          {profile?.hospital_id && (
-            <span className="ml-2 text-sm text-gray-500">(Hospital ID: {profile.hospital_id})</span>
-          )}
-        </h1>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
-            <UsersIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">2,350</div>
-            <p className="text-xs text-muted-foreground">+180.1% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Prescriptions</CardTitle>
-            <PillIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,200</div>
-            <p className="text-xs text-muted-foreground">+19% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Discharges</CardTitle>
-            <SendIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">75</div>
-            <p className="text-xs text-muted-foreground">+5 since last week</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-            <DollarSignIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
-            <p className="text-xs text-muted-foreground">+20.1% from last month</p>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
-          <CardHeader className="flex flex-row items-center">
-            <div className="grid gap-2">
-              <CardTitle>Recent Discharges</CardTitle>
-              <CardDescription>Overview of recently discharged patients.</CardDescription>
+    <div className="flex flex-col min-h-screen bg-soft-offwhite p-8 font-sans">
+      <header className="mb-10 animate-fade-in-up">
+        <h1 className="text-5xl font-bold text-deep-purple mb-2">Dashboard</h1>
+        <p className="text-lg font-medium text-slate-dark">Overview of your pharmacy operations.</p>
+      </header>
+      <main className="flex-1 grid grid-cols-1 gap-8">
+        {/* Quick Stats - Now full width and thin */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="animate-fade-in-up delay-100 bg-white shadow-lg rounded-xl h-[100px] flex items-center justify-between p-4">
+            <div className="flex items-center gap-4">
+              <Users className="h-8 w-8 text-violet-highlight" />
+              <div>
+                <CardTitle className="text-xl font-semibold text-deep-purple">Total Patients</CardTitle>
+                <div className="text-3xl font-bold text-slate-dark">{patients.length}</div>
+              </div>
             </div>
-            <Button asChild size="sm" className="ml-auto gap-1">
-              <Link href="/discharge">
-                View All
-                <ArrowUpRightIcon className="h-4 w-4" />
-              </Link>
+            <p className="text-sm font-medium text-gray-500 hidden md:block">Registered patients</p>
+          </Card>
+
+          <Card className="animate-fade-in-up delay-200 bg-white shadow-lg rounded-xl h-[100px] flex items-center justify-between p-4">
+            <div className="flex items-center gap-4">
+              <DollarSign className="h-8 w-8 text-violet-highlight" />
+              <div>
+                <CardTitle className="text-xl font-semibold text-deep-purple">Outstanding Balance</CardTitle>
+                <div className="text-3xl font-bold text-slate-dark">
+                  ${outstandingAccounts.reduce((sum, acc) => sum + acc.totalOwed, 0).toFixed(2)}
+                </div>
+              </div>
+            </div>
+            <p className="text-sm font-medium text-gray-500 hidden md:block">Total amount owed</p>
+          </Card>
+
+          <Card className="animate-fade-in-up delay-300 bg-white shadow-lg rounded-xl h-[100px] flex items-center justify-between p-4">
+            <div className="flex items-center gap-4">
+              <Clock className="h-8 w-8 text-violet-highlight" />
+              <div>
+                <CardTitle className="text-xl font-semibold text-deep-purple">Overdue Tasks</CardTitle>
+                <div className="text-3xl font-bold text-slate-dark">{overdueTasks.length}</div>
+              </div>
+            </div>
+            <p className="text-sm font-medium text-gray-500 hidden md:block">Tasks past due date</p>
+          </Card>
+        </div>
+
+        {/* Your Tasks */}
+        <Card className="animate-fade-in-up delay-400 bg-white shadow-lg rounded-xl">
+          <CardHeader className="flex flex-row items-center justify-between p-6">
+            <CardTitle className="text-2xl font-semibold text-deep-purple">Your Tasks</CardTitle>
+            <Button variant="ghost" className="text-violet-highlight underline">
+              View All
             </Button>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Patient</TableHead>
-                  <TableHead className="hidden md:table-cell">Hospital</TableHead>
-                  <TableHead className="hidden md:table-cell">Discharge Date</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Liam Johnson</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">liam@example.com</div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">General Hospital</TableCell>
-                  <TableCell className="hidden md:table-cell">2023-06-23</TableCell>
-                  <TableCell className="text-right">
-                    <Badge className="text-xs" variant="outline">
-                      Completed
+          <CardContent className="p-6 pt-0">
+            <ul className="space-y-6">
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <li
+                    key={notification.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg transition-all duration-300 hover:bg-gray-100"
+                  >
+                    <div className="flex items-center gap-4">
+                      <BellIcon className="h-6 w-6 text-light-pink" />
+                      <div>
+                        <p className="text-lg font-semibold text-slate-dark">{notification.message}</p>
+                        <p className="text-sm font-medium text-gray-500">Due: {notification.dueDate}</p>
+                      </div>
+                    </div>
+                    <Badge
+                      variant={notification.completed ? "secondary" : "default"}
+                      className={`font-medium ${
+                        notification.completed ? "bg-green-100 text-green-800" : "bg-light-pink text-deep-purple"
+                      }`}
+                    >
+                      {notification.completed ? "Completed" : notification.type}
                     </Badge>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Olivia Smith</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">olivia@example.com</div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">City Medical Center</TableCell>
-                  <TableCell className="hidden md:table-cell">2023-06-22</TableCell>
-                  <TableCell className="text-right">
-                    <Badge className="text-xs" variant="outline">
-                      Pending
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Noah Williams</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">noah@example.com</div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">Community Health Clinic</TableCell>
-                  <TableCell className="hidden md:table-cell">2023-06-21</TableCell>
-                  <TableCell className="text-right">
-                    <Badge className="text-xs" variant="outline">
-                      Completed
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Emma Brown</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">emma@example.com</div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">General Hospital</TableCell>
-                  <TableCell className="hidden md:table-cell">2023-06-20</TableCell>
-                  <TableCell className="text-right">
-                    <Badge className="text-xs" variant="outline">
-                      Completed
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Liam Johnson</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">liam@example.com</div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">City Medical Center</TableCell>
-                  <TableCell className="hidden md:table-cell">2023-06-19</TableCell>
-                  <TableCell className="text-right">
-                    <Badge className="text-xs" variant="outline">
-                      Pending
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+                  </li>
+                ))
+              ) : (
+                <p className="text-center text-gray-500 font-medium p-4">No tasks to display.</p>
+              )}
+            </ul>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+        {/* Recent Payments */}
+        <Card className="animate-fade-in-up delay-500 bg-white shadow-lg rounded-xl">
+          <CardHeader className="flex flex-row items-center justify-between p-6">
+            <CardTitle className="text-2xl font-semibold text-deep-purple">Recent Payments</CardTitle>
+            <Link href="/accounting" className="text-violet-highlight underline font-medium">
+              View All
+            </Link>
           </CardHeader>
-          <CardContent className="grid gap-8">
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/01.png" alt="Avatar" />
-                <AvatarFallback>OM</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">Olivia Martin</p>
-                <p className="text-sm text-muted-foreground">Discharged patient #101</p>
-              </div>
-              <div className="ml-auto font-medium">+$1,999.00</div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                <AvatarFallback>JL</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">Jackson Lee</p>
-                <p className="text-sm text-muted-foreground">Updated medication for patient #205</p>
-              </div>
-              <div className="ml-auto font-medium">+$39.00</div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/03.png" alt="Avatar" />
-                <AvatarFallback>IN</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">Isabella Nguyen</p>
-                <p className="text-sm text-muted-foreground">Added new patient #310</p>
-              </div>
-              <div className="ml-auto font-medium">+$299.00</div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/04.png" alt="Avatar" />
-                <AvatarFallback>WK</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">William Kim</p>
-                <p className="text-sm text-muted-foreground">Recorded payment for patient #101</p>
-              </div>
-              <div className="ml-auto font-medium">+$99.00</div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/05.png" alt="Avatar" />
-                <AvatarFallback>SD</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">Sofia Davis</p>
-                <p className="text-sm text-muted-foreground">Generated discharge summary for patient #205</p>
-              </div>
-              <div className="ml-auto font-medium">+$39.00</div>
-            </div>
+          <CardContent className="p-6 pt-0">
+            <ul className="space-y-6">
+              {recentPayments.length > 0 ? (
+                recentPayments.map((payment) => (
+                  <li
+                    key={payment.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg transition-all duration-300 hover:bg-gray-100"
+                  >
+                    <div>
+                      <p className="text-lg font-semibold text-slate-dark">${payment.amount.toFixed(2)}</p>
+                      <p className="text-sm font-medium text-gray-500">
+                        {payment.patientName} ({payment.mrn})
+                      </p>
+                    </div>
+                    <p className="text-sm font-medium text-gray-500">
+                      {new Date(payment.paymentDate).toLocaleDateString()}
+                    </p>
+                  </li>
+                ))
+              ) : (
+                <p className="text-center text-gray-500 font-medium p-4">No recent payments.</p>
+              )}
+            </ul>
           </CardContent>
         </Card>
-      </div>
+        {/* Outstanding Tasks */}
+        {overdueTasks.length > 0 && (
+          <Card className="animate-fade-in-up delay-600 bg-white shadow-lg rounded-xl">
+            <CardHeader className="p-6">
+              <CardTitle className="text-2xl font-semibold text-deep-purple flex items-center gap-4">
+                <Clock className="h-7 w-7 text-red-500" />
+                Outstanding Tasks
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <ul className="space-y-6">
+                {overdueTasks.map((task) => (
+                  <li
+                    key={task.id}
+                    className="flex items-center justify-between p-4 bg-red-50 border border-red-200 rounded-lg transition-all duration-300 hover:bg-red-100"
+                  >
+                    <div className="flex items-center gap-4">
+                      <BellIcon className="h-6 w-6 text-red-500" />
+                      <div>
+                        <p className="text-lg font-semibold text-slate-dark">{task.message}</p>
+                        <p className="text-sm font-medium text-red-600">Overdue since: {task.dueDate}</p>
+                      </div>
+                    </div>
+                    <Badge variant="destructive" className="bg-red-500 text-white font-medium">
+                      Overdue
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+        {/* Outstanding Accounts */}
+        <Card className="animate-fade-in-up delay-700 bg-white shadow-lg rounded-xl">
+          <CardHeader className="flex flex-row items-center justify-between p-6">
+            <CardTitle className="text-2xl font-semibold text-deep-purple">Outstanding Accounts</CardTitle>
+            <Link href="/accounting" className="text-violet-highlight underline font-medium">
+              View All
+            </Link>
+          </CardHeader>
+          <CardContent className="p-6 pt-0">
+            <ul className="space-y-6">
+              {outstandingAccounts.length > 0 ? (
+                outstandingAccounts.map((account) => (
+                  <li
+                    key={account.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg transition-all duration-300 hover:bg-gray-100"
+                  >
+                    <div>
+                      <p className="text-lg font-semibold text-slate-dark">
+                        {account.patientName} - ${account.totalOwed.toFixed(2)}
+                      </p>
+                      <p className="text-sm font-medium text-gray-500">
+                        {account.hospitalId ? `Hospital: ${account.hospitalId}` : "Hospital: N/A"}
+                        {" | "}
+                        Outstanding for: {account.daysOutstanding} days
+                      </p>
+                    </div>
+                    <Badge
+                      variant={account.status === "overdue" ? "destructive" : "default"}
+                      className={`font-medium ${
+                        account.status === "overdue" ? "bg-red-500 text-white" : "bg-light-pink text-deep-purple"
+                      }`}
+                    >
+                      {account.status.charAt(0).toUpperCase() + account.status.slice(1)}
+                    </Badge>
+                  </li>
+                ))
+              ) : (
+                <p className="text-center text-gray-500 font-medium p-4">No outstanding accounts.</p>
+              )}
+            </ul>
+          </CardContent>
+        </Card>
+      </main>
     </div>
   )
 }
-
-function ArrowUpRightIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M7 7h10v10" />
-      <path d="M7 17 17 7" />
-    </svg>
-  )
-}
-
-function DollarSignIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="12" x2="12" y1="2" y2="22" />
-      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-    </svg>
-  )
-}
-
-function PillIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m10.5 20.5 9-9a4.24 4.24 0 0 0-6-6l-9 9a4.24 4.24 0 0 0 6 6Z" />
-      <path d="m7.5 13.5 3-3" />
-      <path d="m16.5 6.5 3-3" />
-      <path d="m15 9 3-3" />
-    </svg>
-  )
-}
-
-function SendIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m22 2-7 20-4-9-9-4 20-7Z" />
-      <path d="M9.93 9.93 2.07 2.07" />
-    </svg>
-  )
-}
-
-function UsersIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  )
-}
-
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"

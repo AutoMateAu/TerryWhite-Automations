@@ -9,6 +9,7 @@ export const mockNotifications: NotificationItem[] = [
     content: "Order due by end of day.",
     dueDate: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0],
     isCompleted: false,
+    href: "/patients/1", // Example: Link to patient profile
     timestamp: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
   },
   {
@@ -16,6 +17,8 @@ export const mockNotifications: NotificationItem[] = [
     type: "message",
     title: "New prescription for Alice Brown",
     content: "Dr. Emily Carter sent a new e-prescription. Please review.",
+    isCompleted: false,
+    href: "/patients/2", // Example: Link to patient profile
     timestamp: new Date().toISOString(),
   },
   {
@@ -25,7 +28,26 @@ export const mockNotifications: NotificationItem[] = [
     content: "Scheduled for today.",
     dueDate: new Date().toISOString().split("T")[0],
     isCompleted: true,
+    href: "/patients/3", // Example: Link to patient profile (even if completed)
     timestamp: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
+  },
+  {
+    id: "n4",
+    type: "alert",
+    title: "Overdue Account: Robert Johnson",
+    content: "Account ACC003 is 30 days overdue.",
+    isCompleted: false,
+    href: "/accounts/acc3", // Example: Link to accounting page for this account
+    timestamp: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
+  },
+  {
+    id: "n5",
+    type: "reminder",
+    title: "Discharge Summary for Michael Wilson",
+    content: "Summary needs final review before sending.",
+    isCompleted: false,
+    href: "/discharge", // Example: Link to discharge page
+    timestamp: new Date().toISOString(),
   },
 ]
 
@@ -138,6 +160,16 @@ export const mockPatients: PatientProfile[] = [
     allergies: "None known",
     mrn: "MRN002",
     phone: "0498 765 432",
+  },
+  {
+    id: "3",
+    name: "Robert Johnson",
+    dob: "1970-01-01",
+    address: "789 Pine St, Anytown, QLD",
+    medicare: "1122334455",
+    allergies: "Aspirin",
+    mrn: "MRN003",
+    phone: "(02) 9876 5432",
   },
 ]
 

@@ -10,8 +10,8 @@ import type {
   DischargedPatient,
   PatientProfile,
   PatientDocument,
-  UserProfile,
-  Medication,
+  Hospital, // Import Hospital type
+  DischargedForm, // Import DischargedForm type
 } from "@/lib/types"
 import { mockCustomerAccounts, mockPatients } from "@/lib/data" // Import mock data as fallback
 import { put } from "@vercel/blob" // Import Vercel Blob put function
@@ -46,18 +46,6 @@ export async function checkTablesExist() {
     const { error: dischargedFormsError } = await supabase.from("discharged_patient_forms").select("id").limit(1)
 
     if (dischargedFormsError && dischargedFormsError.message.includes("does not exist")) {
-      return false
-    }
-
-    // Check if hospitals table exists
-    const { error: hospitalsError } = await supabase.from("hospitals").select("id").limit(1)
-    if (hospitalsError && hospitalsError.message.includes("does not exist")) {
-      return false
-    }
-
-    // Check if user_profiles table exists
-    const { error: userProfilesError } = await supabase.from("user_profiles").select("id").limit(1)
-    if (userProfilesError && userProfilesError.message.includes("does not exist")) {
       return false
     }
 
@@ -137,6 +125,22 @@ async function getPatientPhoneFromDB(patientId: string, mrn: string): Promise<st
   }
 }
 
+// NEW: Get all hospitals
+export async function getHospitals(): Promise<Hospital[]> {
+  const supabase = createClient()
+  try {
+    const { data, error } = await supabase.from("hospitals").select("*")
+    if (error) {
+      console.error("Error fetching hospitals:", error)
+      return []
+    }
+    return data as Hospital[]
+  } catch (error) {
+    console.error("Error in getHospitals:", error)
+    return []
+  }
+}
+
 // Get all customer accounts
 export async function getCustomerAccounts() {
   const tablesExist = await checkTablesExist()
@@ -148,26 +152,45 @@ export async function getCustomerAccounts() {
       const calculatedDueDate = new Date(baseDate)
       calculatedDueDate.setDate(calculatedDueDate.getDate() + 30)
 
+      const calculatedStatus =
+        account.totalOwed === 0
+          ? ("paid" as const)
+          : calculatedDueDate < new Date()
+            ? ("overdue" as const)
+            : ("current" as const)
+
+      let daysOutstanding = 0
+      if (calculatedStatus === "overdue") {
+        const today = new Date()
+        const diffTime = Math.abs(today.getTime() - calculatedDueDate.getTime())
+        daysOutstanding = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      } else if (calculatedStatus === "current" && account.totalOwed > 0) {
+        const today = new Date()
+        const diffTime = Math.abs(today.getTime() - new Date(account.createdAt).getTime())
+        daysOutstanding = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      }
+
       return {
         ...account,
         phone: account.phone || "Contact pharmacy for phone number", // Mock phone
-        status:
-          account.totalOwed === 0
-            ? ("paid" as const)
-            : calculatedDueDate < new Date()
-              ? ("overdue" as const)
-              : ("current" as const),
+        status: calculatedStatus,
         dueDate: calculatedDueDate.toISOString().split("T")[0], // Add calculated due date for mock data
+        hospitalId: "mock-hospital-id", // Placeholder for mock data
+        hospitalName: "Mock Hospital", // Placeholder for mock data
+        daysOutstanding: daysOutstanding,
+        patientType: account.hospitalId ? "in-patient" : "out-patient", // Infer patient type for mock data
       }
     })
   }
 
   const supabase = createClient()
+  const hospitals = await getHospitals() // Fetch hospitals to map IDs to names
+  const hospitalMap = new Map(hospitals.map((h) => [h.id, h.name]))
 
   try {
     const { data, error } = await supabase
       .from("customer_accounts")
-      .select("*")
+      .select("*, patients(hospital_id)") // Join with patients table to get hospital_id
       .order("total_owed", { ascending: false })
 
     if (error) {
@@ -179,6 +202,22 @@ export async function getCustomerAccounts() {
       data.map(async (account) => {
         const calculatedStatus = calculateAccountStatus(account)
         const phone = account.phone || (await getPatientPhoneFromDB(account.patient_id, account.mrn))
+        const hospitalId = (account.patients as any)?.hospital_id || null // Access hospital_id from joined data
+        const hospitalName = hospitalId ? hospitalMap.get(hospitalId) || null : null // Get hospital name
+        const patientType = hospitalId ? "in-patient" : "out-patient" // Infer patient type
+
+        let daysOutstanding = 0
+        if (calculatedStatus === "overdue" && account.due_date) {
+          const dueDate = new Date(account.due_date)
+          const today = new Date()
+          const diffTime = Math.abs(today.getTime() - dueDate.getTime())
+          daysOutstanding = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        } else if (calculatedStatus === "current" && account.total_owed > 0) {
+          const createdAt = new Date(account.created_at)
+          const today = new Date()
+          const diffTime = Math.abs(today.getTime() - createdAt.getTime())
+          daysOutstanding = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        }
 
         return {
           id: account.id,
@@ -193,6 +232,10 @@ export async function getCustomerAccounts() {
           dischargeFormIds: [], // Will fetch separately if needed
           createdAt: account.created_at,
           dueDate: account.due_date,
+          hospitalId: hospitalId, // Add hospitalId
+          hospitalName: hospitalName, // Add hospitalName
+          daysOutstanding: daysOutstanding, // Add daysOutstanding
+          patientType: patientType, // Add patientType
         }
       }),
     )
@@ -224,9 +267,15 @@ export async function getCustomerAccountById(id: string) {
   }
 
   const supabase = createClient()
+  const hospitals = await getHospitals()
+  const hospitalMap = new Map(hospitals.map((h) => [h.id, h.name]))
 
   try {
-    const { data, error } = await supabase.from("customer_accounts").select("*").eq("id", id).single()
+    const { data, error } = await supabase
+      .from("customer_accounts")
+      .select("*, patients(hospital_id)")
+      .eq("id", id)
+      .single()
 
     if (error) {
       console.error("Error fetching customer account:", error)
@@ -234,6 +283,9 @@ export async function getCustomerAccountById(id: string) {
     }
 
     const phone = data.phone || (await getPatientPhoneFromDB(data.patient_id, data.mrn))
+    const hospitalId = (data.patients as any)?.hospital_id || null
+    const hospitalName = hospitalId ? hospitalMap.get(hospitalId) || null : null
+    const patientType = hospitalId ? "in-patient" : "out-patient"
 
     return {
       id: data.id,
@@ -248,6 +300,9 @@ export async function getCustomerAccountById(id: string) {
       dischargeFormIds: [], // Will fetch separately if needed
       createdAt: data.created_at,
       dueDate: data.due_date,
+      hospitalId: hospitalId,
+      hospitalName: hospitalName,
+      patientType: patientType,
     } as CustomerAccount
   } catch (error) {
     console.error("Error in getCustomerAccountById:", error)
@@ -264,8 +319,15 @@ export async function getCustomerAccountByPatientId(patientId: string) {
   }
 
   const supabase = createClient()
+  const hospitals = await getHospitals()
+  const hospitalMap = new Map(hospitals.map((h) => [h.id, h.name]))
+
   try {
-    const { data, error } = await supabase.from("customer_accounts").select("*").eq("patient_id", patientId).single()
+    const { data, error } = await supabase
+      .from("customer_accounts")
+      .select("*, patients(hospital_id)")
+      .eq("patient_id", patientId)
+      .single()
 
     if (error && error.code !== "PGRST116") {
       console.error("Error fetching customer account by patient ID:", error)
@@ -274,6 +336,9 @@ export async function getCustomerAccountByPatientId(patientId: string) {
     if (!data) return null
 
     const phone = data.phone || (await getPatientPhoneFromDB(data.patient_id, data.mrn))
+    const hospitalId = (data.patients as any)?.hospital_id || null
+    const hospitalName = hospitalId ? hospitalMap.get(hospitalId) || null : null
+    const patientType = hospitalId ? "in-patient" : "out-patient"
 
     return {
       id: data.id,
@@ -288,6 +353,9 @@ export async function getCustomerAccountByPatientId(patientId: string) {
       dischargeFormIds: [], // Not directly stored here, fetch separately if needed
       createdAt: data.created_at,
       dueDate: data.due_date,
+      hospitalId: hospitalId,
+      hospitalName: hospitalName,
+      patientType: patientType,
     } as CustomerAccount
   } catch (error) {
     console.error("Error in getCustomerAccountByPatientId:", error)
@@ -361,7 +429,7 @@ export async function getPatientById(id: string): Promise<PatientProfile | null>
 
 // Add or update a patient
 export async function upsertPatient(
-  patientData: Omit<PatientProfile, "id"> & { id?: string },
+  patientData: Omit<PatientProfile, "id" | "createdAt" | "updatedAt"> & { id?: string },
 ): Promise<{ success: boolean; patient?: PatientProfile; error?: string }> {
   const tablesExist = await checkTablesExist()
   if (!tablesExist) {
@@ -470,33 +538,44 @@ export async function upsertPatient(
   }
 }
 
-// Get all discharged forms (now accepts UserProfile for filtering)
-export async function getDischargedForms(userProfile: UserProfile): Promise<DischargedPatient[]> {
+// Get all discharged forms
+export async function getDischargedForms(
+  hospitalId?: string,
+  status?: "active" | "archived" | "draft",
+): Promise<DischargedForm[]> {
   const tablesExist = await checkTablesExist()
   if (!tablesExist) {
-    console.warn("Required tables do not exist. Returning empty array.")
-    return []
+    console.warn("Required tables do not exist. Returning mock discharged patient data.")
+    return [] // Return empty array as mockDischargedPatients is now empty
   }
 
   const supabase = createClient()
+  let query = supabase.from("discharged_patient_forms").select(
+    `
+    *,
+    patients (
+      name,
+      dob,
+      allergies,
+      mrn,
+      hospital_id
+    ),
+    hospitals (
+      name
+    )
+  `,
+  )
+
+  if (hospitalId) {
+    query = query.eq("hospital_id", hospitalId)
+  }
+
+  if (status) {
+    query = query.eq("status", status)
+  }
+
   try {
-    let query = supabase
-      .from("discharged_patient_forms")
-      .select("*, hospitals(name)") // Select hospital name from joined table
-      .order("discharge_timestamp", { ascending: false })
-
-    // Apply filtering based on user role and hospital affiliation
-    if (userProfile.role === "doctor" || userProfile.role === "nurse") {
-      if (userProfile.hospitalId) {
-        query = query.eq("hospital_id", userProfile.hospitalId)
-      } else {
-        // If doctor/nurse but no hospital selected, return no forms
-        return []
-      }
-    }
-    // Admins get all forms (no additional filter needed)
-
-    const { data, error } = await query
+    const { data, error } = await query.order("discharge_timestamp", { ascending: false })
 
     if (error) {
       console.error("Error fetching discharged forms:", error)
@@ -505,7 +584,7 @@ export async function getDischargedForms(userProfile: UserProfile): Promise<Disc
 
     return data.map((form) => ({
       id: form.id,
-      patientId: form.patient_id || "", // Ensure patientId is not null
+      patient_id: form.patient_id || "", // Ensure patient_id is not null
       name: form.name,
       address: form.address,
       medicare: form.medicare,
@@ -529,12 +608,12 @@ export async function getDischargedForms(userProfile: UserProfile): Promise<Disc
       dateTimeSigned: form.date_time_signed,
       dischargeTimestamp: form.discharge_timestamp,
       templateType: form.template_type || "new", // Default to 'new' if not set
-      hospitalName: (form.hospitals as { name: string } | null)?.name || form.hospital_name || null, // Prefer joined name, fallback to existing
-      hospitalId: form.hospital_id,
+      hospitalName: (form.hospitals as any)?.name || form.hospital_name, // Use joined hospital name or fallback
       medications: form.medications, // JSONB column
       createdAt: form.created_at,
       updatedAt: form.updated_at,
-    })) as DischargedPatient[]
+      status: (form.status as "active" | "archived" | "draft") || "active", // Add status
+    })) as DischargedForm[]
   } catch (error) {
     console.error("Error in getDischargedForms:", error)
     return []
@@ -553,7 +632,7 @@ export async function getDischargeFormsByPatientId(patientId: string): Promise<D
   try {
     const { data, error } = await supabase
       .from("discharged_patient_forms")
-      .select("*, hospitals(name)")
+      .select("*")
       .eq("patient_id", patientId)
       .order("discharge_timestamp", { ascending: false })
 
@@ -588,8 +667,7 @@ export async function getDischargeFormsByPatientId(patientId: string): Promise<D
       dateTimeSigned: form.date_time_signed,
       dischargeTimestamp: form.discharge_timestamp,
       templateType: form.template_type || "new",
-      hospitalName: (form.hospitals as { name: string } | null)?.name || form.hospital_name || null,
-      hospitalId: form.hospital_id,
+      hospitalName: form.hospital_name,
       medications: form.medications,
       createdAt: form.created_at,
       updatedAt: form.updated_at,
@@ -694,6 +772,48 @@ export async function getCallHistory(accountId: string): Promise<CallLog[]> {
     console.error("Error in getCallHistory:", error)
     return []
   }
+}
+
+export async function getRecentPayments(limit = 5): Promise<Payment[]> {
+  const tablesExist = await checkTablesExist()
+  if (!tablesExist) {
+    console.warn("Required tables do not exist. Please run the database setup scripts.")
+    return []
+  }
+
+  const supabase = createClient()
+
+  try {
+    const { data, error } = await supabase
+      .from("payment_records")
+      .select("*, customer_accounts(patient_name, mrn)") // Select payment details and related customer account info
+      .order("payment_date", { ascending: false })
+      .limit(limit)
+
+    if (error) {
+      console.error("Error fetching recent payments:", error)
+      return []
+    }
+
+    return (data || []).map((payment) => ({
+      id: payment.id,
+      accountId: payment.customer_id,
+      amount: payment.amount,
+      paymentDate: payment.payment_date,
+      method: payment.payment_method || "Unknown",
+      notes: payment.notes || "",
+      patientName: (payment.customer_accounts as any)?.patient_name || "Unknown Patient", // Access nested patient_name
+      mrn: (payment.customer_accounts as any)?.mrn || "N/A", // Access nested mrn
+    }))
+  } catch (error) {
+    console.error("Error in getRecentPayments:", error)
+    return []
+  }
+}
+
+export async function getOutstandingAccounts(): Promise<CustomerAccount[]> {
+  const allAccounts = await getCustomerAccounts() // Use the enhanced getCustomerAccounts
+  return allAccounts.filter((account) => account.totalOwed > 0)
 }
 
 // Add a new call log
@@ -893,7 +1013,6 @@ export async function submitMedicationPlanToDB(
   formData: PatientFormData,
   templateType: "before-admission" | "after-admission" | "new" | "hospital-specific",
   hospitalName?: string,
-  hospitalId?: string, // New parameter for hospital ID
 ) {
   const tablesExist = await checkTablesExist()
   if (!tablesExist) {
@@ -976,13 +1095,12 @@ export async function submitMedicationPlanToDB(
         discharge_timestamp: new Date().toISOString(), // Current timestamp
         template_type: templateType,
         hospital_name: hospitalName || null,
-        hospital_id: hospitalId || null, // Store hospital ID
         medications: formData.medications as any, // Cast to any for JSONB
         concession: formData.concession || null,
         health_fund: formData.healthFund || null,
         reason_for_admission: formData.reasonForAdmission || null,
         relevant_past_medical_history: formData.relevantPastMedicalHistory || null,
-        community_pharmacist: formData.communityPharmacist || null,
+        community_pharmacist: formData.community_pharmacist || null,
         general_practitioner: formData.generalPractitioner || null,
         medication_risks_comments: formData.medicationRisksComments || null,
         sources_of_history: formData.sourcesOfHistory || null,
@@ -1123,78 +1241,29 @@ export async function getPatientDocuments(patientId: string): Promise<PatientDoc
   }
 }
 
-export async function createDischargedForm(formData: {
-  patient_name: string
-  diagnosis: string
-  discharge_date: string
-  medications: Medication[]
-  notes: string
-  template: string
-  hospital_id: string | null
-}) {
+export async function markTaskAsComplete(accountId: string): Promise<{ success: boolean; message: string }> {
+  const tablesExist = await checkTablesExist()
+  if (!tablesExist) {
+    return { success: false, message: "Database tables not set up yet." }
+  }
+
   const supabase = createClient()
 
-  const { data, error } = await supabase.from("discharged_patient_forms").insert({
-    patient_name: formData.patient_name,
-    diagnosis: formData.diagnosis,
-    discharge_date: formData.discharge_date,
-    medications_jsonb: formData.medications,
-    notes: formData.notes,
-    template: formData.template,
-    hospital_id: formData.hospital_id,
-  })
+  try {
+    const { error } = await supabase
+      .from("customer_accounts")
+      .update({ status: "paid", total_owed: 0 }) // Mark as paid and set owed to 0
+      .eq("id", accountId)
 
-  if (error) {
-    console.error("Error creating discharged form:", error.message)
-    return { success: false, message: error.message }
+    if (error) {
+      console.error("Error marking task as complete:", error)
+      return { success: false, message: error.message }
+    }
+
+    revalidatePath("/dashboard") // Revalidate dashboard to reflect changes
+    return { success: true, message: "Task marked as complete successfully!" }
+  } catch (error: any) {
+    console.error("Error in markTaskAsComplete:", error)
+    return { success: false, message: error.message || "An unexpected error occurred." }
   }
-
-  revalidatePath("/discharge")
-  return { success: true, message: "Discharge form created successfully." }
-}
-
-export async function updateDischargedForm(
-  id: string,
-  formData: {
-    patient_name?: string
-    diagnosis?: string
-    discharge_date?: string
-    medications?: Medication[]
-    notes?: string
-    template?: string
-    hospital_id?: string | null
-  },
-) {
-  const supabase = createClient()
-
-  const updateData: {
-    patient_name?: string
-    diagnosis?: string
-    discharge_date?: string
-    medications_jsonb?: Medication[]
-    notes?: string
-    template?: string
-    hospital_id?: string | null
-  } = {
-    patient_name: formData.patient_name,
-    diagnosis: formData.diagnosis,
-    discharge_date: formData.discharge_date,
-    notes: formData.notes,
-    template: formData.template,
-    hospital_id: formData.hospital_id,
-  }
-
-  if (formData.medications !== undefined) {
-    updateData.medications_jsonb = formData.medications
-  }
-
-  const { data, error } = await supabase.from("discharged_patient_forms").update(updateData).eq("id", id)
-
-  if (error) {
-    console.error("Error updating discharged form:", error.message)
-    return { success: false, message: error.message }
-  }
-
-  revalidatePath("/discharge")
-  return { success: true, message: "Discharge form updated successfully." }
 }
