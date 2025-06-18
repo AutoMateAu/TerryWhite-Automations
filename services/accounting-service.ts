@@ -1272,4 +1272,3 @@ export async function markTaskAsComplete(accountId: string): Promise<{ success: 
     return { success: false, message: error.message || "An unexpected error occurred." }
   }
 }
-

@@ -182,14 +182,11 @@ export default function DischargePage() {
                         variant="secondary"
                         className="ml-3 bg-violet-highlight/20 text-deep-purple font-medium text-sm"
                       >
-
                         {form.templateType.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                       </Badge>
                     )}
                     {form.hospitalName && (
-
                       <Badge variant="outline" className="ml-2 border-deep-purple text-deep-purple font-medium text-sm">
-
                         {form.hospitalName}
                       </Badge>
                     )}
@@ -199,7 +196,6 @@ export default function DischargePage() {
                     {" "}
                     {/* Increased gap, font size */}
                     <CalendarClock className="h-5 w-5 text-deep-purple" /> {/* Increased size */}
-
                     <span>Prepared: {new Date(form.dischargeTimestamp).toLocaleString()}</span>
                   </div>
                 </div>
@@ -234,11 +230,10 @@ export default function DischargePage() {
                           {" "}
                           {/* Increased mb, padding, font size */}
                           <p className="font-medium text-slate-dark mb-1">
-ng>{med.name || "Unnamed Medication"}</strong>
+                            <strong>{med.name || "Unnamed Medication"}</strong>
                           </p>
                           {form.templateType === "before-admission" ? (
                             <>
-
                               <p className="text-gray-600">Dosage/Frequency: {med.dosageFrequency || "N/A"}</p>
                               <p className="text-gray-600">
                                 Home/New:{" "}
@@ -273,7 +268,6 @@ ng>{med.name || "Unnamed Medication"}</strong>
                                       <p key={time} className="text-sm text-gray-600">
                                         {" "}
                                         {/* Adjusted font size */}
-
                                         <strong>{time.toUpperCase()}:</strong> {dose}
                                       </p>
                                     ),
@@ -284,11 +278,9 @@ ng>{med.name || "Unnamed Medication"}</strong>
                         </div>
                       ))
                     ) : (
-
                       <p className="text-base text-gray-500">No medications listed.</p>
                     )}
                     <div className="mt-6 pt-4 border-t border-light-pink/50 text-sm text-gray-500 space-y-1">
-
                       <p>
                         Admission: {form.admissionDate ? new Date(form.admissionDate).toLocaleDateString() : "N/A"} |
                         Discharge: {form.dischargeDate ? new Date(form.dischargeDate).toLocaleDateString() : "N/A"}
@@ -336,7 +328,6 @@ ng>{med.name || "Unnamed Medication"}</strong>
                     >
                       {" "}
                       {/* Increased px, py */}
-
                       <Share2 className="h-4 w-4 mr-2" /> Send to Hospital
                     </Button>
                   </CardFooter>
@@ -346,13 +337,11 @@ ng>{med.name || "Unnamed Medication"}</strong>
           ))}
         </Accordion>
       )}
-
       <NewDischargeDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         hospitals={hospitals.filter((h) => h.id !== "all")}
       />
-
     </div>
   )
 }
