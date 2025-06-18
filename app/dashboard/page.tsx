@@ -65,8 +65,8 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="col-span-full">
+        <div className="grid grid-cols-1 gap-4">
+          <Card>
             <CardHeader>
               <CardTitle>Your Tasks</CardTitle>
             </CardHeader>
@@ -108,8 +108,10 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
 
-          <Card className="col-span-full">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
             <CardHeader>
               <CardTitle>Recent Payments</CardTitle>
             </CardHeader>
@@ -151,9 +153,7 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardHeader>
               <CardTitle>Outstanding Tasks</CardTitle>
