@@ -1,336 +1,183 @@
-import type React from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { CardDescription } from "@/components/ui/card"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getUserSessionAndProfile } from "@/lib/auth"
-import { redirect } from "next/navigation"
+"use client"
 
-export default async function DashboardPage() {
-  const { session, profile, error } = await getUserSessionAndProfile()
+import { useEffect, useState } from "react"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
+import {
+  MessageSquare,
+  CalendarCheck,
+  AlertTriangle,
+  BarChart2,
+  TrendingUp,
+  Activity,
+  Building2,
+} from "lucide-react"
+import { mockNotifications } from "@/lib/data"
+import type { NotificationItem } from "@/lib/types"
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts"
 
-  if (error || !session) {
-    redirect("/login")
+const sampleSalesData = [
+  { name: "Mon", value: 400 },
+  { name: "Tue", value: 520 },
+  { name: "Wed", value: 150 },
+  { name: "Thu", value: 430 },
+  { name: "Fri", value: 540 },
+  { name: "Sat", value: 350 },
+  { name: "Sun", value: 290 },
+]
+
+const salesByHospital = [
+  { name: "Hospital A", value: 30 },
+  { name: "Hospital B", value: 40 },
+  { name: "Hospital C", value: 30 },
+]
+
+const COLORS = ["#4F46E5", "#3B82F6", "#06B6D4"]
+
+export default function DashboardPage() {
+  const [notifications, setNotifications] = useState<NotificationItem[]>([])
+
+  useEffect(() => {
+    setNotifications(
+      mockNotifications.sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      ),
+    )
+  }, [])
+
+  const toggleCompletion = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, isCompleted: !n.isCompleted } : n)),
+    )
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
-      <div className="flex items-center">
-        <h1 className="text-lg font-semibold md:text-2xl">
-          Welcome, {session.user.email}!
-          {profile?.role && <span className="ml-2 text-sm text-gray-500">({profile.role})</span>}
-          {profile?.hospital_id && (
-            <span className="ml-2 text-sm text-gray-500">(Hospital ID: {profile.hospital_id})</span>
-          )}
-        </h1>
+    <div className="min-h-screen bg-gray-50 px-6 py-10">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-4xl font-bold text-gray-800">Good Morning, John Doe</h1>
+          <p className="text-gray-500">Your performance summary this week</p>
+        </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
-            <UsersIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">2,350</div>
-            <p className="text-xs text-muted-foreground">+180.1% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Prescriptions</CardTitle>
-            <PillIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,200</div>
-            <p className="text-xs text-muted-foreground">+19% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Discharges</CardTitle>
-            <SendIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">75</div>
-            <p className="text-xs text-muted-foreground">+5 since last week</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-            <DollarSignIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
-            <p className="text-xs text-muted-foreground">+20.1% from last month</p>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
-          <CardHeader className="flex flex-row items-center">
-            <div className="grid gap-2">
-              <CardTitle>Recent Discharges</CardTitle>
-              <CardDescription>Overview of recently discharged patients.</CardDescription>
-            </div>
-            <Button asChild size="sm" className="ml-auto gap-1">
-              <Link href="/discharge">
-                View All
-                <ArrowUpRightIcon className="h-4 w-4" />
-              </Link>
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Patient</TableHead>
-                  <TableHead className="hidden md:table-cell">Hospital</TableHead>
-                  <TableHead className="hidden md:table-cell">Discharge Date</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Liam Johnson</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">liam@example.com</div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">General Hospital</TableCell>
-                  <TableCell className="hidden md:table-cell">2023-06-23</TableCell>
-                  <TableCell className="text-right">
-                    <Badge className="text-xs" variant="outline">
-                      Completed
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Olivia Smith</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">olivia@example.com</div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">City Medical Center</TableCell>
-                  <TableCell className="hidden md:table-cell">2023-06-22</TableCell>
-                  <TableCell className="text-right">
-                    <Badge className="text-xs" variant="outline">
-                      Pending
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Noah Williams</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">noah@example.com</div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">Community Health Clinic</TableCell>
-                  <TableCell className="hidden md:table-cell">2023-06-21</TableCell>
-                  <TableCell className="text-right">
-                    <Badge className="text-xs" variant="outline">
-                      Completed
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Emma Brown</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">emma@example.com</div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">General Hospital</TableCell>
-                  <TableCell className="hidden md:table-cell">2023-06-20</TableCell>
-                  <TableCell className="text-right">
-                    <Badge className="text-xs" variant="outline">
-                      Completed
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Liam Johnson</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">liam@example.com</div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">City Medical Center</TableCell>
-                  <TableCell className="hidden md:table-cell">2023-06-19</TableCell>
-                  <TableCell className="text-right">
-                    <Badge className="text-xs" variant="outline">
-                      Pending
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-        <Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+        <Card className="shadow-xl rounded-2xl">
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-xl text-blue-700">
+              <BarChart2 className="h-5 w-5" /> Revenue Analytics
+            </CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-8">
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/01.png" alt="Avatar" />
-                <AvatarFallback>OM</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">Olivia Martin</p>
-                <p className="text-sm text-muted-foreground">Discharged patient #101</p>
-              </div>
-              <div className="ml-auto font-medium">+$1,999.00</div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                <AvatarFallback>JL</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">Jackson Lee</p>
-                <p className="text-sm text-muted-foreground">Updated medication for patient #205</p>
-              </div>
-              <div className="ml-auto font-medium">+$39.00</div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/03.png" alt="Avatar" />
-                <AvatarFallback>IN</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">Isabella Nguyen</p>
-                <p className="text-sm text-muted-foreground">Added new patient #310</p>
-              </div>
-              <div className="ml-auto font-medium">+$299.00</div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/04.png" alt="Avatar" />
-                <AvatarFallback>WK</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">William Kim</p>
-                <p className="text-sm text-muted-foreground">Recorded payment for patient #101</p>
-              </div>
-              <div className="ml-auto font-medium">+$99.00</div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/05.png" alt="Avatar" />
-                <AvatarFallback>SD</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">Sofia Davis</p>
-                <p className="text-sm text-muted-foreground">Generated discharge summary for patient #205</p>
-              </div>
-              <div className="ml-auto font-medium">+$39.00</div>
-            </div>
+          <CardContent className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={sampleSalesData}>
+                <XAxis dataKey="name" stroke="#4F46E5" />
+                <YAxis stroke="#4F46E5" />
+                <Tooltip />
+                <Line type="monotone" dataKey="value" stroke="#4F46E5" strokeWidth={3} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-xl rounded-2xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl text-blue-700">
+              <Building2 className="h-5 w-5" /> Sales Analytics by Hospital
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex justify-center items-center h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={salesByHospital}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label
+                >
+                  {salesByHospital.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-xl rounded-2xl col-span-1 lg:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl text-green-700">
+              <TrendingUp className="h-5 w-5" /> Tasks
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {notifications.map(
+              (item) =>
+                !item.isCompleted && (
+                  <div
+                    key={item.id}
+                    className="p-3 rounded-md border bg-white shadow-sm flex justify-between items-start"
+                  >
+                    <div>
+                      <p className="font-semibold text-gray-800">{item.title}</p>
+                      <p className="text-sm text-gray-600 mt-1">{item.content}</p>
+                    </div>
+                    <Checkbox
+                      checked={item.isCompleted}
+                      onCheckedChange={() => toggleCompletion(item.id)}
+                      className="mt-1"
+                    />
+                  </div>
+                ),
+            )}
           </CardContent>
         </Card>
       </div>
+
+      <Card className="shadow-xl rounded-2xl">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-xl text-indigo-700">
+            <Activity className="h-5 w-5" /> Activity (Completed)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {notifications.map(
+            (item) =>
+              item.isCompleted && (
+                <div
+                  key={item.id}
+                  className="p-3 rounded-md border bg-gray-100 flex justify-between items-start"
+                >
+                  <div>
+                    <p className="font-semibold text-gray-700 line-through">{item.title}</p>
+                    <p className="text-sm text-gray-500 mt-1">{item.content}</p>
+                  </div>
+                  <Badge variant="secondary">Done</Badge>
+                </div>
+              ),
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
-
-function ArrowUpRightIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M7 7h10v10" />
-      <path d="M7 17 17 7" />
-    </svg>
-  )
-}
-
-function DollarSignIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="12" x2="12" y1="2" y2="22" />
-      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-    </svg>
-  )
-}
-
-function PillIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m10.5 20.5 9-9a4.24 4.24 0 0 0-6-6l-9 9a4.24 4.24 0 0 0 6 6Z" />
-      <path d="m7.5 13.5 3-3" />
-      <path d="m16.5 6.5 3-3" />
-      <path d="m15 9 3-3" />
-    </svg>
-  )
-}
-
-function SendIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m22 2-7 20-4-9-9-4 20-7Z" />
-      <path d="M9.93 9.93 2.07 2.07" />
-    </svg>
-  )
-}
-
-function UsersIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  )
-}
-
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
