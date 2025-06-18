@@ -1,5 +1,4 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { CalendarDays, CreditCard, HelpCircle, User2 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -118,30 +117,18 @@ export default function DashboardPage() {
             <CardContent>
               <ScrollArea className="h-[300px] w-full space-y-2">
                 <div className="flex items-center space-x-4">
-                  <Avatar>
-                    <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback>CN</AvatarFallback>
-                  </Avatar>
                   <div>
                     <p className="text-sm font-medium">John Doe</p>
                     <p className="text-xs text-muted-foreground">$150 - Consultation</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <Avatar>
-                    <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback>CN</AvatarFallback>
-                  </Avatar>
                   <div>
                     <p className="text-sm font-medium">Jane Smith</p>
                     <p className="text-xs text-muted-foreground">$200 - Lab Tests</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <Avatar>
-                    <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback>CN</AvatarFallback>
-                  </Avatar>
                   <div>
                     <p className="text-sm font-medium">Michael Johnson</p>
                     <p className="text-xs text-muted-foreground">$100 - Follow-up</p>
@@ -186,30 +173,18 @@ export default function DashboardPage() {
             <CardContent>
               <ScrollArea className="h-[300px] w-full space-y-2">
                 <div className="flex items-center space-x-4">
-                  <Avatar>
-                    <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback>CN</AvatarFallback>
-                  </Avatar>
                   <div>
                     <p className="text-sm font-medium">John Doe</p>
                     <p className="text-xs text-muted-foreground">$500 - Unpaid balance</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <Avatar>
-                    <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback>CN</AvatarFallback>
-                  </Avatar>
                   <div>
                     <p className="text-sm font-medium">Jane Smith</p>
                     <p className="text-xs text-muted-foreground">$300 - Unpaid balance</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <Avatar>
-                    <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback>CN</AvatarFallback>
-                  </Avatar>
                   <div>
                     <p className="text-sm font-medium">Michael Johnson</p>
                     <p className="text-xs text-muted-foreground">$200 - Unpaid balance</p>
