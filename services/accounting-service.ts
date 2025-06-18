@@ -2,19 +2,8 @@
 
 import { createClient } from "@/utils/supabase/server"
 import { revalidatePath } from "next/cache"
-import type {
-  CustomerAccount,
-  CallLog,
-  Payment,
-  PatientFormData,
-  DischargedPatient,
-  PatientProfile,
-  PatientDocument,
-  UserProfile,
-  Medication,
-} from "@/lib/types"
+import type { CustomerAccount, CallLog, Payment, PatientFormData, DischargedPatient, PatientProfile } from "@/lib/types"
 import { mockCustomerAccounts, mockPatients } from "@/lib/data" // Import mock data as fallback
-import { put } from "@vercel/blob" // Import Vercel Blob put function
 
 // Function to check if required tables exist
 export async function checkTablesExist() {
@@ -46,18 +35,6 @@ export async function checkTablesExist() {
     const { error: dischargedFormsError } = await supabase.from("discharged_patient_forms").select("id").limit(1)
 
     if (dischargedFormsError && dischargedFormsError.message.includes("does not exist")) {
-      return false
-    }
-
-    // Check if hospitals table exists
-    const { error: hospitalsError } = await supabase.from("hospitals").select("id").limit(1)
-    if (hospitalsError && hospitalsError.message.includes("does not exist")) {
-      return false
-    }
-
-    // Check if user_profiles table exists
-    const { error: userProfilesError } = await supabase.from("user_profiles").select("id").limit(1)
-    if (userProfilesError && userProfilesError.message.includes("does not exist")) {
       return false
     }
 
@@ -361,7 +338,7 @@ export async function getPatientById(id: string): Promise<PatientProfile | null>
 
 // Add or update a patient
 export async function upsertPatient(
-  patientData: Omit<PatientProfile, "id"> & { id?: string },
+  patientData: Omit<PatientProfile, "id" | "createdAt" | "updatedAt"> & { id?: string },
 ): Promise<{ success: boolean; patient?: PatientProfile; error?: string }> {
   const tablesExist = await checkTablesExist()
   if (!tablesExist) {
@@ -470,33 +447,20 @@ export async function upsertPatient(
   }
 }
 
-// Get all discharged forms (now accepts UserProfile for filtering)
-export async function getDischargedForms(userProfile: UserProfile): Promise<DischargedPatient[]> {
+// Get all discharged forms
+export async function getDischargedForms(): Promise<DischargedPatient[]> {
   const tablesExist = await checkTablesExist()
   if (!tablesExist) {
-    console.warn("Required tables do not exist. Returning empty array.")
-    return []
+    console.warn("Required tables do not exist. Returning mock discharged patient data.")
+    return [] // Return empty array as mockDischargedPatients is now empty
   }
 
   const supabase = createClient()
   try {
-    let query = supabase
+    const { data, error } = await supabase
       .from("discharged_patient_forms")
-      .select("*, hospitals(name)") // Select hospital name from joined table
+      .select("*")
       .order("discharge_timestamp", { ascending: false })
-
-    // Apply filtering based on user role and hospital affiliation
-    if (userProfile.role === "doctor" || userProfile.role === "nurse") {
-      if (userProfile.hospitalId) {
-        query = query.eq("hospital_id", userProfile.hospitalId)
-      } else {
-        // If doctor/nurse but no hospital selected, return no forms
-        return []
-      }
-    }
-    // Admins get all forms (no additional filter needed)
-
-    const { data, error } = await query
 
     if (error) {
       console.error("Error fetching discharged forms:", error)
@@ -529,8 +493,7 @@ export async function getDischargedForms(userProfile: UserProfile): Promise<Disc
       dateTimeSigned: form.date_time_signed,
       dischargeTimestamp: form.discharge_timestamp,
       templateType: form.template_type || "new", // Default to 'new' if not set
-      hospitalName: (form.hospitals as { name: string } | null)?.name || form.hospital_name || null, // Prefer joined name, fallback to existing
-      hospitalId: form.hospital_id,
+      hospitalName: form.hospital_name,
       medications: form.medications, // JSONB column
       createdAt: form.created_at,
       updatedAt: form.updated_at,
@@ -553,7 +516,7 @@ export async function getDischargeFormsByPatientId(patientId: string): Promise<D
   try {
     const { data, error } = await supabase
       .from("discharged_patient_forms")
-      .select("*, hospitals(name)")
+      .select("*")
       .eq("patient_id", patientId)
       .order("discharge_timestamp", { ascending: false })
 
@@ -588,8 +551,7 @@ export async function getDischargeFormsByPatientId(patientId: string): Promise<D
       dateTimeSigned: form.date_time_signed,
       dischargeTimestamp: form.discharge_timestamp,
       templateType: form.template_type || "new",
-      hospitalName: (form.hospitals as { name: string } | null)?.name || form.hospital_name || null,
-      hospitalId: form.hospital_id,
+      hospitalName: form.hospital_name,
       medications: form.medications,
       createdAt: form.created_at,
       updatedAt: form.updated_at,
@@ -893,7 +855,6 @@ export async function submitMedicationPlanToDB(
   formData: PatientFormData,
   templateType: "before-admission" | "after-admission" | "new" | "hospital-specific",
   hospitalName?: string,
-  hospitalId?: string, // New parameter for hospital ID
 ) {
   const tablesExist = await checkTablesExist()
   if (!tablesExist) {
@@ -976,7 +937,6 @@ export async function submitMedicationPlanToDB(
         discharge_timestamp: new Date().toISOString(), // Current timestamp
         template_type: templateType,
         hospital_name: hospitalName || null,
-        hospital_id: hospitalId || null, // Store hospital ID
         medications: formData.medications as any, // Cast to any for JSONB
         concession: formData.concession || null,
         health_fund: formData.healthFund || null,
@@ -1050,151 +1010,4 @@ export async function submitMedicationPlanToDB(
     console.error("Unexpected error in submitMedicationPlanToDB:", e)
     return { success: false, error: e.message || "An unexpected error occurred." }
   }
-}
-
-// Placeholder for saving patient notes (requires new DB table: patient_notes)
-export async function savePatientNotes(patientId: string, notes: string) {
-  console.log(`Simulating saving notes for patient ${patientId}:`, notes)
-  // In a real application, you would insert/update a 'patient_notes' table here.
-  // Example:
-  // const supabase = createClient();
-  // const { data, error } = await supabase.from('patient_notes').upsert({ patient_id: patientId, notes: notes }, { onConflict: ['patient_id'] });
-  // if (error) { console.error("Error saving notes:", error); return { success: false, error: error.message }; }
-  revalidatePath(`/patients/${patientId}`) // Revalidate the patient's page
-  return { success: true }
-}
-
-// Server action for uploading patient documents to Vercel Blob
-export async function uploadPatientDocument(patientId: string, file: File) {
-  try {
-    // 1. Upload file to Vercel Blob
-    const { url } = await put(file.name, file, { access: "public" })
-
-    // 2. Save document metadata to Supabase (requires a 'patient_documents' table)
-    const supabase = createClient()
-    const { error } = await supabase.from("patient_documents").insert({
-      patient_id: patientId,
-      file_name: file.name,
-      file_url: url,
-      file_type: file.type,
-      uploaded_at: new Date().toISOString(),
-    })
-
-    if (error) {
-      console.error("Error saving document metadata to DB:", error)
-      // If DB save fails, you might want to delete the blob or log for manual cleanup
-      return { success: false, error: error.message }
-    }
-
-    revalidatePath(`/patients/${patientId}`) // Revalidate the patient's page to show new document
-    return { success: true, url }
-  } catch (error: any) {
-    console.error("Error in uploadPatientDocument:", error)
-    return { success: false, error: error.message || "An unexpected error occurred during upload." }
-  }
-}
-
-// NEW: Get patient documents
-export async function getPatientDocuments(patientId: string): Promise<PatientDocument[]> {
-  const supabase = createClient()
-  try {
-    const { data, error } = await supabase
-      .from("patient_documents")
-      .select("*")
-      .eq("patient_id", patientId)
-      .order("uploaded_at", { ascending: false })
-
-    if (error) {
-      console.error("Error fetching patient documents:", error)
-      return []
-    }
-
-    return data.map((doc) => ({
-      id: doc.id,
-      patientId: doc.patient_id,
-      fileName: doc.file_name,
-      fileUrl: doc.file_url,
-      fileType: doc.file_type,
-      uploadedAt: doc.uploaded_at,
-    })) as PatientDocument[]
-  } catch (error) {
-    console.error("Error in getPatientDocuments:", error)
-    return []
-  }
-}
-
-export async function createDischargedForm(formData: {
-  patient_name: string
-  diagnosis: string
-  discharge_date: string
-  medications: Medication[]
-  notes: string
-  template: string
-  hospital_id: string | null
-}) {
-  const supabase = createClient()
-
-  const { data, error } = await supabase.from("discharged_patient_forms").insert({
-    patient_name: formData.patient_name,
-    diagnosis: formData.diagnosis,
-    discharge_date: formData.discharge_date,
-    medications_jsonb: formData.medications,
-    notes: formData.notes,
-    template: formData.template,
-    hospital_id: formData.hospital_id,
-  })
-
-  if (error) {
-    console.error("Error creating discharged form:", error.message)
-    return { success: false, message: error.message }
-  }
-
-  revalidatePath("/discharge")
-  return { success: true, message: "Discharge form created successfully." }
-}
-
-export async function updateDischargedForm(
-  id: string,
-  formData: {
-    patient_name?: string
-    diagnosis?: string
-    discharge_date?: string
-    medications?: Medication[]
-    notes?: string
-    template?: string
-    hospital_id?: string | null
-  },
-) {
-  const supabase = createClient()
-
-  const updateData: {
-    patient_name?: string
-    diagnosis?: string
-    discharge_date?: string
-    medications_jsonb?: Medication[]
-    notes?: string
-    template?: string
-    hospital_id?: string | null
-  } = {
-    patient_name: formData.patient_name,
-    diagnosis: formData.diagnosis,
-    discharge_date: formData.discharge_date,
-    notes: formData.notes,
-    template: formData.template,
-    hospital_id: formData.hospital_id,
-  }
-
-  if (formData.medications !== undefined) {
-    updateData.medications_jsonb = formData.medications
-  }
-
-  const { data, error } = await supabase.from("discharged_patient_forms").update(updateData).eq("id", id)
-
-  if (error) {
-    console.error("Error updating discharged form:", error.message)
-    return { success: false, message: error.message }
-  }
-
-  revalidatePath("/discharge")
-  return { success: true, message: "Discharge form updated successfully." }
 }

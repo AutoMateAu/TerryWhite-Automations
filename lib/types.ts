@@ -1,54 +1,100 @@
-import type { Database } from "@/types/supabase"
-
-export type Patient = Database["public"]["Tables"]["patients"]["Row"]
-export type Medication = Database["public"]["Tables"]["medications_master"]["Row"]
-export type Notification = Database["public"]["Tables"]["notifications"]["Row"]
-export type DischargedForm = Database["public"]["Tables"]["discharged_patient_forms"]["Row"]
-export type CustomerAccount = Database["public"]["Tables"]["customer_accounts"]["Row"]
-export type Payment = Database["public"]["Tables"]["payments"]["Row"]
-export type CallLog = Database["public"]["Tables"]["call_logs"]["Row"]
-
-export type UserRole = "admin" | "doctor" | "nurse"
-
-export type UserProfile = {
-  id: string
-  role: UserRole
-  hospital_id: string | null
-}
-
-export type Hospital = {
-  id: string
-  name: string
-}
-
-export type DischargedPatient = DischargedForm & {
-  medications: Medication[]
-}
+import type { Json } from "@/types/supabase"
 
 export interface PatientProfile {
   id: string
   name: string
   dob: string
-  mrn: string
   address: string
   medicare: string
   allergies: string
-  phone: string // Added phone number
+  mrn: string
+  phone: string | null
+  // currentMedications: MedicationItem[] // This will be part of the discharge form or a separate medication history
 }
 
+export interface MedicationItem {
+  name: string
+  dosage: string
+  frequency: string
+}
+
+export interface NotificationItem {
+  id: string
+  type: "reminder" | "message"
+  title: string
+  content: string
+  dueDate?: string // ISO date string
+  isCompleted: boolean
+  timestamp: string // ISO date string
+}
+
+export interface CustomerAccount {
+  id: string
+  patientId: string
+  patientName: string
+  mrn: string
+  phone: string | null
+  totalOwed: number
+  lastPaymentDate: string | null
+  lastPaymentAmount: number | null
+  status: "current" | "overdue" | "paid"
+  dischargeFormIds: string[] // IDs of associated discharge forms
+  createdAt: string
+  dueDate: string | null // ISO date string for explicit due date
+}
+
+export interface Payment {
+  id: string
+  accountId: string
+  amount: number
+  paymentDate: string
+  method: "cash" | "card" | "insurance" | "other" | "Unknown"
+  notes: string
+}
+
+export interface CallLog {
+  id: string
+  accountId: string
+  callDate: string
+  comments: string
+}
+
+// Medication types for the form and database
+export interface Medication {
+  id: string
+  name: string
+  // For default/after-admission template
+  times?: { [key: string]: string } // e.g., { "7am": "1 tab", "Noon": "" }
+  status?: string // e.g., "Active", "Discontinued"
+  comments?: string
+  // For before-admission template
+  dosageFrequency?: string
+  homeNewStatus?: string // "Home", "New"
+  chartedStatus?: string // "Yes", "No"
+  commentsActions?: string
+  drSignActionCompleted?: string
+}
+
+export interface MedicationWithComment {
+  name: string
+  comment?: string
+}
+
+// Patient form data, including all fields from both template types
 export interface PatientFormData {
   name: string
-  dob: string
-  mrn: string
   address: string
   medicare: string
   allergies: string
-  phone: string
-  admissionDate: string
-  dischargeDate: string
-  pharmacist: string
+  dob: string
+  mrn: string
+  // Fields for default/after-admission
+  phone?: string
+  admissionDate?: string
+  dischargeDate?: string
+  pharmacist?: string
   dateListPrepared: string
-  medications: Medication[]
+  // Fields for before-admission
   concession?: string
   healthFund?: string
   reasonForAdmission?: string
@@ -59,93 +105,41 @@ export interface PatientFormData {
   sourcesOfHistory?: string
   pharmacistSignature?: string
   dateTimeSigned?: string
-}
-
-export interface PaymentInterface {
-  id: string
-  accountId: string
-  amount: number
-  paymentDate: string
-  method: string
-  notes: string | null
-}
-
-export interface CallLogInterface {
-  id: string
-  accountId: string
-  callDate: string
-  comments: string
-}
-
-export interface MedicationPlan {
-  id: string
-  patientId: string
   medications: Medication[]
-  startDate: string
-  endDate: string
-  notes?: string
 }
 
-export interface ExportOptions {
-  startDate: Date
-  endDate: Date
-  patientIds: string[]
-  includeAccountSummary: boolean
-  includeContactInfo: boolean
-  includeOutstandingBalance: boolean
-  includePaymentHistory: boolean
-  includeCallHistory: boolean
-  includeNotes: boolean
-}
-
-export interface PatientDataForExport {
-  patient: PatientProfile
-  dischargeSummaries: DischargedPatient[]
-  account: CustomerAccount | null
-  paymentHistory: Payment[]
-  callHistory: CallLog[]
-  notes: string
-  documents: PatientDocument[]
-}
-
-export interface PatientExportData {
-  patient: PatientProfile
-  medicationHistory: DischargedPatient[]
-  accountingSummary: CustomerAccount | null
-  paymentHistory: Payment[]
-  callHistory: CallLog[]
-  notes: string
-  documents: PatientDocument[]
-}
-
-export interface PatientDocument {
+// DischargedPatient type for the database, reflecting the full form data
+export interface DischargedPatient {
   id: string
-  patientId: string
-  fileName: string
-  fileType: string
-  fileUrl: string
-  uploadedAt: string
-}
-
-export interface DischargedFormTemplate {
-  id: string
+  patientId: string // Link to the patients table
   name: string
-  templateContent: string
-}
-
-export interface UploadedFile extends File {
-  id: string
-  name: string
-  size: number
-  type: string
-  url: string
-  uploadDate: string
-}
-
-export interface PDFExportOptions {
-  includeAccountSummary: boolean
-  includeContactInfo: boolean
-  includeOutstandingBalance: boolean
-  includeCallHistory: boolean
-  includeNotes: boolean
+  address: string | null
+  medicare: string | null
+  allergies: string | null
+  dob: string | null
+  mrn: string
+  // Fields from default/after-admission
+  phone: string | null
+  admissionDate: string | null
+  dischargeDate: string | null
+  pharmacist: string | null
+  dateListPrepared: string | null
+  // Fields from before-admission
+  concession: string | null
+  healthFund: string | null
+  reasonForAdmission: string | null
+  relevantPastMedicalHistory: string | null
+  communityPharmacist: string | null
+  generalPractitioner: string | null
+  medicationRisksComments: string | null
+  sourcesOfHistory: string | null
+  pharmacistSignature: string | null
+  dateTimeSigned: string | null
+  // Common fields
+  dischargeTimestamp: string
+  templateType: "before-admission" | "after-admission" | "new" | "hospital-specific"
+  hospitalName: string | null
+  medications: Json // Stored as JSONB in DB
+  createdAt: string
+  updatedAt: string
 }
