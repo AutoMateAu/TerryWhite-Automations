@@ -211,7 +211,7 @@ function MedicationProfileTab({
               <DialogTrigger asChild>
                 <Button
                   variant="outline"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                  className="border-purple-600 text-purple-600 hover:bg-purple-50"
                   // Removed onClick={() => console.log("View Pill Balance clicked")}
                 >
                   View Pill Balance
@@ -355,7 +355,7 @@ function PrintReportDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50">
+        <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50">
           Print Report
         </Button>
       </DialogTrigger>
@@ -417,7 +417,7 @@ function PrintSigningSheetDialog({ patient, patientNotes }: PrintSigningSheetDia
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50">
+        <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50">
           Print Signing Sheet
         </Button>
       </DialogTrigger>
