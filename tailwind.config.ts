@@ -1,6 +1,5 @@
-import type { Config } from "tailwindcss"
-
-const config = {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
@@ -44,7 +43,7 @@ const config = {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
-          purple: "#A084DC", // Added accent-purple
+          purple: "#A084DC", // Added accent purple
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -54,9 +53,12 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        "purple-600": "#8B5CF6", // Hardcoded purple-600
-        "deep-purple": "#673AB7", // Hardcoded deep-purple
-        "violet-highlight": "#A084DC", // Hardcoded violet-highlight
+        // Custom purple shades
+        "purple-50": "#F7F4FB",
+        "purple-100": "#EFE9F7",
+        "purple-600": "#8A2BE2", // A vibrant purple
+        "deep-purple": "#5D3FD3", // A deeper purple for badges
+        "violet-highlight": "#A084DC", // For subtle highlights
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -80,6 +82,4 @@ const config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
-
-export default config
+}
