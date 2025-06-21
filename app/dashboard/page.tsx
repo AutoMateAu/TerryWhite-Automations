@@ -79,7 +79,9 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-4">
-          <Card>
+          <Card className="bg-purple-50 rounded-xl p-4">
+            {" "}
+            {/* Added background tint */}
             <CardHeader>
               <CardTitle>Your Tasks</CardTitle>
             </CardHeader>
