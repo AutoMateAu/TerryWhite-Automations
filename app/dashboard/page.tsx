@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CalendarDays, CreditCard, HelpCircle, User2, Bell } from "lucide-react" // Import Bell icon
+import { CalendarDays, CreditCard, HelpCircle, User2, Bell, ArrowUp, ArrowDown } from "lucide-react" // Import Bell icon and new arrows
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -44,7 +44,10 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-bold">45,231</div>
-              <p className="text-sm text-muted-foreground">+20.1% from last month</p>
+              <p className="text-sm text-purple-600 flex items-center">
+                <ArrowUp className="h-4 w-4 mr-1" />
+                {"+20.1% from last month"}
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -54,7 +57,10 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-bold">$250,000</div>
-              <p className="text-sm text-muted-foreground">+12% from last month</p>
+              <p className="text-sm text-purple-600 flex items-center">
+                <ArrowUp className="h-4 w-4 mr-1" />
+                {"+12% from last month"}
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -64,7 +70,10 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-bold">12</div>
-              <p className="text-sm text-muted-foreground">-5% from last month</p>
+              <p className="text-sm text-purple-600 flex items-center">
+                <ArrowDown className="h-4 w-4 mr-1" />
+                {"-5% from last month"}
+              </p>
             </CardContent>
           </Card>
         </div>
