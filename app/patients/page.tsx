@@ -97,10 +97,10 @@ export default function PatientsPage() {
       <Accordion type="single" collapsible className="w-full space-y-4">
         {filteredPatients.map((patient) => (
           <AccordionItem value={patient.id} key={patient.id} className="border rounded-lg">
-            <AccordionTrigger asChild className="p-4 hover:bg-muted/50 rounded-t-lg">
+            <AccordionTrigger asChild className="p-4 hover:bg-purple-50 rounded-t-lg group">
               <Link href={`/patients/${patient.id}`} className="flex items-center gap-3 w-full">
                 <User className="h-5 w-5 text-primary" />
-                <span className="font-medium">{patient.name}</span>
+                <span className="font-medium group-hover:text-purple-600">{patient.name}</span>
                 <span className="text-sm text-muted-foreground">(MRN: {patient.mrn})</span>
                 {patient.phone && (
                   <span className="text-sm text-muted-foreground flex items-center gap-1">
