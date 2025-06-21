@@ -67,7 +67,7 @@ export default function PatientsPage() {
   return (
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Patients</h1>
+        <h2 className="text-xl font-semibold inline-block border-b-2 border-purple-600">Patients</h2>
         <Dialog open={isAddPatientDialogOpen} onOpenChange={setIsAddPatientDialogOpen}>
           <DialogTrigger asChild>
             <Button>Add New Patient</Button>
