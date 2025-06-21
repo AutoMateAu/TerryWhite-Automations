@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CalendarDays, CreditCard, HelpCircle, User2 } from "lucide-react"
+import { CalendarDays, CreditCard, HelpCircle, User2, Bell } from 'lucide-react' // Import Bell icon
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -152,7 +152,10 @@ export default function DashboardPage() {
                   <AlertDescription>Patient appointment with John Doe is overdue.</AlertDescription>
                 </Alert>
                 <Alert>
-                  <AlertTitle>Reminder</AlertTitle>
+                  <AlertTitle className="flex items-center gap-2">
+                    <Bell className="h-4 w-4" />
+                    Reminder
+                  </AlertTitle>
                   <AlertDescription>Follow up with patient Jane Smith regarding lab results.</AlertDescription>
                 </Alert>
                 <Alert variant="destructive">

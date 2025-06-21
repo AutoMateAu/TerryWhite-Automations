@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { FileText, Hospital, Home, DollarSign, Calendar, Plus, Settings } from "lucide-react"
+import { FileText, Hospital, Home, DollarSign, Calendar, Plus, Settings, X, TrendingUp, TrendingDown } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { BulkPDFExportDialog } from "@/components/bulk-pdf-export-dialog"
@@ -65,10 +65,10 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
 
   // Sample data for recent payments
   const recentPayments = [
-    { id: "p1", patientName: "Alice Smith", amount: 150.0, date: "2024-06-20", type: "Card" },
-    { id: "p2", patientName: "Bob Johnson", amount: 75.5, date: "2024-06-19", type: "Bank Transfer" },
-    { id: "p3", patientName: "Charlie Brown", amount: 300.0, date: "2024-06-18", type: "Cash" },
-    { id: "p4", patientName: "Diana Prince", amount: 120.0, date: "2024-06-17", type: "Card" },
+    { id: "p1", patientName: "Alice Smith", amount: 150.00, date: "2024-06-20", type: "Card" },
+    { id: "p2", patientName: "Bob Johnson", amount: 75.50, date: "2024-06-19", type: "Bank Transfer" },
+    { id: "p3", patientName: "Charlie Brown", amount: 300.00, date: "2024-06-18", type: "Cash" },
+    { id: "p4", patientName: "Diana Prince", amount: 120.00, date: "2024-06-17", type: "Card" },
   ]
 
   const renderTabContent = () => {
@@ -248,7 +248,7 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
         <h1 className="text-2xl font-bold mb-6 text-text-dark">Today</h1>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Gross Volume Chart (Revenue Fluctuations, styled like image) */}
-          <Card className="lg:col-span-3 rounded-lg shadow-sm border border-border-card bg-bg-card p-6 flex flex-col justify-between">
+          <Card className="lg:col-span-2 rounded-lg shadow-sm border border-border-card bg-bg-card p-6 flex flex-col justify-between">
             <div>
               <p className="text-sm font-medium text-text-medium mb-4">Gross volume</p>
               <div className="h-48">
@@ -300,6 +300,46 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
           </Card>
 
           {/* Recommendations & API Keys Card */}
+          <Card className="rounded-lg shadow-sm border border-border-card bg-bg-card p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-base font-semibold text-text-dark">Recommendations</h3>
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-text-light hover:bg-gray-100">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="space-y-3 text-sm text-text-medium mb-6">
+              <p>
+                Automate{" "}
+                <a href="#" className="text-accent-purple underline">
+                  tax compliance
+                </a>
+                .
+              </p>
+              <p>
+                Embed a{" "}
+                <a href="#" className="text-accent-purple underline">
+                  payment form
+                </a>{" "}
+                on your site or redirect to a Stripe-hosted page.
+              </p>
+            </div>
+            <h3 className="text-base font-semibold text-text-dark mb-4">API keys</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-text-medium">Publishable key</span>
+                <span className="font-mono text-text-dark text-xs">pk_test_51RatMrAULCyj4...</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-text-medium">Secret key</span>
+                <span className="font-mono text-text-dark text-xs">sk_test_51RatMrAULCyj4...</span>
+              </div>
+              <div className="text-right mt-2">
+                <a href="#" className="text-accent-purple text-xs font-medium">
+                  View docs
+                </a>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
 
@@ -310,13 +350,13 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
           <div className="flex space-x-2">
             <Button
               variant="outline"
-              className="border-border-card text-text-medium text-xs px-3 py-1.5 hover:bg-accent-purple hover:text-white"
+              className="border-border-card text-text-medium text-xs px-3 py-1.5 hover:bg-gray-100"
             >
               <Plus className="h-3 w-3 mr-1.5 text-accent-purple" /> Add
             </Button>
             <Button
               variant="outline"
-              className="border-border-card text-text-medium text-xs px-3 py-1.5 hover:bg-accent-purple hover:text-white"
+              className="border-border-card text-text-medium text-xs px-3 py-1.5 hover:bg-gray-100"
             >
               <Settings className="h-3 w-3 mr-1.5 text-accent-purple" /> Edit
             </Button>
@@ -336,9 +376,7 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
                     </div>
                     <div>
                       <p className="font-medium text-text-dark">{payment.patientName}</p>
-                      <p className="text-xs text-text-medium">
-                        {payment.type} - {payment.date}
-                      </p>
+                      <p className="text-xs text-text-medium">{payment.type} - {payment.date}</p>
                     </div>
                   </div>
                   <p className="font-bold text-text-dark">
@@ -506,9 +544,7 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
           variant="ghost"
           onClick={() => setActiveTab("overdue")}
           className={`text-text-dark text-sm font-medium px-4 py-2 rounded-md ${
-            activeTab === "overdue"
-              ? "border-b-2 border-accent-purple text-accent-purple"
-              : "hover:bg-accent-purple hover:text-white"
+            activeTab === "overdue" ? "border-b-2 border-accent-purple text-accent-purple" : "hover:bg-gray-100"
           }`}
         >
           Overdue Accounts
@@ -519,7 +555,7 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
           className={`text-text-dark text-sm font-medium px-4 py-2 rounded-md ${
             activeTab === "total-outstanding"
               ? "border-b-2 border-accent-purple text-accent-purple"
-              : "hover:bg-accent-purple hover:text-white"
+              : "hover:bg-gray-100"
           }`}
         >
           Total Outstanding
@@ -528,9 +564,7 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
           variant="ghost"
           onClick={() => setActiveTab("current")}
           className={`text-text-dark text-sm font-medium px-4 py-2 rounded-md ${
-            activeTab === "current"
-              ? "border-b-2 border-accent-purple text-accent-purple"
-              : "hover:bg-accent-purple hover:text-white"
+            activeTab === "current" ? "border-b-2 border-accent-purple text-accent-purple" : "hover:bg-gray-100"
           }`}
         >
           Current Accounts
@@ -539,9 +573,7 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
           variant="ghost"
           onClick={() => setActiveTab("in-patient")}
           className={`text-text-dark text-sm font-medium px-4 py-2 rounded-md ${
-            activeTab === "in-patient"
-              ? "border-b-2 border-accent-purple text-accent-purple"
-              : "hover:bg-accent-purple hover:text-white"
+            activeTab === "in-patient" ? "border-b-2 border-accent-purple text-accent-purple" : "hover:bg-gray-100"
           }`}
         >
           In-patient Accounts
@@ -550,9 +582,7 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
           variant="ghost"
           onClick={() => setActiveTab("out-patient")}
           className={`text-text-dark text-sm font-medium px-4 py-2 rounded-md ${
-            activeTab === "out-patient"
-              ? "border-b-2 border-accent-purple text-accent-purple"
-              : "hover:bg-accent-purple hover:text-white"
+            activeTab === "out-patient" ? "border-b-2 border-accent-purple text-accent-purple" : "hover:bg-gray-100"
           }`}
         >
           Out-patient Accounts
