@@ -70,7 +70,9 @@ export default function PatientsPage() {
         <h2 className="text-xl font-semibold inline-block border-b-2 border-purple-600">Patients</h2>
         <Dialog open={isAddPatientDialogOpen} onOpenChange={setIsAddPatientDialogOpen}>
           <DialogTrigger asChild>
-            <Button>Add New Patient</Button>
+            <Button className="border border-purple-600 text-purple-600 bg-white hover:bg-purple-50">
+              Add New Patient
+            </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[800px] max-h-[90vh] p-0">
             <DialogHeader className="p-6 pb-4">
