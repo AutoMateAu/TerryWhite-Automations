@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { FileText, Hospital, Home, DollarSign, Calendar, Plus, Settings, X } from "lucide-react"
+import { FileText, Hospital, Home, DollarSign, Calendar, Plus, Settings, X, TrendingUp, TrendingDown } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { BulkPDFExportDialog } from "@/components/bulk-pdf-export-dialog"
@@ -61,6 +61,14 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
     { name: "Jun 16", value1: 1600, value2: 1800 },
     { name: "Jun 17", value1: 2000, value2: 2200 },
     { name: "Today", value1: 1900, value2: 2100 },
+  ]
+
+  // Sample data for recent payments
+  const recentPayments = [
+    { id: "p1", patientName: "Alice Smith", amount: 150.00, date: "2024-06-20", type: "Card" },
+    { id: "p2", patientName: "Bob Johnson", amount: 75.50, date: "2024-06-19", type: "Bank Transfer" },
+    { id: "p3", patientName: "Charlie Brown", amount: 300.00, date: "2024-06-18", type: "Cash" },
+    { id: "p4", patientName: "Diana Prince", amount: 120.00, date: "2024-06-17", type: "Card" },
   ]
 
   const renderTabContent = () => {
@@ -344,25 +352,41 @@ export default function AccountingOverview({ accounts }: AccountingOverviewProps
               variant="outline"
               className="border-border-card text-text-medium text-xs px-3 py-1.5 hover:bg-gray-100"
             >
-              <Plus className="h-3 w-3 mr-1.5" /> Add
+              <Plus className="h-3 w-3 mr-1.5 text-accent-purple" /> Add
             </Button>
             <Button
               variant="outline"
               className="border-border-card text-text-medium text-xs px-3 py-1.5 hover:bg-gray-100"
             >
-              <Settings className="h-3 w-3 mr-1.5" /> Edit
+              <Settings className="h-3 w-3 mr-1.5 text-accent-purple" /> Edit
             </Button>
           </div>
         </div>
 
-        {/* Payments Section (Placeholder) */}
+        {/* Payments Section */}
         <Card className="rounded-lg shadow-sm border border-border-card bg-bg-card p-6 mb-6">
-          <h3 className="text-base font-semibold text-text-dark mb-4">Payments</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm text-text-medium">
-            <div className="h-16 bg-gray-100 rounded-md animate-pulse"></div>
-            <div className="h-16 bg-gray-100 rounded-md animate-pulse"></div>
-            <div className="h-16 bg-gray-100 rounded-md animate-pulse"></div>
-            <div className="h-16 bg-gray-100 rounded-md animate-pulse"></div>
+          <h3 className="text-base font-semibold text-text-dark mb-4">Recent Payments</h3>
+          <div className="space-y-4">
+            {recentPayments.length > 0 ? (
+              recentPayments.map((payment) => (
+                <div key={payment.id} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-accent-purple/10 text-accent-purple">
+                      <DollarSign className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-text-dark">{payment.patientName}</p>
+                      <p className="text-xs text-text-medium">{payment.type} - {payment.date}</p>
+                    </div>
+                  </div>
+                  <p className="font-bold text-text-dark">
+                    ${payment.amount.toLocaleString("en-AU", { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-text-medium text-sm">No recent payments found.</p>
+            )}
           </div>
         </Card>
 
