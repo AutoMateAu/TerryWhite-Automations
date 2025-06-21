@@ -19,9 +19,14 @@ const NotificationCard = ({
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <HelpCircle className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
-      <CardContent>
-        <CardDescription className="text-xs text-muted-foreground">{description}</CardDescription>
-        <p className="text-xs text-muted-foreground">{time}</p>
+      <CardContent className="flex items-start gap-2">
+        {" "}
+        {/* Added flex and gap */}
+        <div className="w-2 h-2 bg-purple-600 rounded-full mt-1" /> {/* Purple dot */}
+        <div>
+          <CardDescription className="text-xs text-muted-foreground">{description}</CardDescription>
+          <p className="text-xs text-muted-foreground">{time}</p>
+        </div>
       </CardContent>
     </Card>
   )
@@ -117,18 +122,21 @@ export default function DashboardPage() {
             <CardContent>
               <ScrollArea className="h-[300px] w-full space-y-2">
                 <div className="flex items-center space-x-4">
+                  <div className="w-2 h-2 bg-purple-600 rounded-full" /> {/* Purple dot */}
                   <div>
                     <p className="text-sm font-medium">John Doe</p>
                     <p className="text-xs text-muted-foreground">$150 - Consultation</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
+                  <div className="w-2 h-2 bg-purple-600 rounded-full" /> {/* Purple dot */}
                   <div>
                     <p className="text-sm font-medium">Jane Smith</p>
                     <p className="text-xs text-muted-foreground">$200 - Lab Tests</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
+                  <div className="w-2 h-2 bg-purple-600 rounded-full" /> {/* Purple dot */}
                   <div>
                     <p className="text-sm font-medium">Michael Johnson</p>
                     <p className="text-xs text-muted-foreground">$100 - Follow-up</p>
