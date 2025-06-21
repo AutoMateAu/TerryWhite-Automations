@@ -115,15 +115,14 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
           </div>
           <Button
             variant="outline"
-            className="border-border-card text-text-medium text-sm px-3 py-1.5 hover:bg-gray-100"
+            className="border-border-card text-text-medium text-sm px-3 py-1.5 hover:bg-accent-purple hover:text-white"
           >
             <Filter className="h-4 w-4 mr-2" />
             Filter
           </Button>
           <Button
             variant="outline"
-            className="border-border-card text-text-medium text-sm px-3 py-1.5 hover:bg-gray-100"
-            onClick={() => setShowEnhancedExportDialog(true)}
+            className="border-border-card text-text-medium text-sm px-3 py-1.5 hover:bg-accent-purple hover:text-white"
           >
             <FileDown className="h-4 w-4 mr-2" />
             Export
@@ -139,7 +138,7 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
                 <Button
                   variant="ghost"
                   onClick={() => requestSort("patientName")}
-                  className="p-0 h-auto text-xs font-medium text-text-medium hover:bg-transparent"
+                  className="p-0 h-auto text-xs font-medium text-text-medium hover:bg-accent-purple hover:text-white"
                 >
                   Patient Name
                   {getSortIcon("patientName")}
@@ -149,7 +148,7 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
                 <Button
                   variant="ghost"
                   onClick={() => requestSort("mrn")}
-                  className="p-0 h-auto text-xs font-medium text-text-medium hover:bg-transparent"
+                  className="p-0 h-auto text-xs font-medium text-text-medium hover:bg-accent-purple hover:text-white"
                 >
                   MRN
                   {getSortIcon("mrn")}
@@ -159,7 +158,7 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
                 <Button
                   variant="ghost"
                   onClick={() => requestSort("phone")}
-                  className="p-0 h-auto text-xs font-medium text-text-medium hover:bg-transparent"
+                  className="p-0 h-auto text-xs font-medium text-text-medium hover:bg-accent-purple hover:text-white"
                 >
                   Phone
                   {getSortIcon("phone")}
@@ -169,7 +168,7 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
                 <Button
                   variant="ghost"
                   onClick={() => requestSort("totalOwed")}
-                  className="p-0 h-auto text-xs font-medium text-text-medium hover:bg-transparent"
+                  className="p-0 h-auto text-xs font-medium text-text-medium hover:bg-accent-purple hover:text-white"
                 >
                   Amount Owed
                   {getSortIcon("totalOwed")}
@@ -179,7 +178,7 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
                 <Button
                   variant="ghost"
                   onClick={() => requestSort("dueDate")}
-                  className="p-0 h-auto text-xs font-medium text-text-medium hover:bg-transparent"
+                  className="p-0 h-auto text-xs font-medium text-text-medium hover:bg-accent-purple hover:text-white"
                 >
                   Due Date
                   {getSortIcon("dueDate")}
@@ -189,7 +188,7 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
                 <Button
                   variant="ghost"
                   onClick={() => requestSort("status")}
-                  className="p-0 h-auto text-xs font-medium text-text-medium hover:bg-transparent"
+                  className="p-0 h-auto text-xs font-medium text-text-medium hover:bg-accent-purple hover:text-white"
                 >
                   Status
                   {getSortIcon("status")}
@@ -227,7 +226,10 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
                   <TableCell className="py-3 px-4 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0 text-text-medium hover:bg-gray-100">
+                        <Button
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-text-medium hover:bg-accent-purple hover:text-white"
+                        >
                           <span className="sr-only">Open menu</span>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
@@ -235,25 +237,25 @@ export default function CustomerAccountTable({ accounts }: CustomerAccountTableP
                       <DropdownMenuContent align="end" className="bg-bg-card border border-border-card text-text-dark">
                         <DropdownMenuItem
                           onClick={() => handleRecordPaymentClick(account)}
-                          className="text-sm hover:bg-gray-50 cursor-pointer"
+                          className="text-sm hover:bg-accent-purple hover:text-white cursor-pointer"
                         >
                           <DollarSign className="mr-2 h-4 w-4" /> Record Payment
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePaymentHistoryClick(account)}
-                          className="text-sm hover:bg-gray-50 cursor-pointer"
+                          className="text-sm hover:bg-accent-purple hover:text-white cursor-pointer"
                         >
                           <FileText className="mr-2 h-4 w-4" /> View Payment History
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleEditDueDateClick(account)}
-                          className="text-sm hover:bg-gray-50 cursor-pointer"
+                          className="text-sm hover:bg-accent-purple hover:text-white cursor-pointer"
                         >
                           <CalendarDays className="mr-2 h-4 w-4" /> Edit Due Date
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleSendPaymentLinkClick(account)}
-                          className="text-sm hover:bg-gray-50 cursor-pointer"
+                          className="text-sm hover:bg-accent-purple hover:text-white cursor-pointer"
                         >
                           <Link className="mr-2 h-4 w-4" /> Send Payment Link
                         </DropdownMenuItem>
