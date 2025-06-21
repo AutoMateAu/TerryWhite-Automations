@@ -781,7 +781,7 @@ export default function PatientManagementPage() {
 
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 break-words">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 break-words inline-block border-b-2 border-purple-600">
         Patient Management: {patient.name}{" "}
         <Badge
           className={`ml-2 text-base ${
