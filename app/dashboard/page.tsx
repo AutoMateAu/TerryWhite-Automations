@@ -111,8 +111,8 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
-            <CardHeader className="border-l-4 border-purple-600 pl-4">
-              <CardTitle>Recent Payments</CardTitle>
+            <CardHeader>
+              <CardTitle className="border-b-2 border-purple-600 inline-block pb-1">Recent Payments</CardTitle>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[300px] w-full space-y-2">
@@ -142,8 +142,8 @@ export default function DashboardPage() {
           </Card>
 
           <Card>
-            <CardHeader className="border-l-4 border-purple-600 pl-4">
-              <CardTitle>Outstanding Tasks</CardTitle>
+            <CardHeader>
+              <CardTitle className="border-b-2 border-purple-600 inline-block pb-1">Outstanding Tasks</CardTitle>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[300px] w-full space-y-2">
@@ -170,8 +170,8 @@ export default function DashboardPage() {
           </Card>
 
           <Card>
-            <CardHeader className="border-l-4 border-purple-600 pl-4">
-              <CardTitle>Outstanding Accounts</CardTitle>
+            <CardHeader>
+              <CardTitle className="border-b-2 border-purple-600 inline-block pb-1">Outstanding Accounts</CardTitle>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[300px] w-full space-y-2">
