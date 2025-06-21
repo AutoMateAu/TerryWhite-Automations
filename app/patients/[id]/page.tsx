@@ -61,7 +61,7 @@ function PatientDetailsTab({ patient }: { patient: PatientProfile }) {
   return (
     <Card className="rounded-lg shadow-md">
       <CardHeader>
-        <CardTitle>Basic Information</CardTitle>
+        <CardTitle className="border-l-4 border-purple-600 pl-4">Basic Information</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -149,7 +149,7 @@ function MedicationProfileTab({
   return (
     <Card className="rounded-lg shadow-md">
       <CardHeader>
-        <CardTitle>Medication Profile</CardTitle>
+        <CardTitle className="border-l-4 border-purple-600 pl-4">Medication Profile</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Top Section: Patient Details */}
@@ -282,14 +282,14 @@ function MedicationProfileTab({
 
         {/* Section: Packed Medications (moved from inner tab) */}
         <div>
-          <h3 className="font-semibold text-lg mb-2">Packed Medications:</h3>
+          <h3 className="font-semibold text-lg mb-2 border-l-4 border-purple-600 pl-4">Packed Medications:</h3>
           <MedicationTable medications={packedDrugs} />
           {/* Removed AddMedicationDialog from here */}
         </div>
 
         {/* Section: Non-Packed Medications (moved from inner tab) */}
         <div className="mt-6">
-          <h3 className="font-semibold text-lg mb-2">Non-Packed Medications:</h3>
+          <h3 className="font-semibold text-lg mb-2 border-l-4 border-purple-600 pl-4">Non-Packed Medications:</h3>
           <MedicationTable medications={nonPackedDrugs} />
         </div>
       </CardContent>
@@ -450,7 +450,7 @@ function MedicationHistoryTab({ dischargeSummaries }: { dischargeSummaries: Disc
   return (
     <Card className="rounded-lg shadow-md">
       <CardHeader>
-        <CardTitle>Medication History</CardTitle>
+        <CardTitle className="border-l-4 border-purple-600 pl-4">Medication History</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {dischargeSummaries.length === 0 ? (
@@ -489,7 +489,7 @@ function AdmissionsTab({ dischargeSummaries }: { dischargeSummaries: DischargedP
   return (
     <Card className="rounded-lg shadow-md">
       <CardHeader>
-        <CardTitle>Admissions</CardTitle>
+        <CardTitle className="border-l-4 border-purple-600 pl-4">Admissions</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {admissions.length === 0 ? (
@@ -543,7 +543,7 @@ function NotesTab({
   return (
     <Card className="rounded-lg shadow-md">
       <CardHeader>
-        <CardTitle>Doctors and Contacts Notes</CardTitle>
+        <CardTitle className="border-l-4 border-purple-600 pl-4">Doctors and Contacts Notes</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <Textarea
@@ -591,7 +591,7 @@ function AccountingTab({
   return (
     <Card className="rounded-lg shadow-md">
       <CardHeader>
-        <CardTitle>Accounting Summary</CardTitle>
+        <CardTitle className="border-l-4 border-purple-600 pl-4">Accounting Summary</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {account ? (
@@ -615,7 +615,7 @@ function AccountingTab({
             </div>
 
             <div className="border-t pt-4">
-              <h3 className="font-semibold text-xl mb-3 flex items-center gap-2">
+              <h3 className="font-semibold text-xl mb-3 flex items-center gap-2 border-l-4 border-purple-600 pl-4">
                 <History className="h-5 w-5 flex-shrink-0" /> Payment History
               </h3>
               {paymentHistory.length === 0 ? (
@@ -635,7 +635,7 @@ function AccountingTab({
             </div>
 
             <div className="border-t pt-4">
-              <h3 className="font-semibold text-xl mb-3 flex items-center gap-2">
+              <h3 className="font-semibold text-xl mb-3 flex items-center gap-2 border-l-4 border-purple-600 pl-4">
                 <PhoneCall className="h-5 w-5 flex-shrink-0" /> Call History
               </h3>
               {callHistory.length === 0 ? (
