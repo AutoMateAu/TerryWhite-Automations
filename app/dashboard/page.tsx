@@ -147,7 +147,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[300px] w-full space-y-2">
-                <Alert variant="destructive">
+                <Alert className="bg-purple-100 text-purple-600 font-semibold px-2 py-1 rounded-md">
                   <AlertTitle>Overdue!</AlertTitle>
                   <AlertDescription>Patient appointment with John Doe is overdue.</AlertDescription>
                 </Alert>
@@ -158,7 +158,7 @@ export default function DashboardPage() {
                   </AlertTitle>
                   <AlertDescription>Follow up with patient Jane Smith regarding lab results.</AlertDescription>
                 </Alert>
-                <Alert variant="destructive">
+                <Alert className="bg-purple-100 text-purple-600 font-semibold px-2 py-1 rounded-md">
                   <AlertTitle>Overdue!</AlertTitle>
                   <AlertDescription>Patient appointment with John Doe is overdue.</AlertDescription>
                 </Alert>
