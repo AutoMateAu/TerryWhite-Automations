@@ -47,7 +47,7 @@ export function AppSidebar() {
                       "w-full justify-start",
                       (pathname === item.href ||
                         (pathname.startsWith(item.href) && item.href !== "/dashboard" && item.href !== "/")) &&
-                        "bg-muted",
+                        "bg-muted text-purple-600 font-medium",
                     )}
                   >
                     <Link href={item.href}>
