@@ -282,14 +282,14 @@ function MedicationProfileTab({
 
         {/* Section: Packed Medications (moved from inner tab) */}
         <div>
-          <h3 className="font-semibold text-lg mb-2 border-l-4 border-purple-600 pl-4">Packed Medications:</h3>
+          <h3 className="font-semibold text-lg mb-2 border-l-4 border-purple-600 pl-2">Packed Medications:</h3>
           <MedicationTable medications={packedDrugs} />
           {/* Removed AddMedicationDialog from here */}
         </div>
 
         {/* Section: Non-Packed Medications (moved from inner tab) */}
         <div className="mt-6">
-          <h3 className="font-semibold text-lg mb-2 border-l-4 border-purple-600 pl-4">Non-Packed Medications:</h3>
+          <h3 className="font-semibold text-lg mb-2 border-l-4 border-purple-600 pl-2">Non-Packed Medications:</h3>
           <MedicationTable medications={nonPackedDrugs} />
         </div>
       </CardContent>
