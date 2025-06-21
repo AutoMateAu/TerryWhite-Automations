@@ -273,11 +273,18 @@ function MedicationProfileTab({
           <p className="text-muted-foreground">Content for Solid Weekly medications will go here.</p>
         </TabsContent>
 
+        {/* Moved "Add New Drug" button here */}
+        <div className="flex justify-end mb-4">
+          {" "}
+          {/* Added a div for alignment and spacing */}
+          <AddMedicationDialog onAddMedication={handleAddMedication} />
+        </div>
+
         {/* Section: Packed Medications (moved from inner tab) */}
         <div>
           <h3 className="font-semibold text-lg mb-2">Packed Medications:</h3>
           <MedicationTable medications={packedDrugs} />
-          <AddMedicationDialog onAddMedication={handleAddMedication} />
+          {/* Removed AddMedicationDialog from here */}
         </div>
 
         {/* Section: Non-Packed Medications (moved from inner tab) */}
