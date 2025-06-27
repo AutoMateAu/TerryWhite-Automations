@@ -54,6 +54,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog" // Import Dialog components
 import { PDFGenerator, generatePDFFilename } from "@/lib/pdf-generator" // Import PDFGenerator
+import { cn } from "@/lib/utils" // Import cn for conditional class names
 
 // --- Tab Components ---
 
@@ -61,7 +62,7 @@ function PatientDetailsTab({ patient }: { patient: PatientProfile }) {
   return (
     <Card className="rounded-lg shadow-md">
       <CardHeader>
-        <CardTitle>Basic Information</CardTitle>
+        <CardTitle className="border-l-4 border-purple-600 pl-4">Basic Information</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -149,7 +150,7 @@ function MedicationProfileTab({
   return (
     <Card className="rounded-lg shadow-md">
       <CardHeader>
-        <CardTitle>Medication Profile</CardTitle>
+        <CardTitle className="border-l-4 border-purple-600 pl-4">Medication Profile</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Top Section: Patient Details */}
@@ -211,7 +212,7 @@ function MedicationProfileTab({
               <DialogTrigger asChild>
                 <Button
                   variant="outline"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                  className="border-purple-600 text-purple-600 hover:bg-purple-50"
                   // Removed onClick={() => console.log("View Pill Balance clicked")}
                 >
                   View Pill Balance
@@ -273,16 +274,23 @@ function MedicationProfileTab({
           <p className="text-muted-foreground">Content for Solid Weekly medications will go here.</p>
         </TabsContent>
 
+        {/* Moved "Add New Drug" button here */}
+        <div className="flex justify-end mb-4">
+          {" "}
+          {/* Added a div for alignment and spacing */}
+          <AddMedicationDialog onAddMedication={handleAddMedication} />
+        </div>
+
         {/* Section: Packed Medications (moved from inner tab) */}
         <div>
-          <h3 className="font-semibold text-lg mb-2">Packed Medications:</h3>
+          <h3 className="font-semibold text-lg mb-2 border-l-4 border-purple-600 pl-2">Packed Medications:</h3>
           <MedicationTable medications={packedDrugs} />
-          <AddMedicationDialog onAddMedication={handleAddMedication} />
+          {/* Removed AddMedicationDialog from here */}
         </div>
 
         {/* Section: Non-Packed Medications (moved from inner tab) */}
         <div className="mt-6">
-          <h3 className="font-semibold text-lg mb-2">Non-Packed Medications:</h3>
+          <h3 className="font-semibold text-lg mb-2 border-l-4 border-purple-600 pl-2">Non-Packed Medications:</h3>
           <MedicationTable medications={nonPackedDrugs} />
         </div>
       </CardContent>
@@ -348,7 +356,7 @@ function PrintReportDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50">
+        <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50">
           Print Report
         </Button>
       </DialogTrigger>
@@ -410,7 +418,7 @@ function PrintSigningSheetDialog({ patient, patientNotes }: PrintSigningSheetDia
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50">
+        <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50">
           Print Signing Sheet
         </Button>
       </DialogTrigger>
@@ -443,21 +451,31 @@ function MedicationHistoryTab({ dischargeSummaries }: { dischargeSummaries: Disc
   return (
     <Card className="rounded-lg shadow-md">
       <CardHeader>
-        <CardTitle>Medication History</CardTitle>
+        <CardTitle className="border-l-4 border-purple-600 pl-4">Medication History</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {dischargeSummaries.length === 0 ? (
           <p className="text-muted-foreground">No previous medication records found.</p>
         ) : (
-          dischargeSummaries.map((form) => (
-            <div key={form.id} className="border p-4 rounded-md bg-gray-50">
-              <h3 className="font-semibold text-lg mb-2 break-words">
-                Medications from {new Date(form.dischargeTimestamp).toLocaleDateString()}
+          dischargeSummaries.map((form, index) => (
+            <div
+              key={form.id}
+              className={cn(
+                "border p-4 rounded-md transition-colors duration-200",
+                index % 2 !== 0 ? "bg-purple-50" : "bg-white", // Alternating background
+                "hover:bg-purple-100", // Hover effect
+              )}
+            >
+              <h3 className="font-semibold text-lg mb-2 break-words font-medium">
+                Medications from{" "}
+                <span className="text-purple-600">{new Date(form.dischargeTimestamp).toLocaleDateString()}</span>
               </h3>
               {form.medications.length === 0 ? (
                 <p className="text-xs text-muted-foreground">No medications listed in this summary.</p>
               ) : (
-                <ul className="list-disc list-inside text-sm space-y-1">
+                <ul className="space-y-1">
+                  {" "}
+                  {/* Removed list-disc here */}
                   {form.medications.map((med: Medication, idx: number) => (
                     <li key={idx} className="break-words">
                       <strong>{med.name}</strong>: {med.dosageFrequency || med.status || "N/A"}
@@ -482,16 +500,24 @@ function AdmissionsTab({ dischargeSummaries }: { dischargeSummaries: DischargedP
   return (
     <Card className="rounded-lg shadow-md">
       <CardHeader>
-        <CardTitle>Admissions</CardTitle>
+        <CardTitle className="border-l-4 border-purple-600 pl-4">Admissions</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {admissions.length === 0 ? (
           <p className="text-muted-foreground">No admission records found for this patient.</p>
         ) : (
-          admissions.map((form) => (
-            <div key={form.id} className="border p-4 rounded-md bg-gray-50">
-              <h3 className="font-semibold text-lg mb-2 break-words">
-                Admission on {new Date(form.admissionDate!).toLocaleDateString()}
+          admissions.map((form, index) => (
+            <div
+              key={form.id}
+              className={cn(
+                "border p-4 rounded-md transition-colors duration-200",
+                index % 2 !== 0 ? "bg-purple-50" : "bg-white", // Alternating background
+                "hover:bg-purple-100", // Hover effect
+              )}
+            >
+              <h3 className="font-semibold text-lg mb-2 break-words font-medium">
+                Admission on{" "}
+                <span className="text-purple-600">{new Date(form.admissionDate!).toLocaleDateString()}</span>
               </h3>
               {form.dischargeDate && (
                 <p className="text-sm text-muted-foreground break-words">
@@ -536,7 +562,7 @@ function NotesTab({
   return (
     <Card className="rounded-lg shadow-md">
       <CardHeader>
-        <CardTitle>Doctors and Contacts Notes</CardTitle>
+        <CardTitle className="border-l-4 border-purple-600 pl-4">Doctors and Contacts Notes</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <Textarea
@@ -544,9 +570,15 @@ function NotesTab({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={10}
-          className="mb-4"
+          className="mb-4 focus:ring-2 focus:ring-purple-600 focus:border-purple-600"
         />
-        <Button onClick={handleSaveNotes}>Save Notes</Button>
+        <Button
+          onClick={handleSaveNotes}
+          variant="outline"
+          className="border-purple-600 text-purple-600 hover:bg-purple-50"
+        >
+          Save Notes
+        </Button>
       </CardContent>
     </Card>
   )
@@ -584,7 +616,7 @@ function AccountingTab({
   return (
     <Card className="rounded-lg shadow-md">
       <CardHeader>
-        <CardTitle>Accounting Summary</CardTitle>
+        <CardTitle className="border-l-4 border-purple-600 pl-4">Accounting Summary</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {account ? (
@@ -608,7 +640,7 @@ function AccountingTab({
             </div>
 
             <div className="border-t pt-4">
-              <h3 className="font-semibold text-xl mb-3 flex items-center gap-2">
+              <h3 className="font-semibold text-xl mb-3 flex items-center gap-2 border-l-4 border-purple-600 pl-4">
                 <History className="h-5 w-5 flex-shrink-0" /> Payment History
               </h3>
               {paymentHistory.length === 0 ? (
@@ -628,7 +660,7 @@ function AccountingTab({
             </div>
 
             <div className="border-t pt-4">
-              <h3 className="font-semibold text-xl mb-3 flex items-center gap-2">
+              <h3 className="font-semibold text-xl mb-3 flex items-center gap-2 border-l-4 border-purple-600 pl-4">
                 <PhoneCall className="h-5 w-5 flex-shrink-0" /> Call History
               </h3>
               {callHistory.length === 0 ? (
@@ -774,7 +806,7 @@ export default function PatientManagementPage() {
 
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 break-words">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 break-words inline-block border-b-2 border-purple-600">
         Patient Management: {patient.name}{" "}
         <Badge
           className={`ml-2 text-base ${

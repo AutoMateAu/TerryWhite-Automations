@@ -29,7 +29,7 @@ export function MedicationTable({ medications }: MedicationTableProps) {
         </TableHeader>
         <TableBody>
           {medications.map((med) => (
-            <TableRow key={med.id}>
+            <TableRow key={med.id} className="border-l-4 border-purple-600 hover:bg-purple-50">
               <TableCell className="font-medium break-words">{med.name}</TableCell>
               <TableCell className="break-words">{med.directions || "N/A"}</TableCell>
               <TableCell>{med.isPacked ? "Yes" : "No"}</TableCell>

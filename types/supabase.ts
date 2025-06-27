@@ -115,6 +115,7 @@ export interface Database {
           updated_at: string
           template_type: string | null // Added template_type
           hospital_name: string | null // Added hospital_name
+          hospital_id: string | null // Added hospital_id
           medications: Json | null // Added medications as JSONB
           phone: string | null // Added phone
           concession: string | null // Added before-admission fields
@@ -127,6 +128,7 @@ export interface Database {
           sources_of_history: string | null
           pharmacist_signature: string | null
           date_time_signed: string | null
+          status: "active" | "archived" | "draft" // Added status
         }
         Insert: {
           id?: string
@@ -146,6 +148,7 @@ export interface Database {
           updated_at?: string
           template_type?: string | null
           hospital_name?: string | null
+          hospital_id?: string | null
           medications?: Json | null
           phone?: string | null
           concession?: string | null
@@ -158,6 +161,7 @@ export interface Database {
           sources_of_history?: string | null
           pharmacist_signature?: string | null
           date_time_signed?: string | null
+          status?: "active" | "archived" | "draft"
         }
         Update: {
           id?: string
@@ -177,6 +181,7 @@ export interface Database {
           updated_at?: string
           template_type?: string | null
           hospital_name?: string | null
+          hospital_id?: string | null
           medications?: Json | null
           phone?: string | null
           concession?: string | null
@@ -189,6 +194,7 @@ export interface Database {
           sources_of_history?: string | null
           pharmacist_signature?: string | null
           date_time_signed?: string | null
+          status?: "active" | "archived" | "draft"
         }
       }
       patients: {
@@ -203,6 +209,7 @@ export interface Database {
           phone: string | null
           created_at: string
           updated_at: string
+          hospital_id: string | null // Added hospital_id
         }
         Insert: {
           id?: string
@@ -215,6 +222,7 @@ export interface Database {
           phone?: string | null
           created_at?: string
           updated_at?: string
+          hospital_id?: string | null
         }
         Update: {
           id?: string
@@ -225,6 +233,37 @@ export interface Database {
           allergies?: string | null
           mrn?: string
           phone?: string | null
+          created_at?: string
+          updated_at?: string
+          hospital_id?: string | null
+        }
+      }
+      hospitals: {
+        // NEW: Define hospitals table
+        Row: {
+          id: string
+          name: string
+          address: string | null
+          phone: string | null
+          email: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          address?: string | null
+          phone?: string | null
+          email?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          address?: string | null
+          phone?: string | null
+          email?: string | null
           created_at?: string
           updated_at?: string
         }

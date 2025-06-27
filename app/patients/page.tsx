@@ -67,14 +67,16 @@ export default function PatientsPage() {
   return (
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Patients</h1>
+        <h2 className="text-xl font-semibold inline-block border-b-2 border-purple-600">Patients</h2>
         <Dialog open={isAddPatientDialogOpen} onOpenChange={setIsAddPatientDialogOpen}>
           <DialogTrigger asChild>
-            <Button>Add New Patient</Button>
+            <Button className="border border-purple-600 text-purple-600 bg-white hover:bg-purple-50">
+              Add New Patient
+            </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[800px] max-h-[90vh] p-0">
             <DialogHeader className="p-6 pb-4">
-              <DialogTitle>Add New Patient</DialogTitle>
+              <DialogTitle></DialogTitle>
             </DialogHeader>
             <AddPatientFormContent
               onPatientAdd={handleAddNewPatient}
@@ -97,10 +99,10 @@ export default function PatientsPage() {
       <Accordion type="single" collapsible className="w-full space-y-4">
         {filteredPatients.map((patient) => (
           <AccordionItem value={patient.id} key={patient.id} className="border rounded-lg">
-            <AccordionTrigger asChild className="p-4 hover:bg-muted/50 rounded-t-lg">
+            <AccordionTrigger asChild className="p-4 hover:bg-purple-50 rounded-t-lg group">
               <Link href={`/patients/${patient.id}`} className="flex items-center gap-3 w-full">
                 <User className="h-5 w-5 text-primary" />
-                <span className="font-medium">{patient.name}</span>
+                <span className="font-medium group-hover:text-purple-600">{patient.name}</span>
                 <span className="text-sm text-muted-foreground">(MRN: {patient.mrn})</span>
                 {patient.phone && (
                   <span className="text-sm text-muted-foreground flex items-center gap-1">

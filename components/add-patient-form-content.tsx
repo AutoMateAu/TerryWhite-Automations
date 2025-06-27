@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { PlusCircle, Trash2 } from "lucide-react"
+import { PlusCircle, Trash2, UserPlus } from "lucide-react"
 import type { PatientProfile } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
 import { formatAustralianPhoneNumber, getPhoneNumberMaxLength } from "@/utils/phone-formatter"
@@ -81,6 +81,10 @@ export function AddPatientFormContent({ onPatientAdd, onClose }: AddPatientFormC
 
   return (
     <form onSubmit={handleSubmit}>
+      <h2 className="text-2xl font-bold text-center mb-6 flex items-center justify-center gap-2 border-l-4 border-purple-600 pl-4 py-1">
+        <UserPlus className="h-6 w-6 text-purple-600" />
+        Add New Patient
+      </h2>
       <div className="grid gap-6 py-4 max-h-[70vh] overflow-y-auto px-2">
         {/* Patient Information Section */}
         <div className="space-y-4">
@@ -108,7 +112,7 @@ export function AddPatientFormContent({ onPatientAdd, onClose }: AddPatientFormC
                 placeholder="0412 345 678 or (02) 9876 5432"
                 maxLength={getPhoneNumberMaxLength(formData.phone)}
               />
-              <p className="text-xs text-muted-foreground">Mobile: 04XX XXX XXX • Landline: (0X) XXXX XXXX</p>
+              <p className="text-xs text-purple-500">Mobile: 04XX XXX XXX • Landline: (0X) XXXX XXXX</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="medicare">Medicare Number</Label>
@@ -182,10 +186,17 @@ export function AddPatientFormContent({ onPatientAdd, onClose }: AddPatientFormC
         </div>
       </div>
       <div className="flex justify-end gap-2 p-4 border-t">
-        <Button type="button" variant="secondary" onClick={onClose}>
+        <Button
+          type="button"
+          variant="outline"
+          className="border-purple-600 text-purple-600 hover:bg-purple-50"
+          onClick={onClose}
+        >
           Cancel
         </Button>
-        <Button type="submit">Save Patient</Button>
+        <Button type="submit" className="bg-purple-600 text-white hover:bg-purple-700">
+          Save Patient
+        </Button>
       </div>
     </form>
   )

@@ -77,42 +77,60 @@ export default function DocumentUploadTab({
   return (
     <Card className="rounded-lg shadow-md">
       <CardHeader>
-        <CardTitle>Uploading Documents</CardTitle>
+        <CardTitle className="border-l-4 border-purple-600 pl-4">Uploading Documents</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="document">Upload New Document</Label>
-          <Input id="document" type="file" onChange={handleFileChange} />
+          <Input
+            id="document"
+            type="file"
+            onChange={handleFileChange}
+            className="focus:ring-purple-600 focus:border-purple-600"
+          />
           {selectedFile && <p className="text-sm text-muted-foreground mt-1">Selected: {selectedFile.name}</p>}
         </div>
-        <Button onClick={handleUpload} disabled={!selectedFile || isUploading}>
+        <Button
+          onClick={handleUpload}
+          disabled={!selectedFile || isUploading}
+          variant="outline"
+          className="border-purple-600 text-purple-600 hover:bg-purple-50 hover:shadow-sm"
+        >
           {isUploading ? "Uploading..." : "Upload Document"}
         </Button>
         <p className="text-sm text-muted-foreground">Supported formats: PDF, Word (.doc, .docx), Images (JPG, PNG)</p>
 
-        <div className="border-t pt-4">
-          <h3 className="font-semibold text-xl mb-3 flex items-center gap-2">
-            <FileText className="h-5 w-5" /> Existing Documents
-          </h3>
-          {existingDocuments.length === 0 ? (
-            <p className="text-muted-foreground">No documents uploaded for this patient yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {existingDocuments.map((doc) => (
-                <li key={doc.id} className="flex justify-between items-center text-sm p-2 border rounded-md bg-gray-50">
-                  <span className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    {doc.fileName} ({new Date(doc.uploadedAt).toLocaleDateString()})
-                  </span>
-                  <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
-                    <Button variant="ghost" size="sm">
-                      <Download className="h-4 w-4 mr-1" /> View
-                    </Button>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
+        <div className="bg-purple-50 rounded-xl p-4">
+          {" "}
+          {/* Added wrapper div */}
+          <div className="border-t pt-4">
+            <h3 className="font-semibold text-xl mb-3 flex items-center gap-2">
+              <FileText className="h-5 w-5" /> Existing Documents
+            </h3>
+            {existingDocuments.length === 0 ? (
+              <p className="text-muted-foreground">No documents uploaded for this patient yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {existingDocuments.map((doc) => (
+                  <li
+                    key={doc.id}
+                    className="flex justify-between items-center text-sm p-2 border rounded-md bg-gray-50 border-l-4 border-purple-600 pl-2 transition-colors duration-200 hover:bg-purple-50"
+                  >
+                    <span className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-purple-600">{doc.fileName}</span> (
+                      {new Date(doc.uploadedAt).toLocaleDateString()})
+                    </span>
+                    <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
+                      <Button variant="ghost" size="sm" className="text-purple-600 font-medium hover:bg-purple-50">
+                        <Download className="h-4 w-4 mr-1" /> View
+                      </Button>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
